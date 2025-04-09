@@ -15,8 +15,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.pbdvmobile.app.adapters.SessionAdapter;
 import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.services.SessionService;
-import com.pbdvmobile.app.services.UserService;
+import com.pbdvmobile.app.data.SessionService;
+import com.pbdvmobile.app.data.UserService;
 import java.util.ArrayList;
 import java.util.List;
 

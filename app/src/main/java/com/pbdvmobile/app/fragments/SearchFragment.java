@@ -17,7 +17,7 @@ import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.adapters.TutorAdapter;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.services.UserService;
+import com.pbdvmobile.app.data.UserService;
 import java.util.ArrayList;
 import java.util.List;
 

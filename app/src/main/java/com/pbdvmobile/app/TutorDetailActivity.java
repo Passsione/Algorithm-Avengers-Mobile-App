@@ -17,9 +17,9 @@ import com.pbdvmobile.app.data.model.Resource;
 import com.pbdvmobile.app.data.model.Review;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.services.ResourceService;
-import com.pbdvmobile.app.services.ReviewService;
-import com.pbdvmobile.app.services.UserService;
+import com.pbdvmobile.app.data.ResourceService;
+import com.pbdvmobile.app.data.ReviewService;
+import com.pbdvmobile.app.data.UserService;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -11,7 +11,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.services.AuthService;
+import com.pbdvmobile.app.data.AuthService;
 
 public class RegistrationActivity extends AppCompatActivity {
 

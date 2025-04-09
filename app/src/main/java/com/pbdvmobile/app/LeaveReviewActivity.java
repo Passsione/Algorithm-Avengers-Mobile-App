@@ -12,9 +12,9 @@ import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.data.model.Review;
 import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.services.ReviewService;
-import com.pbdvmobile.app.services.SessionService;
-import com.pbdvmobile.app.services.UserService;
+import com.pbdvmobile.app.data.ReviewService;
+import com.pbdvmobile.app.data.SessionService;
+import com.pbdvmobile.app.data.UserService;
 
 public class LeaveReviewActivity extends AppCompatActivity {
 

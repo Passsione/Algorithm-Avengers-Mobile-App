@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.services.UserService;
+import com.pbdvmobile.app.UserService;
 import com.pbdvmobile.app.utils.SubjectTokenizer;
 import java.util.ArrayList;
 import java.util.List;
