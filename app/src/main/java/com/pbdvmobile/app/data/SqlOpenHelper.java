@@ -20,7 +20,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String TABLE_PRIZES = "prizes";
     public static final String TABLE_REDEEM_PRIZES = "redeem_prizes";
     public static final String TABLE_USER_SUBJECTS = "user_subjects";
-    public static final String TABLE_CHAT = "chats";
+//    public static final String TABLE_CHAT = "chats";
 
 
     // User Table Columns
@@ -69,6 +69,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     // Prize Table Columns
     public static final String KEY_PRIZE_ID = "prize_id";
     public static final String KEY_PRIZE_NAME = "prize_name";
+    public static final String KEY_PRIZE_COST = "prize_cost";
 
     // RedeemPrize Table Columns
     public static final String KEY_REDEEM_ID = "redeem_id";
@@ -95,18 +96,18 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS +
                 "(" +
                 KEY_USER_STUDENT_NUM + " INTEGER PRIMARY KEY," +
-                KEY_USER_FIRST_NAME + " TEXT," +
-                KEY_USER_LAST_NAME + " TEXT," +
-                KEY_USER_EMAIL + " TEXT UNIQUE," +
-                KEY_USER_PASSWORD + " TEXT," +
+                KEY_USER_FIRST_NAME + " VARCHAR(50)," +
+                KEY_USER_LAST_NAME + " VARCHAR(50)," +
+                KEY_USER_EMAIL + " VARCHAR(100) UNIQUE NOT NULL," +
+                KEY_USER_PASSWORD + " TEXT NOT NULL," +
                 KEY_USER_BIO + " TEXT," +
-                KEY_USER_EDUCATION_LEVEL + " TEXT," +
-                KEY_USER_IS_TUTOR + " INTEGER," + // 0 for false, 1 for true
-                KEY_USER_TIER_LEVEL + " TEXT," +
+                KEY_USER_EDUCATION_LEVEL + " VARCHAR(25) NOT NULL," +
+                KEY_USER_IS_TUTOR + " INTEGER DEFAULT 0," + // 0 for false, 1 for true
+                KEY_USER_TIER_LEVEL + " VARCHAR(25)," +
                 KEY_USER_AVERAGE_RATING + " REAL," +
                 KEY_USER_PROFILE_IMAGE_URL + " TEXT," +
                 KEY_USER_CREDITS + " REAL," +
-                KEY_USER_SUBJECTS + " TEXT," + // JSON string
+                KEY_USER_SUBJECTS + " TEXT," + // JSON string, Android Cookbook pdf page: 503
                 KEY_USER_BANK_DETAILS + " TEXT" +
                 ")";
 
@@ -121,7 +122,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 "(" +
                 KEY_USER_SUBJECT_USER_ID + " INTEGER," +
                 KEY_USER_SUBJECT_SUBJECT_ID + " INTEGER," +
-                KEY_USER_SUBJECT_MARK + " REAL," +
+                KEY_USER_SUBJECT_MARK + " REAL DEFAULT 0," +
                 "PRIMARY KEY (" + KEY_USER_SUBJECT_USER_ID + ", " + KEY_USER_SUBJECT_SUBJECT_ID + ")," +
                 "FOREIGN KEY (" + KEY_USER_SUBJECT_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_USER_SUBJECT_SUBJECT_ID + ") REFERENCES " + TABLE_SUBJECTS + "(" + KEY_SUBJECT_ID + ")" +
@@ -130,13 +131,13 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         String CREATE_SESSIONS_TABLE = "CREATE TABLE " + TABLE_SESSIONS +
                 "(" +
                 KEY_SESSION_ID + " INTEGER PRIMARY KEY," +
-                KEY_SESSION_TUTOR_ID + " INTEGER," +
-                KEY_SESSION_TUTEE_ID + " INTEGER," +
-                KEY_SESSION_SUBJECT_ID + " INTEGER," +
+                KEY_SESSION_TUTOR_ID + " INTEGER NOT NULL," +
+                KEY_SESSION_TUTEE_ID + " INTEGER NOT NULL," +
+                KEY_SESSION_SUBJECT_ID + " INTEGER NOT NULL," +
                 KEY_SESSION_LOCATION + " TEXT," +
-                KEY_SESSION_START_TIME + " INTEGER," + // Stored as Unix timestamp (milliseconds)
-                KEY_SESSION_END_TIME + " INTEGER," + // Stored as Unix timestamp (milliseconds)
-                KEY_SESSION_STATUS + " TEXT," +
+                KEY_SESSION_START_TIME + " TIMESTAMP NOT NULL," + // Android Cookbook pdf page: 494
+                KEY_SESSION_END_TIME + " TIMESTAMP," +
+                KEY_SESSION_STATUS + " VARCHAR(15) NOT NULL," +
                 KEY_SESSION_TUTOR_REVIEW + " TEXT," +
                 KEY_SESSION_TUTEE_REVIEW + " TEXT," +
                 "FOREIGN KEY (" + KEY_SESSION_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
@@ -155,7 +156,8 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         String CREATE_PRIZES_TABLE = "CREATE TABLE " + TABLE_PRIZES +
                 "(" +
                 KEY_PRIZE_ID + " INTEGER PRIMARY KEY," +
-                KEY_PRIZE_NAME + " TEXT" +
+                KEY_PRIZE_NAME + " TEXT," +
+                KEY_PRIZE_COST + "REAL DEFAULT 1"+
                 ")";
 
         String CREATE_REDEEM_PRIZES_TABLE = "CREATE TABLE " + TABLE_REDEEM_PRIZES +
@@ -163,7 +165,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 KEY_REDEEM_ID + " INTEGER PRIMARY KEY," +
                 KEY_REDEEM_STUDENT_NUM + " INTEGER," +
                 KEY_REDEEM_PRIZE_ID + " INTEGER," +
-                KEY_REDEEM_STATUS + " TEXT," +
+                KEY_REDEEM_STATUS + " VARCHAR(10)," +
                 "FOREIGN KEY (" + KEY_REDEEM_STUDENT_NUM + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_REDEEM_PRIZE_ID + ") REFERENCES " + TABLE_PRIZES + "(" + KEY_PRIZE_ID + ")" +
                 ")";
@@ -176,7 +178,6 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_PRIZES_TABLE);
         db.execSQL(CREATE_REDEEM_PRIZES_TABLE);
     }
-
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion != newVersion) {
@@ -190,5 +191,20 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
             onCreate(db);
         }
+    }
+    public void dropAll(SQLiteDatabase db) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_REDEEM_PRIZES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRIZES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_RESOURCES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSIONS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER_SUBJECTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUBJECTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        onCreate(db);
+    }
+    public void dropTable(SQLiteDatabase db, String name) {
+        db.execSQL("DROP TABLE IF EXISTS " + name);
+        onCreate(db);
+
     }
 }
