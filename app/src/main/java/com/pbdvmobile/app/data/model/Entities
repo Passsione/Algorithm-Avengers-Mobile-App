@@ -32,9 +32,14 @@ User =
     String bankDetails;
 
 Subject = 
-    int subjectId;
+    int subjectId; // Id set to AUTO INCREMENT
     String subjectName;
+
+UserSubject =
+    int studentNum;
+    int subjectId;
     double mark;
+    // primary key is userId join subjectId
 
 Session = 
     enum Status {
@@ -44,20 +49,21 @@ Session =
         DECLINED,
         COMPLETED
     }
-    int id;
+    int id; // Id set to AUTO INCREMENT
     int tutorId; // Student number
     int tuteeId; // Student number
     int subjectId;
-    String location; // lat and long
+    String location; // lat and long JSON
     Date startTime;
     Date endTime;
     Status status;
     String tutorReview;
     String tuteeReview;
+    Double tutorRating;
+    Double tuteeRating;
 
-// all resources
 Resources =
-    int resourcesId
+    int resourcesId // Id set to AUTO INCREMENT
     String resource // url
     int tutorId
 
@@ -68,14 +74,13 @@ RedeemPrize =
         CANCELLED,
         DECLINED
     }
-    int redeemId;
+    int redeemId; // Id set to AUTO INCREMENT
     int studentNum;
-
     int prizeId
     Status status;
 
 Prize =
-    int prizeId;
+    int prizeId; // Id set to AUTO INCREMENT
     String prizeName;
     double creditCost;
 

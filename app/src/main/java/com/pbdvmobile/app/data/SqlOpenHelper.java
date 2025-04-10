@@ -4,6 +4,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import androidx.annotation.NonNull;
+
+// Android Cookbook pdf page: 485
 public class SqlOpenHelper extends SQLiteOpenHelper {
     // Database Info
     private static final String DATABASE_NAME = "PeerTutorDB";
@@ -20,7 +23,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String TABLE_PRIZES = "prizes";
     public static final String TABLE_REDEEM_PRIZES = "redeem_prizes";
     public static final String TABLE_USER_SUBJECTS = "user_subjects";
-//    public static final String TABLE_CHAT = "chats";
+//  public static final String TABLE_CHAT = "chats";
 
 
     // User Table Columns
@@ -42,7 +45,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     // Subject Table Columns
     public static final String KEY_SUBJECT_ID = "subject_id";
     public static final String KEY_SUBJECT_NAME = "subject_name";
-    public static final String KEY_SUBJECT_MARK = "mark";
+//    public static final String KEY_SUBJECT_MARK = "mark";
 
     // User-Subject Join Table Columns
     public static final String KEY_USER_SUBJECT_USER_ID = "user_id";
@@ -59,7 +62,9 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String KEY_SESSION_END_TIME = "end_time";
     public static final String KEY_SESSION_STATUS = "status";
     public static final String KEY_SESSION_TUTOR_REVIEW = "tutor_review";
+    public static final String KEY_SESSION_TUTOR_RATING= "tutor_rating";
     public static final String KEY_SESSION_TUTEE_REVIEW = "tutee_review";
+    public static final String KEY_SESSION_TUTEE_RATING = "tutee_rating";
 
     // Resources Table Columns
     public static final String KEY_RESOURCE_ID = "resource_id";
@@ -92,7 +97,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(@NonNull SQLiteDatabase db) {
         String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS +
                 "(" +
                 KEY_USER_STUDENT_NUM + " INTEGER PRIMARY KEY," +
@@ -106,14 +111,14 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 KEY_USER_TIER_LEVEL + " VARCHAR(25)," +
                 KEY_USER_AVERAGE_RATING + " REAL," +
                 KEY_USER_PROFILE_IMAGE_URL + " TEXT," +
-                KEY_USER_CREDITS + " REAL," +
+                KEY_USER_CREDITS + " REAL DEFAULT 10," +
                 KEY_USER_SUBJECTS + " TEXT," + // JSON string, Android Cookbook pdf page: 503
-                KEY_USER_BANK_DETAILS + " TEXT" +
+                KEY_USER_BANK_DETAILS + " TEXT" + // JSON string
                 ")";
 
         String CREATE_SUBJECTS_TABLE = "CREATE TABLE " + TABLE_SUBJECTS +
                 "(" +
-                KEY_SUBJECT_ID + " INTEGER PRIMARY KEY," +
+                KEY_SUBJECT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_SUBJECT_NAME + " TEXT" +
 
                 ")";
@@ -130,7 +135,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
 
         String CREATE_SESSIONS_TABLE = "CREATE TABLE " + TABLE_SESSIONS +
                 "(" +
-                KEY_SESSION_ID + " INTEGER PRIMARY KEY," +
+                KEY_SESSION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_SESSION_TUTOR_ID + " INTEGER NOT NULL," +
                 KEY_SESSION_TUTEE_ID + " INTEGER NOT NULL," +
                 KEY_SESSION_SUBJECT_ID + " INTEGER NOT NULL," +
@@ -139,6 +144,8 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 KEY_SESSION_END_TIME + " TIMESTAMP," +
                 KEY_SESSION_STATUS + " VARCHAR(15) NOT NULL," +
                 KEY_SESSION_TUTOR_REVIEW + " TEXT," +
+                KEY_SESSION_TUTEE_RATING + "REAL,"+
+                KEY_SESSION_TUTOR_RATING + "REAL,"+
                 KEY_SESSION_TUTEE_REVIEW + " TEXT," +
                 "FOREIGN KEY (" + KEY_SESSION_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_SESSION_TUTEE_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
@@ -147,7 +154,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
 
         String CREATE_RESOURCES_TABLE = "CREATE TABLE " + TABLE_RESOURCES +
                 "(" +
-                KEY_RESOURCE_ID + " INTEGER PRIMARY KEY," +
+                KEY_RESOURCE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_RESOURCE_URL + " TEXT," +
                 KEY_RESOURCE_TUTOR_ID + " INTEGER," +
                 "FOREIGN KEY (" + KEY_RESOURCE_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")" +
@@ -155,17 +162,17 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
 
         String CREATE_PRIZES_TABLE = "CREATE TABLE " + TABLE_PRIZES +
                 "(" +
-                KEY_PRIZE_ID + " INTEGER PRIMARY KEY," +
+                KEY_PRIZE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_PRIZE_NAME + " TEXT," +
                 KEY_PRIZE_COST + "REAL DEFAULT 1"+
                 ")";
 
         String CREATE_REDEEM_PRIZES_TABLE = "CREATE TABLE " + TABLE_REDEEM_PRIZES +
                 "(" +
-                KEY_REDEEM_ID + " INTEGER PRIMARY KEY," +
+                KEY_REDEEM_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_REDEEM_STUDENT_NUM + " INTEGER," +
                 KEY_REDEEM_PRIZE_ID + " INTEGER," +
-                KEY_REDEEM_STATUS + " VARCHAR(10)," +
+                KEY_REDEEM_STATUS + " VARCHAR(10) DEFAULT 'PENDING'," +
                 "FOREIGN KEY (" + KEY_REDEEM_STUDENT_NUM + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_REDEEM_PRIZE_ID + ") REFERENCES " + TABLE_PRIZES + "(" + KEY_PRIZE_ID + ")" +
                 ")";
@@ -192,7 +199,10 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
             onCreate(db);
         }
     }
-    public void dropAll(SQLiteDatabase db) {
+    public void dropDB(SQLiteDatabase db) {
+//        db.execSQL("DROP DATABASE IF EXISTS " + DATABASE_NAME);
+    }
+    public void dropAll(@NonNull SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_REDEEM_PRIZES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRIZES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_RESOURCES);
@@ -202,7 +212,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
         onCreate(db);
     }
-    public void dropTable(SQLiteDatabase db, String name) {
+    public void dropTable(@NonNull SQLiteDatabase db, String name) {
         db.execSQL("DROP TABLE IF EXISTS " + name);
         onCreate(db);
 
