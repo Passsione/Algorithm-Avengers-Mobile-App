@@ -6,11 +6,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.pbdvmobile.app.R;
-import com.pbdvmobile.app.fragments.DashboardFragment;
-import com.pbdvmobile.app.fragments.ProfileFragment;
-import com.pbdvmobile.app.fragments.SearchFragment;
-import com.pbdvmobile.app.fragments.SessionsFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,48 +64,4 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }*/
 
-    private BottomNavigationView bottomNavigationView;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(
-                new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        Fragment selectedFragment = null;
-
-                        switch (item.getItemId()) {
-                            case R.id.nav_dashboard:
-                                selectedFragment = new DashboardFragment();
-                                break;
-                            case R.id.nav_search:
-                                selectedFragment = new SearchFragment();
-                                break;
-                            case R.id.nav_sessions:
-                                selectedFragment = new SessionsFragment();
-                                break;
-                            case R.id.nav_profile:
-                                selectedFragment = new ProfileFragment();
-                                break;
-                        }
-
-                        if (selectedFragment != null) {
-                            getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.fragment_container, selectedFragment)
-                                    .commit();
-                        }
-
-                        return true;
-                    }
-                });
-
-        // Set default fragment
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new DashboardFragment())
-                .commit();
-    }
 }

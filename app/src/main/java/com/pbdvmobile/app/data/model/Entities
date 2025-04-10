@@ -1,0 +1,82 @@
+
+User =
+    enum TierLevel {
+        BASIC,
+        PREMIUM,
+        VIP
+    }
+    enum EduLevel {
+        HIGHER_CERF,
+        BACHELOR,
+        ADV_DIP,
+        DIP,
+        POSTGRAD,
+        HONOURS,
+        MASTER,
+        PHD
+    }
+
+    int studentNum;
+    String firstName;
+    String lastName;
+    String email;
+    String password;
+    String bio;
+    EduLevel educationLevel;
+    bool tutor; // is the user a tutor?
+    TierLevel tierLevel;
+    double averageRating;
+    String profileImageUrl;
+    double credits; // credits are earned by tutoring
+    String subjects; // JSON toString
+    String bankDetails;
+
+Subject = 
+    int subjectId;
+    String subjectName;
+    double mark;
+
+Session = 
+    enum Status {
+        PENDING,
+        CONFIRMED,
+        CANCELLED,
+        DECLINED,
+        COMPLETED
+    }
+    int id;
+    int tutorId; // Student number
+    int tuteeId; // Student number
+    int subjectId;
+    String location; // lat and long
+    Date startTime;
+    Date endTime;
+    Status status;
+    String tutorReview;
+    String tuteeReview;
+
+// all resources
+Resources =
+    int resourcesId
+    String resource // url
+    int tutorId
+
+RedeemPrize =
+    enum Status {
+        PENDING,
+        CONFIRMED,
+        CANCELLED,
+        DECLINED
+    }
+    int redeemId;
+    int studentNum;
+
+    int prizeId
+    Status status;
+
+Prize =
+    int prizeId;
+    String prizeName;
+
+
+
