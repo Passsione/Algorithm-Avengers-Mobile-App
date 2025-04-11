@@ -22,6 +22,7 @@ public class ResourceDao {
         ContentValues values = new ContentValues();
         values.put(SqlOpenHelper.KEY_RESOURCE_URL, resource.getResource());
         values.put(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID, resource.getTutorId());
+        values.put(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID, resource.getSubjectId());
 
         long id = db.insert(SqlOpenHelper.TABLE_RESOURCES, null, values);
         db.close();
@@ -43,6 +44,7 @@ public class ResourceDao {
             resource.setResourcesId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_ID)));
             resource.setResource(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_URL)));
             resource.setTutorId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID)));
+            resource.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID)));
             cursor.close();
         }
         db.close();
@@ -65,6 +67,7 @@ public class ResourceDao {
                 resource.setResourcesId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_ID)));
                 resource.setResource(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_URL)));
                 resource.setTutorId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID)));
+                resource.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID)));
                 resources.add(resource);
             } while (cursor.moveToNext());
         }

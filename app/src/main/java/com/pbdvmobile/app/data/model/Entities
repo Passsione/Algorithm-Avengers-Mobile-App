@@ -66,6 +66,7 @@ Resources =
     int resourcesId // Id set to AUTO INCREMENT
     String resource // url
     int tutorId
+    int SubjectId
 
 RedeemPrize =
     enum Status {
@@ -84,5 +85,8 @@ Prize =
     String prizeName;
     double creditCost;
 
-
+ChatRoom =
+     int tutorId;
+     int tuteeId;
+     // primary key is userId join subjectId
 

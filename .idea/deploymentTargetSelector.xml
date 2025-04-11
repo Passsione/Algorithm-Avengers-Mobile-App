@@ -13,7 +13,7 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="Admin">
+      <SelectionState runConfigName="admin">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

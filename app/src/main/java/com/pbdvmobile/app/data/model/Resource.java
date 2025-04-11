@@ -4,14 +4,16 @@ public class Resource {
     private int resourcesId;// Id set to AUTO INCREMENT
     private String resource; // url
     private int tutorId;
+    private int subjectId;
 
     // Constructor
     public Resource() {
     }
 
-    public Resource(int tutorId, String resLink) {
+    public Resource(int tutorId, int subjectId, String resLink) {
         this.tutorId = tutorId;
         this.resource = resLink;
+        this.subjectId = subjectId;
     }
 
     // Getters and Setters
@@ -21,6 +23,13 @@ public class Resource {
 
     public void setResourcesId(int resourcesId) {
         this.resourcesId = resourcesId;
+    }
+    public int getSubjectId() {
+        return subjectId;
+    }
+
+    public void setSubjectId(int subId) {
+        this.subjectId = subId;
     }
 
     public String getResource() {

@@ -1,24 +1,18 @@
-package com.pbdvmobile.app.ui;
+package com.pbdvmobile.app;
 
 import android.os.Bundle;
 
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
-import com.pbdvmobile.app.R;
+import com.google.android.material.snackbar.Snackbar;
 import com.pbdvmobile.app.data.model.User;
 import com.pbdvmobile.app.databinding.ActivityMainBinding;
 import com.pbdvmobile.app.data.DataManager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,16 +34,25 @@ public class MainActivity extends AppCompatActivity {
 
         // Now you can use the DAOs for database operations
         // For example, to add a new user:
-        /*User newUser = new User(22323801, "Mogale", "Tshehla");
+        /*User newUser = new User(22323809, "Mogale", "Tshehla");
         newUser.setAverageRating(10);
         newUser.setBio("Testing that the database works");
         newUser.setCredits(14);
-        newUser.setEmail("22323801@dut4life.ac.za");
+        newUser.setEmail("22323809@dut4life.ac.za");
         newUser.setPassword("password1");
         newUser.setEducationLevel(User.EduLevel.BACHELOR);
         long result = dataManager.getUserDao().insertUser(newUser);
         if (result > 0) {
             // User added successfully
+
+            binding.fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Snackbar.make(view, "USer added", Snackbar.LENGTH_LONG)
+                            .setAnchorView(R.id.fab)
+                            .setAction("Action", null).show();
+                }
+            });
         }*/
         //testing updating
         /*

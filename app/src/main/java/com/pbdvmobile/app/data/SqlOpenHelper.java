@@ -70,6 +70,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String KEY_RESOURCE_ID = "resource_id";
     public static final String KEY_RESOURCE_URL = "resource_url";
     public static final String KEY_RESOURCE_TUTOR_ID = "tutor_id";
+    public static final String KEY_RESOURCE_SUBJECT_ID = "subject_id";
 
     // Prize Table Columns
     public static final String KEY_PRIZE_ID = "prize_id";
@@ -157,7 +158,9 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 KEY_RESOURCE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_RESOURCE_URL + " TEXT," +
                 KEY_RESOURCE_TUTOR_ID + " INTEGER," +
-                "FOREIGN KEY (" + KEY_RESOURCE_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")" +
+                KEY_RESOURCE_SUBJECT_ID + " INTEGER," +
+                "FOREIGN KEY (" + KEY_RESOURCE_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
+                "FOREIGN KEY (" + KEY_RESOURCE_SUBJECT_ID + ") REFERENCES " + TABLE_SUBJECTS + "(" + KEY_SUBJECT_ID + ")" +
                 ")";
 
         String CREATE_PRIZES_TABLE = "CREATE TABLE " + TABLE_PRIZES +
