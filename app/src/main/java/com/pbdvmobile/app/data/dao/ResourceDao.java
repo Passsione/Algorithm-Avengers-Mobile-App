@@ -101,7 +101,6 @@ public class ResourceDao {
         return rowsAffected;
     }
 
-
     public int deleteResource(int resourceId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         int rowsAffected = db.delete(SqlOpenHelper.TABLE_RESOURCES,

@@ -34,81 +34,54 @@ public class MainActivity extends AppCompatActivity {
 
         // Now you can use the DAOs for database operations
         // For example, to add a new user:
-        /*User newUser = new User(22323809, "Mogale", "Tshehla");
-        newUser.setAverageRating(10);
-        newUser.setBio("Testing that the database works");
+        /*User newUser = new User(22323800, "Mohale", "Tshehla");
+        newUser.setAverageRating(5);
+        newUser.setBio("I like yellow");
         newUser.setCredits(14);
-        newUser.setEmail("22323809@dut4life.ac.za");
+        newUser.setEmail("22323800@dut4life.ac.za");
         newUser.setPassword("password1");
-        newUser.setEducationLevel(User.EduLevel.BACHELOR);
+        newUser.setEducationLevel(User.EduLevel.DIP);
         long result = dataManager.getUserDao().insertUser(newUser);
-        if (result > 0) {
-            // User added successfully
-
-            binding.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Snackbar.make(view, "USer added", Snackbar.LENGTH_LONG)
-                            .setAnchorView(R.id.fab)
-                            .setAction("Action", null).show();
-                }
-            });
-        }*/
-        //testing updating
-        /*
-
-        User mogaleUser = dataManager.getUserDao().getUserById(22323809);
-        int mogaleUpdate = dataManager.getUserDao().updateUserEmail(22323809, "22323809@dut4life.ac.za");
-        User mogaleUser1 = dataManager.getUserDao().getUserById(22323809);
-
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Teaster ", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, result > 0? "USer added" : "Failed add", Snackbar.LENGTH_LONG)
+                        .setAnchorView(R.id.fab)
+                        .setAction("Action", null).show();
+            }
+        });*/
+
+        //testing updating
+        /*
+        User mogaleUser = dataManager.getUserDao().getUserById(22323809);
+        int updateId = dataManager.getUserDao().updateUserEmail(22323809, "22323809@dut4life.ac.za");
+        User mogaleUser1 = dataManager.getUserDao().getUserById(22323809);
+
+        // User found successfully
+        binding.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, updateId > 0 ? "Welcome "+mogaleUser.getStudentNum()+
+                                " old email: "+mogaleUser.getEmail()+
+                                " new email: " + mogaleUser1.getEmail() : "Update fail", Snackbar.LENGTH_LONG)
                         .setAnchorView(R.id.fab)
                         .setAction("Action", null).show();
             }
         });
-        if (mogaleUpdate != -1) {
-            // User found successfully
-            binding.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Snackbar.make(view, "Welcome "+mogaleUser.getStudentNum()+
-                                    " old email: "+mogaleUser.getEmail()+
-                                    " new email: " + mogaleUser1.getEmail(), Snackbar.LENGTH_LONG)
-                            .setAnchorView(R.id.fab)
-                            .setAction("Action", null).show();
-                }
-            });
-        }else{
-            binding.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Snackbar.make(view, "Not found ", Snackbar.LENGTH_LONG)
-                            .setAnchorView(R.id.fab)
-                            .setAction("Action", null).show();
-                }
-            });
-        }
 */
+
         // Deleting works too
-        /*
-        int index = dataManager.getUserDao().deleteUser(22323801);
-        if(index != -1){
-            // User deleted successfully
-            binding.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Snackbar.make(view, "deleted user at index "+ index, Snackbar.LENGTH_LONG)
-                            .setAnchorView(R.id.fab)
-                            .setAction("Action", null).show();
-                }
-            });
-        }*/
+        int index = dataManager.getUserDao().deleteUser(22323800);
 
-
-
+        // User deleted successfully
+     /*   binding.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, index > 0 ?"deleted user at index "+ index : "Error deleteing" , Snackbar.LENGTH_LONG)
+                        .setAnchorView(R.id.fab)
+                        .setAction("Action", null).show();
+            }
+        });*/
     }
 
     @Override

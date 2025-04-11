@@ -47,6 +47,7 @@ public class UserDao {
     }
 
     public User getUserById(int studentNum) {
+
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         Cursor cursor = db.query(SqlOpenHelper.TABLE_USERS,
