@@ -54,7 +54,10 @@ public class DataManager {
 
     // Sample usage in activity
     public void initialize() {
+
         // This method would be called once when the app starts
         // It can handle any initial database setup or data insertion
+
+
     }
 }
