@@ -34,21 +34,13 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.toolbar);
 
-   /*     binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });
-*/
+
         // Get DataManager instance
         DataManager dataManager = DataManager.getInstance(this);
 
-        /*// Now you can use the DAOs for database operations
+        // Now you can use the DAOs for database operations
         // For example, to add a new user:
-        User newUser = new User(22323801, "Mogale", "Tshehla");
+        /*User newUser = new User(22323801, "Mogale", "Tshehla");
         newUser.setAverageRating(10);
         newUser.setBio("Testing that the database works");
         newUser.setCredits(14);
@@ -59,12 +51,21 @@ public class MainActivity extends AppCompatActivity {
         if (result > 0) {
             // User added successfully
         }*/
-
         //testing updating
+        /*
+
         User mogaleUser = dataManager.getUserDao().getUserById(22323809);
         int mogaleUpdate = dataManager.getUserDao().updateUserEmail(22323809, "22323809@dut4life.ac.za");
         User mogaleUser1 = dataManager.getUserDao().getUserById(22323809);
 
+        binding.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Teaster ", Snackbar.LENGTH_LONG)
+                        .setAnchorView(R.id.fab)
+                        .setAction("Action", null).show();
+            }
+        });
         if (mogaleUpdate != -1) {
             // User found successfully
             binding.fab.setOnClickListener(new View.OnClickListener() {
@@ -77,9 +78,19 @@ public class MainActivity extends AppCompatActivity {
                             .setAction("Action", null).show();
                 }
             });
+        }else{
+            binding.fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Snackbar.make(view, "Not found ", Snackbar.LENGTH_LONG)
+                            .setAnchorView(R.id.fab)
+                            .setAction("Action", null).show();
+                }
+            });
         }
-
-        /*// Deleting works too
+*/
+        // Deleting works too
+        /*
         int index = dataManager.getUserDao().deleteUser(22323801);
         if(index != -1){
             // User deleted successfully
