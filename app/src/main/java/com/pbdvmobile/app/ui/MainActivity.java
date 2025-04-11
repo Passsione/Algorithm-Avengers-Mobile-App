@@ -60,21 +60,38 @@ public class MainActivity extends AppCompatActivity {
             // User added successfully
         }*/
 
-        User mogaleUser = dataManager.getUserDao().getUserById(22323801);
+        //testing updating
+        User mogaleUser = dataManager.getUserDao().getUserById(22323809);
+        int mogaleUpdate = dataManager.getUserDao().updateUserEmail(22323809, "22323809@dut4life.ac.za");
+        User mogaleUser1 = dataManager.getUserDao().getUserById(22323809);
 
-        if (mogaleUser != null) {
+        if (mogaleUpdate != -1) {
             // User found successfully
             binding.fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Snackbar.make(view, "Welcome "+mogaleUser.getFirstName()+
-                                    " password: "+mogaleUser.getPassword()+
-                                    " Email: " + mogaleUser.getEmail(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, "Welcome "+mogaleUser.getStudentNum()+
+                                    " old email: "+mogaleUser.getEmail()+
+                                    " new email: " + mogaleUser1.getEmail(), Snackbar.LENGTH_LONG)
                             .setAnchorView(R.id.fab)
                             .setAction("Action", null).show();
                 }
             });
         }
+
+        /*// Deleting works too
+        int index = dataManager.getUserDao().deleteUser(22323801);
+        if(index != -1){
+            // User deleted successfully
+            binding.fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Snackbar.make(view, "deleted user at index "+ index, Snackbar.LENGTH_LONG)
+                            .setAnchorView(R.id.fab)
+                            .setAction("Action", null).show();
+                }
+            });
+        }*/
 
 
 

@@ -128,6 +128,18 @@ public class UserDao {
         return rowsAffected;
     }
 
+    public int updateUserEmail(@NonNull int id, String email) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(SqlOpenHelper.KEY_USER_EMAIL, email);
+
+        int rowsAffected = db.update(SqlOpenHelper.TABLE_USERS, values,
+                SqlOpenHelper.KEY_USER_STUDENT_NUM + "=?",
+                new String[]{String.valueOf(id)});
+        db.close();
+        return rowsAffected;
+    }
     public int deleteUser(int studentNum) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         int rowsAffected = db.delete(SqlOpenHelper.TABLE_USERS,
