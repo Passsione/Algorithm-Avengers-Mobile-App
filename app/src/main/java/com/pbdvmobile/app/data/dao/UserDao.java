@@ -141,6 +141,7 @@ public class UserDao {
         db.close();
         return rowsAffected;
     }
+
     public int deleteUser(int studentNum) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         int rowsAffected = db.delete(SqlOpenHelper.TABLE_USERS,

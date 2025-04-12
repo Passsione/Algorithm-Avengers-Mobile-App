@@ -1,5 +1,6 @@
 package com.pbdvmobile.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.ui.AppBarConfiguration;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.pbdvmobile.app.data.LoggedUser;
 import com.pbdvmobile.app.data.model.User;
 import com.pbdvmobile.app.databinding.ActivityMainBinding;
 import com.pbdvmobile.app.data.DataManager;
@@ -18,19 +20,27 @@ public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
+    DataManager dataManager;
+    private LoggedUser current_user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        dataManager = DataManager.getInstance(this);
+        current_user = LoggedUser.getInstance(dataManager);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
         setSupportActionBar(binding.toolbar);
 
 
-        // Get DataManager instance
-        DataManager dataManager = DataManager.getInstance(this);
+//        Button btnNavigate = findViewById(R.id.btnNavigate);
+        User mogale = new User(22323809, "Mogale", "Tshehla");
+        mogale.setEmail("22323809@dut4life.ac.za");
+        mogale.setPassword("password1");
+
+
 
         // Now you can use the DAOs for database operations
         // For example, to add a new user:
@@ -71,10 +81,9 @@ public class MainActivity extends AppCompatActivity {
 */
 
         // Deleting works too
-        int index = dataManager.getUserDao().deleteUser(22323800);
-
         // User deleted successfully
-     /*   binding.fab.setOnClickListener(new View.OnClickListener() {
+        /*int index = dataManager.getUserDao().deleteUser(22323800);
+     binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, index > 0 ?"deleted user at index "+ index : "Error deleteing" , Snackbar.LENGTH_LONG)
@@ -106,5 +115,13 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public boolean LoggedIn(User user){
+        if (current_user.getUser() != null) {
+            Intent intent = new Intent(MainActivity.this, LogInActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return false;
+    }
 
 }
