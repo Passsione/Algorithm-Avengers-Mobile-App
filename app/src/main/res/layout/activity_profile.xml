@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ProfileActivity">
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save changes"
+        tools:layout_editor_absoluteX="59dp"
+        tools:layout_editor_absoluteY="625dp" />
+
+    <EditText
+        android:id="@+id/editTextText3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Name"
+        tools:layout_editor_absoluteX="108dp"
+        tools:layout_editor_absoluteY="190dp" />
+
+    <EditText
+        android:id="@+id/editTextText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Password"
+        tools:layout_editor_absoluteX="114dp"
+        tools:layout_editor_absoluteY="324dp" />
+
+    <EditText
+        android:id="@+id/editTextText4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Surname"
+        tools:layout_editor_absoluteX="108dp"
+        tools:layout_editor_absoluteY="256dp" />
+
+    <EditText
+        android:id="@+id/editTextText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Re Enter password"
+        tools:layout_editor_absoluteX="114dp"
+        tools:layout_editor_absoluteY="395dp" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hi, First Name"
+        tools:layout_editor_absoluteX="161dp"
+        tools:layout_editor_absoluteY="171dp" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="144dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@tools:sample/avatars" />
+
+    <Switch
+        android:id="@+id/switch2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tutor Status"
+        tools:layout_editor_absoluteX="144dp"
+        tools:layout_editor_absoluteY="588dp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Feel like upgrading your account?"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="673dp" />
+
+    <EditText
+        android:id="@+id/editTextTextMultiLine"
+        android:layout_width="275dp"
+        android:layout_height="123dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="Payment Details"
+        android:inputType="textMultiLine"
+        tools:layout_editor_absoluteX="68dp"
+        tools:layout_editor_absoluteY="453dp" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Log Out"
+        tools:layout_editor_absoluteX="272dp"
+        tools:layout_editor_absoluteY="644dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

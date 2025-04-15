@@ -3,44 +3,35 @@ package com.pbdvmobile.app;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
-import androidx.navigation.ui.AppBarConfiguration;
-
-import com.google.android.material.snackbar.Snackbar;
-import com.pbdvmobile.app.data.LoggedUser;
-import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.databinding.ActivityMainBinding;
 import com.pbdvmobile.app.data.DataManager;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
+import com.pbdvmobile.app.data.LogInUser;
 
 public class MainActivity extends AppCompatActivity {
-
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
-    DataManager dataManager;
-    private LoggedUser current_user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
-        dataManager = DataManager.getInstance(this);
-        current_user = LoggedUser.getInstance(dataManager);
+        DataManager dataManager = DataManager.getInstance(this);
+        LogInUser current_user = LogInUser.getInstance(dataManager);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        setSupportActionBar(binding.toolbar);
-
-
-//        Button btnNavigate = findViewById(R.id.btnNavigate);
-        User mogale = new User(22323809, "Mogale", "Tshehla");
-        mogale.setEmail("22323809@dut4life.ac.za");
-        mogale.setPassword("password1");
-
-
+        if(!current_user.isLoggedIn()){ // Go to log-in page
+            Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
+            startActivity(toLogin);
+        }
 
         // Now you can use the DAOs for database operations
         // For example, to add a new user:
@@ -92,36 +83,4 @@ public class MainActivity extends AppCompatActivity {
             }
         });*/
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    public boolean LoggedIn(User user){
-        if (current_user.getUser() != null) {
-            Intent intent = new Intent(MainActivity.this, LogInActivity.class);
-            startActivity(intent);
-            return true;
-        }
-        return false;
-    }
-
 }

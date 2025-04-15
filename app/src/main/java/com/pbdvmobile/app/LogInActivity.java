@@ -1,52 +1,80 @@
 package com.pbdvmobile.app;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.snackbar.Snackbar;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.pbdvmobile.app.databinding.ActivityLogInBinding;
+import com.pbdvmobile.app.data.DataManager;
+import com.pbdvmobile.app.data.LogInUser;
+import com.pbdvmobile.app.data.model.User;
 
 public class LogInActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityLogInBinding binding;
+    TextView signUp, flash;
+    Button logIn;
+    EditText email, password;
+
+    DataManager dataManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_log_in);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+        // database connection
+        dataManager = DataManager.getInstance(this);
+        LogInUser current_user = LogInUser.getInstance(dataManager);
 
-        binding = ActivityLogInBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.toolbar);
+        // Finding the elements on the front end
+        signUp = findViewById(R.id.txtSignUp);
+        logIn = findViewById(R.id.btnLogIn);
+        email = findViewById(R.id.edtSignUpEmail);
+        password = findViewById(R.id.edtPassword);
+        flash = findViewById(R.id.txtError);
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_log_in);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
+        // Switching to Log In
+        logIn.setOnClickListener((v) -> {
+            if(dataManager.required(email, password)) { // Check if edits are filled in
+
+                User user = dataManager.getUserDao().getUserByEmail(email.getText().toString());
+
+                    if (current_user.logIn(user)) { // is user in database?
+                        Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
+                        startActivity(toLanding);
+                    } else {
+                        Snackbar.make(v, "Log in information incorrect", Snackbar.LENGTH_LONG)
+                                .setAnchorView(flash)
+                                .setAction("Action", null).show();
+                    }
+            }else{
+                Snackbar.make(v, "Please fill all the field", Snackbar.LENGTH_LONG)
+                        .setAnchorView(flash)
                         .setAction("Action", null).show();
             }
         });
-    }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_log_in);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
+        // Switching to Sign Up
+        signUp.setOnClickListener((v) -> {
+            Intent toSignUp = new Intent(LogInActivity.this, SignUpActivity.class);
+            startActivity(toSignUp);
+        });
+
+
     }
 }

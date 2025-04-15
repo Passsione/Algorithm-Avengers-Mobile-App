@@ -1,6 +1,6 @@
 
 User =
-    enum TierLevel {
+    enum TierLevel { // 
         BASIC,
         PREMIUM,
         VIP
@@ -90,3 +90,4 @@ ChatRoom =
      int tuteeId;
      // primary key is userId join subjectId
 
+l

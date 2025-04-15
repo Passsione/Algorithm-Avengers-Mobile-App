@@ -1,11 +1,16 @@
 package com.pbdvmobile.app.data;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.view.View;
+import android.widget.EditText;
 
 import com.pbdvmobile.app.data.dao.PrizeDao;
 import com.pbdvmobile.app.data.dao.ResourceDao;
 import com.pbdvmobile.app.data.dao.SessionDao;
 import com.pbdvmobile.app.data.dao.SubjectDao;
 import com.pbdvmobile.app.data.dao.UserDao;
+
+import java.util.regex.Pattern;
 
 public class DataManager {
     private static DataManager instance;
@@ -60,4 +65,19 @@ public class DataManager {
 
 
     }
+
+    public boolean required(EditText...args){
+        for (EditText et: args) {
+            if(et.getText().toString().isEmpty()){
+//                et.setError("Fill in");
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean validDut(String email){
+        Pattern pattern = Pattern.compile("[0-9]{8}+@dut4life.ac.za");
+        return pattern.matcher(email).matches();
+    }
+
 }

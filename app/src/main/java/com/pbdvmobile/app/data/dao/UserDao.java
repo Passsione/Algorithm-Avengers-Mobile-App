@@ -46,7 +46,7 @@ public class UserDao {
         return id;
     }
 
-    public User getUserById(int studentNum) {
+    public User getUserByStudentNum(int studentNum) {
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
