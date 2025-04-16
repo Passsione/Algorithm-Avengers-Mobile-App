@@ -52,16 +52,15 @@ public class LogInActivity extends AppCompatActivity {
         logIn.setOnClickListener((v) -> {
             if(dataManager.required(email, password)) { // Check if edits are filled in
 
-                User user = dataManager.getUserDao().getUserByEmail(email.getText().toString());
-
-                    if (current_user.logIn(user)) { // is user in database?
-                        Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
-                        startActivity(toLanding);
-                    } else {
-                        Snackbar.make(v, "Log in information incorrect", Snackbar.LENGTH_LONG)
-                                .setAnchorView(flash)
-                                .setAction("Action", null).show();
-                    }
+                if (current_user.logIn(email.getText().toString(), password.getText().toString())) {
+                    // is user in database?
+                    Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
+                    startActivity(toLanding);
+                } else {
+                    Snackbar.make(v, "Log in information incorrect", Snackbar.LENGTH_LONG)
+                            .setAnchorView(flash)
+                            .setAction("Action", null).show();
+                }
             }else{
                 Snackbar.make(v, "Please fill all the field", Snackbar.LENGTH_LONG)
                         .setAnchorView(flash)

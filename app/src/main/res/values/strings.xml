@@ -1,12 +1,52 @@
 <resources>
     <string name="app_name">PBDV Mobile App</string>
     <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
 
+
+    <!-- Navigation Drawer -->
+    <string name="nav_open">Open navigation drawer</string>
+    <string name="nav_close">Close navigation drawer</string>
+
+    <!-- Tab Titles -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_explorer">Explorer</string>
+    <string name="tab_resources">Resources</string>
+
+    <!-- Dashboard Tab -->
+    <string name="upcoming_sessions">Upcoming Sessions</string>
+    <string name="pending_sessions">Pending Sessions</string>
+    <string name="no_upcoming_sessions">No upcoming sessions scheduled</string>
+    <string name="no_pending_sessions">No pending session requests</string>
+    <string name="join">Join</string>
+    <string name="reschedule">Reschedule</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Explorer Tab -->
+    <string name="search_tutors">Search tutors by name, subject, etc.</string>
+    <string name="filters">Filters</string>
+    <string name="minimum_rating">Minimum Rating</string>
+    <string name="subject">Subject</string>
+    <string name="education_level">Education Level</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="request">Request</string>
+    <string name="per_hour">%1$s/hour</string>
+
+    <!-- Resources Tab -->
+    <string name="filter_by">Filter by</string>
+    <string name="sort_by">Sort by</string>
+    <string name="math_resources">Mathematics Resources</string>
+    <string name="physics_resources">Physics Resources</string>
+    <string name="chemistry_resources">Chemistry Resources</string>
+    <string name="toggle_visibility">Toggle visibility</string>
+    <string name="title">Title</string>
+    <string name="type">Type</string>
+    <string name="tutor">Tutor</string>
+    <string name="download">Download</string>
+    <string name="no_resources">No resources available</string>
+
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="error_occurred">An error occurred. Please try again.</string>
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
@@ -43,6 +83,8 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_login">LoginActivity</string>

@@ -23,15 +23,14 @@ public class LogInUser {
     public User getUser(){return user;}
     public void setUser(User user){this.user = user;}
 
-    public boolean logIn(User user){
-        if(user != null) {
-            User attempt = dataManager.getUserDao().getUserByEmail(user.getEmail());
-            if (attempt != null && Objects.equals(attempt.getPassword(), user.getPassword())) {
-                this.user = user;
-                return true;
-            }
-            return false;
-        }return false;
+    public boolean logIn(String email, String password){
+
+        User attempt = dataManager.getUserDao().getUserByEmail(email);
+        if (attempt != null && Objects.equals(attempt.getPassword(), password)) {
+            this.user = attempt;
+            return true;
+        }
+        return false;
     }
     public void logOut(){this.user = null;}
     public boolean isLoggedIn(){return this.user != null;}

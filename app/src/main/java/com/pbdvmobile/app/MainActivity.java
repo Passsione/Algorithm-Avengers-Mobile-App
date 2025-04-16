@@ -33,54 +33,5 @@ public class MainActivity extends AppCompatActivity {
             startActivity(toLogin);
         }
 
-        // Now you can use the DAOs for database operations
-        // For example, to add a new user:
-        /*User newUser = new User(22323800, "Mohale", "Tshehla");
-        newUser.setAverageRating(5);
-        newUser.setBio("I like yellow");
-        newUser.setCredits(14);
-        newUser.setEmail("22323800@dut4life.ac.za");
-        newUser.setPassword("password1");
-        newUser.setEducationLevel(User.EduLevel.DIP);
-        long result = dataManager.getUserDao().insertUser(newUser);
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, result > 0? "USer added" : "Failed add", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });*/
-
-        //testing updating
-        /*
-        User mogaleUser = dataManager.getUserDao().getUserById(22323809);
-        int updateId = dataManager.getUserDao().updateUserEmail(22323809, "22323809@dut4life.ac.za");
-        User mogaleUser1 = dataManager.getUserDao().getUserById(22323809);
-
-        // User found successfully
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, updateId > 0 ? "Welcome "+mogaleUser.getStudentNum()+
-                                " old email: "+mogaleUser.getEmail()+
-                                " new email: " + mogaleUser1.getEmail() : "Update fail", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });
-*/
-
-        // Deleting works too
-        // User deleted successfully
-        /*int index = dataManager.getUserDao().deleteUser(22323800);
-     binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, index > 0 ?"deleted user at index "+ index : "Error deleteing" , Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });*/
     }
 }

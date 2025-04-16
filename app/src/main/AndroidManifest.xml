@@ -13,9 +13,6 @@
         android:theme="@style/Theme.PBDVMobileApp"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity2"
-            android:exported="false" />
-        <activity
             android:name=".ProfileActivity"
             android:exported="false" />
         <activity
@@ -25,17 +22,6 @@
             android:name=".LogInActivity"
             android:exported="false"
             android:theme="@style/Theme.PBDVMobileApp" />
-        <activity
-            android:name=".ui.admin.AdminMain"
-            android:exported="true"
-            android:label="@string/title_activity_admin_main"
-            android:theme="@style/Theme.PBDVMobileApp.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true"

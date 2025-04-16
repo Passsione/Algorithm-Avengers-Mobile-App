@@ -2,4 +2,17 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#344052</color>
+    <color name="primary_light">#BBDEFB</color>
+    <color name="accent">#FF4081</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+    <color name="icons">#FFFFFF</color>
+    <color name="divider">#BDBDBD</color>
+    <color name="status_confirmed">#4CAF50</color>
+    <color name="status_pending">#FFC107</color>
+    <color name="status_canceled">#F44336</color>
+    <color name="background_light">#F5F5F5</color>
 </resources>
