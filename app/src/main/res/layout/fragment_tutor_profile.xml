@@ -252,7 +252,6 @@
                                 <ImageView
                                     android:layout_width="36dp"
                                     android:layout_height="36dp"
-                                    android:src="@drawable/ic_education"
                                     android:layout_gravity="top"
                                     android:layout_marginEnd="12dp" />
 
@@ -288,7 +287,6 @@
                                 <ImageView
                                     android:layout_width="36dp"
                                     android:layout_height="36dp"
-                                    android:src="@drawable/ic_education"
                                     android:layout_gravity="top"
                                     android:layout_marginEnd="12dp" />
 
@@ -368,12 +366,12 @@
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
                                 android:layout_marginBottom="4dp">
-
+<!--
                                 <de.hdodenhof.circleimageview.CircleImageView
                                     android:layout_width="32dp"
                                     android:layout_height="32dp"
                                     android:src="@drawable/avatar_default"
-                                    android:layout_marginEnd="8dp" />
+                                    android:layout_marginEnd="8dp" />-->
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -410,11 +408,13 @@
                                 android:gravity="center_vertical"
                                 android:layout_marginBottom="4dp">
 
+<!--
                                 <de.hdodenhof.circleimageview.CircleImageView
                                     android:layout_width="32dp"
                                     android:layout_height="32dp"
                                     android:src="@drawable/avatar_default"
                                     android:layout_marginEnd="8dp" />
+-->
 
                                 <TextView
                                     android:layout_width="0dp"
