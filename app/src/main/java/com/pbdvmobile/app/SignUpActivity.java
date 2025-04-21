@@ -55,30 +55,38 @@ public class SignUpActivity extends AppCompatActivity {
 
 
         // switching pages
+        // Sign Up new user
+        signUp.setOnClickListener((v) -> {
 
-        signUp.setOnClickListener((v) -> {// switching to Login
+            // all fields are filled in?
             if(dataManager.required(email, fName, lName, password, rePassword)){
-                // all fields are filled in?
 
                 String sEmail = email.getText().toString();
 
-                if(dataManager.validDut(sEmail)){ // is Valid DUT email?
+                // is Valid DUT email?
+                if(dataManager.validDut(sEmail)){
 
+                    // does email exist is database?
                     if(dataManager.getUserDao().getUserByEmail(sEmail) == null){
-                        // does email exist is database?
-
-                        int studentNum = dataManager.getStudentNum(sEmail);
-
-                        User user = new User(studentNum, fName.getText().toString(), lName.getText().toString());
-                        user.setEducationLevel(User.EduLevel.BACHELOR);
-                        user.setEmail(sEmail);
-
+                        // passwords match?
                         if(password.getText().toString().equals(rePassword.getText().toString())) {
-                            // passwords match?
+
+                            // gets student number from the email provided
+                            int studentNum = dataManager.retrieveStudentNum(sEmail);
+
+                            User user = new User(studentNum, fName.getText().toString(), lName.getText().toString());
+                            user.setEmail(sEmail);
+
+                            // random education level
+                            user.setEducationLevel(User.EduLevel.values()[dataManager.randomIndex(8)]);
 
                             user.setPassword(password.getText().toString());
                             user.setTutor(tutor.isChecked());
                             dataManager.getUserDao().insertUser(user);
+
+                            // randomly assign user subjects
+                            dataManager.fillUserSubject(studentNum);
+
 
                             // go to sign up
                             current_user.signedIn = sEmail;
@@ -103,7 +111,9 @@ public class SignUpActivity extends AppCompatActivity {
             }
 
         });
-        logIn.setOnClickListener((v) -> { // go to login page
+
+        // go to login page
+        logIn.setOnClickListener((v) -> {
             Intent toLogin = new Intent(SignUpActivity.this, LogInActivity.class);
             startActivity(toLogin);
         });

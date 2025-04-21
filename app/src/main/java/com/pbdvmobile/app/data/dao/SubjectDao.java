@@ -16,7 +16,7 @@ public class SubjectDao {
         this.dbHelper = dbHelper;
     }
 
-    // Subject model
+    // Subject section
     public long insertSubject(@NonNull Subject subject) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -68,6 +68,7 @@ public class SubjectDao {
         return subjects;
     }
 
+
     // User Subject section
 
     public long addUserSubject(@NonNull UserSubject userSubject) {
@@ -105,7 +106,26 @@ public class SubjectDao {
         db.close();
         return userSubjects;
     }
+    public List<UserSubject> getAllUserSubjects() {
+        List<UserSubject> subjects = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
 
+        Cursor cursor = db.query(SqlOpenHelper.TABLE_USER_SUBJECTS,
+                null, null, null, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                UserSubject subject = new UserSubject();
+                subject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
+                subject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
+                subject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
+                subjects.add(subject);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return subjects;
+    }
     public int updateUserSubjectMark(int userId, int subjectId, double mark) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -119,7 +139,6 @@ public class SubjectDao {
         db.close();
         return rowsAffected;
     }
-
     public int deleteUserSubject(int userId, int subjectId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         int rowsAffected = db.delete(SqlOpenHelper.TABLE_USER_SUBJECTS,

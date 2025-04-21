@@ -14,11 +14,7 @@ public class UserSubject {
         this.subjectId = subjectId;
         this.mark = mark;
     }
-    /*
-        public String getUserSubjectPK() {
-            return subjectId+","+userId;
-        }
-    */
+
     public int getUserId() {
         return userId;
     }

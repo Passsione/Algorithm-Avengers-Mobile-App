@@ -83,6 +83,24 @@ public class UserDao {
         return user;
     }
 
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        Cursor cursor = db.query(SqlOpenHelper.TABLE_USERS,
+                null,null, null,
+                null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                User user = cursorToUser(cursor);
+                users.add(user);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return users;
+    }
     public List<User> getAllTutors() {
         List<User> tutors = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -187,4 +205,6 @@ public class UserDao {
 
         return user;
     }
+
+
 }
