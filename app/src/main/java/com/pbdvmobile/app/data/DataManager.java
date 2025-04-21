@@ -1,5 +1,6 @@
 package com.pbdvmobile.app.data;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.EditText;
@@ -69,13 +70,14 @@ public class DataManager {
     }
 
     public boolean required(EditText...args){
+        boolean fill = true;
         for (EditText et: args) {
             if(et.getText().toString().isEmpty()){
-//                et.setError("Fill in");
-                return false;
+                et.setHintTextColor(Color.RED);
+                fill = false;
             }
         }
-        return true;
+        return fill;
     }
 
     public void displayError(View v, TextView anchor, String error){
@@ -88,4 +90,7 @@ public class DataManager {
         return pattern.matcher(email).matches();
     }
 
+    public int getStudentNum(String sEmail) {
+        return Integer.parseInt(sEmail.split("@")[0]);
+    }
 }

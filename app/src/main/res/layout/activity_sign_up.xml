@@ -103,4 +103,13 @@
         app:layout_constraintStart_toStartOf="@+id/edtSignUpLName"
         app:layout_constraintTop_toBottomOf="@+id/edtSignUpLName" />
 
+    <TextView
+        android:id="@+id/txtError"
+        android:layout_width="0dp"
+        android:layout_height="63dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="68dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>

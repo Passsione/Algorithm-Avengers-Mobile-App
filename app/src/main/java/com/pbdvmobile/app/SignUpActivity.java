@@ -19,7 +19,7 @@ import com.pbdvmobile.app.data.model.User;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    TextView logIn;
+    TextView logIn, flash;
     Button signUp;
     EditText email, fName, lName, password, rePassword;
     DataManager dataManager;
@@ -35,6 +35,7 @@ public class SignUpActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
         dataManager = DataManager.getInstance(this);
         current_user = LogInUser.getInstance(dataManager);
 
@@ -48,33 +49,51 @@ public class SignUpActivity extends AppCompatActivity {
         password = findViewById(R.id.edtSignUpPassword);
         rePassword = findViewById(R.id.edtSignUpRePassword);
         tutor = findViewById(R.id.chkSignUpTutor);
+        flash = findViewById(R.id.txtError);
 
 
         // switching pages
-        signUp.setOnClickListener((v) -> { // go to sign up
 
+        signUp.setOnClickListener((v) -> {
             if(dataManager.required(email, fName, lName, password, rePassword)){
+                // all fields are filled in?
+
                 String sEmail = email.getText().toString();
 
-                if(dataManager.validDut(sEmail)){
+                if(dataManager.validDut(sEmail)){ // is Valid DUT email?
 
-                    int studentNum = Integer.parseInt(sEmail.split("@")[0]);
+                    if(dataManager.getUserDao().getUserByEmail(sEmail) == null){
+                        // does email exist is database?
 
-                    User user = new User(studentNum, fName.getText().toString(), lName.getText().toString());
-                    user.setEducationLevel(User.EduLevel.BACHELOR);
-                    user.setEmail(sEmail);
+                        int studentNum = dataManager.getStudentNum(sEmail);
 
-                    if(password.getText().toString() == rePassword.getText().toString()) {
-                        user.setPassword(password.getText().toString());
-                        user.setTutor(tutor.isChecked());
-                        dataManager.getUserDao().insertUser(user);
+                        User user = new User(studentNum, fName.getText().toString(), lName.getText().toString());
+                        user.setEducationLevel(User.EduLevel.BACHELOR);
+                        user.setEmail(sEmail);
 
-                        Intent toMain = new Intent(SignUpActivity.this, LogInActivity.class);
-                        startActivity(toMain);
+                        if(password.getText().toString().equals(rePassword.getText().toString())) {
+                            // passwords match?
+
+                            user.setPassword(password.getText().toString());
+                            user.setTutor(tutor.isChecked());
+                            dataManager.getUserDao().insertUser(user);
+
+                            // go to sign up
+                            Intent toMain = new Intent(SignUpActivity.this, LogInActivity.class);
+                            startActivity(toMain);
+                        }else{
+                            dataManager.displayError(v, flash, "Passwords don't match");
+                        }
                     }else{
-                        dataManager.displayError(v, rePassword, "Passwords don't match");
+                        dataManager.displayError(v, flash, "Email already exists. Try logging in");
                     }
+                }else{
+                    dataManager.displayError(v, flash, "Not a valid DUT email");
+
                 }
+            }else{
+                dataManager.displayError(v, flash, "Please fill in all fields");
+
             }
 
         });
