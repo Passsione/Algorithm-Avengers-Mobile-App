@@ -1,5 +1,6 @@
 package com.pbdvmobile.app.data;
 import android.content.Context;
+import android.graphics.BlendMode;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.View;
@@ -73,7 +74,7 @@ public class DataManager {
         boolean fill = true;
         for (EditText et: args) {
             if(et.getText().toString().isEmpty()){
-                et.setHintTextColor(Color.RED);
+                et.setError("Required field");
                 fill = false;
             }
         }

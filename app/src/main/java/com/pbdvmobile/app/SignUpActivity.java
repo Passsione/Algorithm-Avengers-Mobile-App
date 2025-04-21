@@ -38,7 +38,9 @@ public class SignUpActivity extends AppCompatActivity {
 
         dataManager = DataManager.getInstance(this);
         current_user = LogInUser.getInstance(dataManager);
+        Intent toMain = new Intent(SignUpActivity.this, MainActivity.class);
 
+        if(current_user.isLoggedIn())startActivity(toMain);
 
         // Find in xml
         logIn = findViewById(R.id.txtLogIn);
@@ -54,7 +56,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         // switching pages
 
-        signUp.setOnClickListener((v) -> {
+        signUp.setOnClickListener((v) -> {// switching to Login
             if(dataManager.required(email, fName, lName, password, rePassword)){
                 // all fields are filled in?
 
@@ -79,15 +81,19 @@ public class SignUpActivity extends AppCompatActivity {
                             dataManager.getUserDao().insertUser(user);
 
                             // go to sign up
-                            Intent toMain = new Intent(SignUpActivity.this, LogInActivity.class);
-                            startActivity(toMain);
+                            current_user.signedIn = sEmail;
+                            Intent toLogin = new Intent(SignUpActivity.this, LogInActivity.class);
+                            startActivity(toLogin);
                         }else{
+                            rePassword.setError("Doesn't match password");
                             dataManager.displayError(v, flash, "Passwords don't match");
                         }
                     }else{
+
                         dataManager.displayError(v, flash, "Email already exists. Try logging in");
                     }
                 }else{
+                    email.setError("Not a valid DUT email");
                     dataManager.displayError(v, flash, "Not a valid DUT email");
 
                 }

@@ -12,7 +12,7 @@ public class LogInUser {
     private final DataManager dataManager;
     private static LogInUser instance;
     private User user;
-
+    public String signedIn;
     private LogInUser(DataManager dataManager){ this.dataManager = dataManager;}
     public static synchronized LogInUser getInstance(DataManager dataManager){
         if(instance == null){

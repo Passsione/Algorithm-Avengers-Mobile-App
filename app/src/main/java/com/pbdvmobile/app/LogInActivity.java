@@ -20,7 +20,7 @@ public class LogInActivity extends AppCompatActivity {
 
     TextView signUp, flash;
     Button logIn;
-    EditText email, password;
+    public EditText email, password;
 
     DataManager dataManager;
 
@@ -38,6 +38,8 @@ public class LogInActivity extends AppCompatActivity {
         dataManager = DataManager.getInstance(this);
         LogInUser current_user = LogInUser.getInstance(dataManager);
 
+        Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
+        if(current_user.isLoggedIn())startActivity(toLanding);
 
         // Finding the elements on the front end
         signUp = findViewById(R.id.txtSignUp);
@@ -46,14 +48,19 @@ public class LogInActivity extends AppCompatActivity {
         password = findViewById(R.id.edtLoginPassword);
         flash = findViewById(R.id.txtError);
 
+        if(current_user.signedIn != null){ // just signed up
+            email.setText(current_user.signedIn);
+            dataManager.displayError(flash, flash, "Successful Sign Up. Please log in");
+            current_user.signedIn = null;
+        }
 
-        // Switching to Log In
+        // Switching to Main
         logIn.setOnClickListener((v) -> {
+
             if(dataManager.required(email, password)) { // Check if edits are filled in
 
                 if (current_user.logIn(email.getText().toString(), password.getText().toString())) {
                     // is user in database?
-                    Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
                     startActivity(toLanding);
                 } else {
                     dataManager.displayError(v, flash, "Login information is incorrect");
@@ -68,7 +75,5 @@ public class LogInActivity extends AppCompatActivity {
             Intent toSignUp = new Intent(LogInActivity.this, SignUpActivity.class);
             startActivity(toSignUp);
         });
-
-
     }
 }
