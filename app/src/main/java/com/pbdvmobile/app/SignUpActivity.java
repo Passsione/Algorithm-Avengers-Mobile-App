@@ -3,6 +3,7 @@ package com.pbdvmobile.app;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -23,6 +24,7 @@ public class SignUpActivity extends AppCompatActivity {
     EditText email, fName, lName, password, rePassword;
     DataManager dataManager;
     LogInUser current_user;
+    CheckBox tutor;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +38,7 @@ public class SignUpActivity extends AppCompatActivity {
         dataManager = DataManager.getInstance(this);
         current_user = LogInUser.getInstance(dataManager);
 
+
         // Find in xml
         logIn = findViewById(R.id.txtLogIn);
         signUp = findViewById(R.id.btnSignUp);
@@ -44,6 +47,7 @@ public class SignUpActivity extends AppCompatActivity {
         lName = findViewById(R.id.edtSignUpLName);
         password = findViewById(R.id.edtSignUpPassword);
         rePassword = findViewById(R.id.edtSignUpRePassword);
+        tutor = findViewById(R.id.chkSignUpTutor);
 
 
         // switching pages
@@ -62,6 +66,7 @@ public class SignUpActivity extends AppCompatActivity {
 
                     if(password.getText().toString() == rePassword.getText().toString()) {
                         user.setPassword(password.getText().toString());
+                        user.setTutor(tutor.isChecked());
                         dataManager.getUserDao().insertUser(user);
 
                         Intent toMain = new Intent(SignUpActivity.this, LogInActivity.class);
