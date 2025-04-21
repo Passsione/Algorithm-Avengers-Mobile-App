@@ -22,7 +22,7 @@
         app:layout_constraintVertical_bias="0.881" />
 
     <EditText
-        android:id="@+id/edtSignUpEmail"
+        android:id="@+id/edtLoginEmail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="112dp"
@@ -34,7 +34,7 @@
         app:layout_constraintTop_toBottomOf="@+id/txtLogin" />
 
     <EditText
-        android:id="@+id/edtPassword"
+        android:id="@+id/edtLoginPassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
@@ -42,8 +42,8 @@
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword"
-        app:layout_constraintStart_toStartOf="@+id/edtSignUpEmail"
-        app:layout_constraintTop_toBottomOf="@+id/edtSignUpEmail" />
+        app:layout_constraintStart_toStartOf="@+id/edtLoginEmail"
+        app:layout_constraintTop_toBottomOf="@+id/edtLoginEmail" />
 
     <TextView
         android:id="@+id/txtLogin"
@@ -62,8 +62,8 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="88dp"
         android:text="Log In"
-        app:layout_constraintStart_toStartOf="@+id/edtPassword"
-        app:layout_constraintTop_toBottomOf="@+id/edtPassword" />
+        app:layout_constraintStart_toStartOf="@+id/edtLoginPassword"
+        app:layout_constraintTop_toBottomOf="@+id/edtLoginPassword" />
 
     <TextView
         android:id="@+id/txtError"

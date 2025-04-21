@@ -15,7 +15,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.snackbar.Snackbar;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
-import com.pbdvmobile.app.data.model.User;
 
 public class LogInActivity extends AppCompatActivity {
 
@@ -43,8 +42,8 @@ public class LogInActivity extends AppCompatActivity {
         // Finding the elements on the front end
         signUp = findViewById(R.id.txtSignUp);
         logIn = findViewById(R.id.btnLogIn);
-        email = findViewById(R.id.edtSignUpEmail);
-        password = findViewById(R.id.edtPassword);
+        email = findViewById(R.id.edtLoginEmail);
+        password = findViewById(R.id.edtLoginPassword);
         flash = findViewById(R.id.txtError);
 
 
@@ -57,14 +56,10 @@ public class LogInActivity extends AppCompatActivity {
                     Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
                     startActivity(toLanding);
                 } else {
-                    Snackbar.make(v, "Log in information incorrect", Snackbar.LENGTH_LONG)
-                            .setAnchorView(flash)
-                            .setAction("Action", null).show();
+                    dataManager.displayError(v, flash, "Login information is incorrect");
                 }
             }else{
-                Snackbar.make(v, "Please fill all the field", Snackbar.LENGTH_LONG)
-                        .setAnchorView(flash)
-                        .setAction("Action", null).show();
+                dataManager.displayError(v, flash, "Please fill all the field");
             }
         });
 

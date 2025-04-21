@@ -10,12 +10,12 @@ import android.view.ViewGroup;
 
 import com.pbdvmobile.app.R;
 
-public class ResourcesFragment extends Fragment {
+public class TutorDashboardFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_resources, container, false);
+        return inflater.inflate(R.layout.fragment_tutor_dashboard, container, false);
     }
 }

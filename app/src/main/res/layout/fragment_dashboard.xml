@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,6 +18,7 @@
             android:text="Upcoming Sessions"
             android:textSize="18sp"
             android:textStyle="bold"
+
             android:layout_marginBottom="8dp" />
 
         <androidx.cardview.widget.CardView

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class LogInUser {
 
-    private DataManager dataManager;
+    private final DataManager dataManager;
     private static LogInUser instance;
     private User user;
 

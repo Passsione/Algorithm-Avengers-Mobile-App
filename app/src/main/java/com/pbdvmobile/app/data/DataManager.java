@@ -3,7 +3,9 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.pbdvmobile.app.data.dao.PrizeDao;
 import com.pbdvmobile.app.data.dao.ResourceDao;
 import com.pbdvmobile.app.data.dao.SessionDao;
@@ -74,6 +76,12 @@ public class DataManager {
             }
         }
         return true;
+    }
+
+    public void displayError(View v, TextView anchor, String error){
+        Snackbar.make(v, error, Snackbar.LENGTH_LONG)
+                .setAnchorView(anchor)
+                .setAction("Action", null).show();
     }
     public boolean validDut(String email){
         Pattern pattern = Pattern.compile("[0-9]{8}+@dut4life.ac.za");

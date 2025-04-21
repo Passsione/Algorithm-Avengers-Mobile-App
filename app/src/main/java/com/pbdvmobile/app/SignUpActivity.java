@@ -39,22 +39,39 @@ public class SignUpActivity extends AppCompatActivity {
         // Find in xml
         logIn = findViewById(R.id.txtLogIn);
         signUp = findViewById(R.id.btnSignUp);
-        email = findViewById(R.id.edtSignUpEmail);
-        int studentNum = 22323809; //Integer.parseInt(email.getText().toString().split("@")[0]);
+        email = findViewById(R.id.edtSignupEmail);
         fName = findViewById(R.id.edtSignUpFName);
         lName = findViewById(R.id.edtSignUpLName);
         password = findViewById(R.id.edtSignUpPassword);
         rePassword = findViewById(R.id.edtSignUpRePassword);
 
 
-
-
-
         // switching pages
         signUp.setOnClickListener((v) -> { // go to sign up
-            current_user.setUser(new User(studentNum, fName.getText().toString(), lName.getText().toString()));
-            Intent toMain = new Intent(SignUpActivity.this, MainActivity.class);
-            startActivity(toMain);
+
+            if(dataManager.required(email, fName, lName, password, rePassword)){
+                String sEmail = email.getText().toString();
+
+                if(dataManager.validDut(sEmail)){
+
+                    int studentNum = Integer.parseInt(sEmail.split("@")[0]);
+
+                    User user = new User(studentNum, fName.getText().toString(), lName.getText().toString());
+                    user.setEducationLevel(User.EduLevel.BACHELOR);
+                    user.setEmail(sEmail);
+
+                    if(password.getText().toString() == rePassword.getText().toString()) {
+                        user.setPassword(password.getText().toString());
+                        dataManager.getUserDao().insertUser(user);
+
+                        Intent toMain = new Intent(SignUpActivity.this, LogInActivity.class);
+                        startActivity(toMain);
+                    }else{
+                        dataManager.displayError(v, rePassword, "Passwords don't match");
+                    }
+                }
+            }
+
         });
         logIn.setOnClickListener((v) -> { // go to login page
             Intent toLogin = new Intent(SignUpActivity.this, LogInActivity.class);
