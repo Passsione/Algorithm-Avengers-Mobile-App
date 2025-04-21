@@ -57,10 +57,11 @@ public class LogInActivity extends AppCompatActivity {
         // Switching to Main
         logIn.setOnClickListener((v) -> {
 
-            if(dataManager.required(email, password)) { // Check if edits are filled in
+            // Check if edits are filled in
+            if(dataManager.required(email, password)) {
 
+                // is user in database?
                 if (current_user.logIn(email.getText().toString(), password.getText().toString())) {
-                    // is user in database?
                     startActivity(toLanding);
                 } else {
                     dataManager.displayError(v, flash, "Login information is incorrect");

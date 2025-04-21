@@ -67,10 +67,9 @@
                 android:id="@+id/tab_view_pager"/>
 
             <TextView
-                android:id="@+id/textView2"
+                android:id="@+id/txtError"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="TextView" />
+                android:layout_height="wrap_content" />
 
 
         </com.google.android.material.appbar.AppBarLayout>

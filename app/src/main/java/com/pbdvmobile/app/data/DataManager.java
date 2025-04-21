@@ -105,28 +105,30 @@ public class DataManager {
         resourceDao = new ResourceDao(dbHelper);
         prizeDao = new PrizeDao(dbHelper);
 
-        // adds subjects to database
-        if(getSubjectDao().getAllSubjects().isEmpty()){
-            for (String subject: subjects) {
-                getSubjectDao().insertSubject(new Subject(subject));
-            }
-        }
-
-        //assigns users random subjects
-        if (getSubjectDao().getAllUserSubjects().isEmpty()){
-            for (User user: getUserDao().getAllUsers()) {
-                for(int s = 0; s < 8; s++) {
-                    int subID = randomIndex(subjects.length);
-                    getSubjectDao().addUserSubject(
-                        new UserSubject(user.getStudentNum(), subID, randomIndex(100)));
-                }
-            }
-        }
     }
 
     public static synchronized DataManager getInstance(Context context) {
         if (instance == null) {
             instance = new DataManager(context.getApplicationContext());
+        }
+
+
+        // adds subjects to database
+        if(instance.getSubjectDao().getAllSubjects().isEmpty()){
+            for (String subject: instance.subjects) {
+                instance.getSubjectDao().insertSubject(new Subject(subject));
+            }
+        }
+
+        //assigns users random subjects
+        if (instance.getSubjectDao().getAllUserSubjects().isEmpty()){
+            for (User user: instance.getUserDao().getAllUsers()) {
+                for(int s = 0; s < 8; s++) {
+                    int subID = instance.randomIndex(instance.subjects.length);
+                    instance.getSubjectDao().addUserSubject(
+                            new UserSubject(user.getStudentNum(), subID, instance.randomIndex(100)));
+                }
+            }
         }
 
         return instance;
