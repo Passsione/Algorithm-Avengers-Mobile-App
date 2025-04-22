@@ -53,8 +53,7 @@
                     android:paddingTop="4dp"
                     android:paddingEnd="12dp"
                     android:paddingBottom="4dp"
-                    android:text="Confirmed"
-                    android:textColor="@color/white" />
+                    android:text="Pending"/>
 
                 <View
                     android:layout_width="match_parent"
@@ -154,6 +153,7 @@
         </androidx.cardview.widget.CardView>
 
         <!-- Tutor Info Card -->
+
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -229,42 +229,102 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:text="View Full Profile" />
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+
+        <!--Review Section-->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_margin="12dp"
+                android:text="Rating and Review"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="20dp">
+
+                <TextView
+                    android:id="@+id/txtDetailsRating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="How would you rate the session?" />
+
+                <RatingBar
+                    android:id="@+id/rabDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:numStars="5" />
+
+                <TextView
+                    android:id="@+id/txtDetailsReview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Add a review" />
+
+                <EditText
+                    android:id="@+id/redDetailsReview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:height="100sp"
+                    android:ems="10"
+                    android:gravity="start|top"
+                    android:inputType="textMultiLine" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
 
         <!-- Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_margin="16dp">
+            android:layout_margin="16dp"
+
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btn_cancel_session"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:text="Cancel"
-                android:layout_marginEnd="8dp"
                 android:textColor="@color/status_canceled" />
 
             <Button
                 android:id="@+id/btn_reschedule_session"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
+                android:layout_width="63dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reschedule"
                 android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="Reschedule" />
 
             <Button
                 android:id="@+id/btn_join_session"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="8dp"
+                android:layout_weight="1"
                 android:text="Join Now" />
         </LinearLayout>
     </LinearLayout>
