@@ -40,10 +40,10 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
                     android:text="Tutor"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -54,14 +54,14 @@
                         android:id="@+id/session_detail_tutor_image"
                         android:layout_width="64dp"
                         android:layout_height="64dp"
-                        android:src="@mipmap/ic_launcher_round"
-                        android:contentDescription="Tutor profile picture" />
+                        android:contentDescription="Tutor profile picture"
+                        android:src="@mipmap/ic_launcher_round" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginStart="16dp">
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/session_detail_tutor_name"
@@ -121,8 +121,8 @@
                     android:id="@+id/et_subject"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
                     android:drawableEnd="@android:drawable/arrow_down_float"
+                    android:focusable="false"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -138,8 +138,8 @@
                     android:id="@+id/et_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
                     android:drawableEnd="@android:drawable/ic_menu_my_calendar"
+                    android:focusable="false"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -155,8 +155,8 @@
                     android:id="@+id/et_time"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
                     android:drawableEnd="@android:drawable/ic_menu_recent_history"
+                    android:focusable="false"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -172,8 +172,8 @@
                     android:id="@+id/et_duration"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
                     android:drawableEnd="@android:drawable/arrow_down_float"
+                    android:focusable="false"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -181,25 +181,25 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:text="Location"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold" />
 
             <RadioGroup
                 android:id="@+id/radio_group_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
 
                 <RadioButton
                     android:id="@+id/radio_online"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Online (Zoom)"
-                    android:checked="true" />
+                    android:checked="true"
+                    android:text="Online (Zoom)" />
 
                 <RadioButton
                     android:id="@+id/radio_in_person"
@@ -246,17 +246,17 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_margin="16dp">
+            android:layout_margin="16dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btn_cancel_session"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:text="Cancel"
-                android:layout_marginEnd="8dp"
                 android:textColor="@color/status_canceled" />
 
 
@@ -264,8 +264,8 @@
                 android:id="@+id/btn_join_session"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="8dp"
+                android:layout_weight="1"
                 android:text="Sumbit Request" />
         </LinearLayout>
     </LinearLayout>

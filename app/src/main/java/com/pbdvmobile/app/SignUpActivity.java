@@ -40,7 +40,11 @@ public class SignUpActivity extends AppCompatActivity {
         current_user = LogInUser.getInstance(dataManager);
         Intent toMain = new Intent(SignUpActivity.this, MainActivity.class);
 
-        if(current_user.isLoggedIn())startActivity(toMain);
+        if(current_user.isLoggedIn()){
+            startActivity(toMain);
+            finish();
+            return;
+        }
 
         // Find in xml
         logIn = findViewById(R.id.txtLogIn);
@@ -88,10 +92,12 @@ public class SignUpActivity extends AppCompatActivity {
                             dataManager.fillUserSubject(studentNum);
 
 
-                            // go to sign up
-                            current_user.signedIn = sEmail;
+                            // go to Login page
+                            current_user.message = sEmail;
                             Intent toLogin = new Intent(SignUpActivity.this, LogInActivity.class);
                             startActivity(toLogin);
+                            finish();
+
                         }else{
                             rePassword.setError("Doesn't match password");
                             dataManager.displayError(v, flash, "Passwords don't match");

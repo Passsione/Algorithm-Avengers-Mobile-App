@@ -37,6 +37,8 @@ public class ProfileActivity extends AppCompatActivity {
         if(!current_user.isLoggedIn()){
             Intent toLogin = new Intent(ProfileActivity.this, LogInActivity.class);
             startActivity(toLogin);
+            finish();
+            return;
         }
         TextView email, upgrade;
         email = findViewById(R.id.txtProfileEmail);
@@ -48,6 +50,7 @@ public class ProfileActivity extends AppCompatActivity {
         name = findViewById(R.id.edtProfileName);
         surname = findViewById(R.id.edtProfileSurname);
         password = findViewById(R.id.edtProfilePassword);
+
         repassword = findViewById(R.id.edtProfileRePassword);
         paymentdetails = findViewById(R.id.redProfilePayment);
         Switch tutor = findViewById(R.id.togProfileTutor);
@@ -68,12 +71,16 @@ public class ProfileActivity extends AppCompatActivity {
             current_user.logOut();
             Intent toLogin = new Intent(ProfileActivity.this, LogInActivity.class);
             startActivity(toLogin);
+            finish();
         });
 
-        save.setOnClickListener(v ->{
-            current_user.signedIn = "Changes saved";
+        save.setOnClickListener(v -> {
+
+
+            current_user.message = "Changes saved";
             Intent toMain = new Intent(ProfileActivity.this, MainActivity.class);
             startActivity(toMain);
+
         });
     }
 

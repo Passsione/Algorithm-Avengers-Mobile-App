@@ -39,7 +39,11 @@ public class LogInActivity extends AppCompatActivity {
         LogInUser current_user = LogInUser.getInstance(dataManager);
 
         Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
-        if(current_user.isLoggedIn())startActivity(toLanding);
+        if(current_user.isLoggedIn()){
+            startActivity(toLanding);
+            finish();
+            return;
+        }
 
         // Finding the elements on the front end
         signUp = findViewById(R.id.txtSignUp);
@@ -48,10 +52,10 @@ public class LogInActivity extends AppCompatActivity {
         password = findViewById(R.id.edtLoginPassword);
         flash = findViewById(R.id.txtError);
 
-        if(current_user.signedIn != null){ // just signed up
-            email.setText(current_user.signedIn);
+        if(current_user.message != null){ // just signed up
+            email.setText(current_user.message);
             dataManager.displayError(flash, flash, "Successful Sign Up. Please log in");
-            current_user.signedIn = null;
+            current_user.message = null;
         }
 
         // Switching to Main
@@ -63,6 +67,8 @@ public class LogInActivity extends AppCompatActivity {
                 // is user in database?
                 if (current_user.logIn(email.getText().toString(), password.getText().toString())) {
                     startActivity(toLanding);
+                    finish();
+
                 } else {
                     dataManager.displayError(v, flash, "Login information is incorrect");
                 }

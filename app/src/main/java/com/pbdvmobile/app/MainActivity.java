@@ -57,29 +57,41 @@ public class MainActivity extends AppCompatActivity {
         if(!current_user.isLoggedIn()){
             Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
             startActivity(toLogin);
+            finish(); // can't come back to main activity
+            return;
         }
         flash = findViewById(R.id.txtError);
 
-        // changes to profile
-        if(current_user.signedIn != null){
-            dataManager.displayError(flash, flash, current_user.signedIn);
+        // changes from profile activity
+        if(Objects.equals(current_user.message, "Changes saved")){
+            dataManager.displayError(flash, flash, current_user.message);
+            current_user.message = null;
         }
 
-
+        // navigation
         nav = findViewById(R.id.nav_view);
         nav_header = nav.getHeaderView(0).findViewById(R.id.nav_header_name);
         nav_header_email = nav.getHeaderView(0).findViewById(R.id.nav_header_email);
         nav_header.setText(current_user.getUser().getFirstName() +" "+ current_user.getUser().getLastName());
         nav_header_email.setText(current_user.getUser().getEmail());
 
+        //navigation menu
         Menu menu = nav.getMenu();
-
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
 
             Intent toProfile = new Intent(MainActivity.this, ProfileActivity.class);
             startActivity(toProfile);
             return false;
         });
+        menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
+            current_user.logOut();
+            Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
+            startActivity(toLogin);
+            finish();
+            return false;
+        });
+
+        // Main view
         menuswitch = findViewById(R.id.imgMenu);
         tablayout = findViewById(R.id.tab_layout);
         viewpager2 = findViewById(R.id.view_pager);

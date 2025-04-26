@@ -8,16 +8,88 @@
     tools:context=".ProfileActivity"
     >
 
-    <Button
-        android:id="@+id/bthSaveProfile"
+    <ImageView
+        android:id="@+id/imgProfileImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="8dp"
-        android:text="Save changes"
+        android:layout_marginStart="144dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/togProfileTutor"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@tools:sample/avatars" />
+
+    <TextView
+        android:id="@+id/txtProfileEduLvl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:layout_marginEnd="24dp"
+        android:text="Education level"
+        app:layout_constraintEnd_toStartOf="@+id/imgProfileImage"
+        app:layout_constraintTop_toTopOf="@+id/imgProfileImage" />
+
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/ProfileInfoCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="190dp"
+        android:layout_margin="20sp"
+        app:cardCornerRadius="8sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imgProfileImage" >
+
+        <TextView
+            android:id="@+id/txtProfileEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="28dp"
+            android:text="Email" />
+
+        <TextView
+            android:id="@+id/txtProfileTier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="User tier" />
+
+        <TextView
+            android:id="@+id/txtCredit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Credits:" />
+
+        <TextView
+            android:id="@+id/txtAvgRating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Average Rating as a tutee:"
+
+            />
+
+        <TextView
+            android:id="@+id/txtAvgTutorRating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Average Rating as a tutor:" />
+    </androidx.cardview.widget.CardView>
+
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/ProfileSubjectsCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="300dp"
+        android:layout_margin="20sp"
+        app:cardCornerRadius="8sp"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ProfileInfoCard" />
 
     <EditText
         android:id="@+id/edtProfileName"
@@ -29,18 +101,8 @@
         android:inputType="text"
         android:text="Name"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtProfileEmail" />
+        app:layout_constraintTop_toBottomOf="@+id/ProfileSubjectsCard" />
 
-    <EditText
-        android:id="@+id/edtProfilePassword"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:ems="10"
-        android:inputType="text"
-        android:text="Password"
-        app:layout_constraintStart_toStartOf="@+id/edtProfileSurname"
-        app:layout_constraintTop_toBottomOf="@+id/edtProfileSurname" />
 
     <EditText
         android:id="@+id/edtProfileSurname"
@@ -54,6 +116,32 @@
         app:layout_constraintTop_toBottomOf="@+id/edtProfileName" />
 
     <EditText
+        android:id="@+id/redBio"
+        android:layout_width="220dp"
+        android:layout_height="149dp"
+        android:layout_marginStart="92dp"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="Tell us about yourself..."
+        android:inputType="textMultiLine"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/edtProfileSurname" />
+
+    <EditText
+        android:id="@+id/edtProfilePassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Password"
+        android:visibility="gone"
+
+        app:layout_constraintStart_toStartOf="@+id/redBio"
+        app:layout_constraintTop_toBottomOf="@+id/redBio" />
+
+    <EditText
         android:id="@+id/edtProfileRePassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -61,60 +149,75 @@
         android:ems="10"
         android:inputType="text"
         android:text="Re Enter password"
-        app:layout_constraintStart_toStartOf="@+id/edtProfilePassword"
-        app:layout_constraintTop_toBottomOf="@+id/edtProfilePassword" />
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="@+id/redBio"
+        app:layout_constraintTop_toBottomOf="@+id/redBio" />
 
-    <TextView
-        android:id="@+id/txtProfileEmail"
+
+    <Button
+        android:id="@+id/btnChangePassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="12dp"
+        android:text="Change Password"
+        app:layout_constraintStart_toStartOf="@+id/redBio"
+        app:layout_constraintTop_toBottomOf="@+id/redBio" />
+
+    <LinearLayout
+        android:id="@+id/paymentlayout"
+        android:layout_width="61dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="168dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnChangePassword">
+
+        <EditText
+            android:id="@+id/redProfilePayment"
+            android:layout_width="275dp"
+            android:layout_height="123dp"
+            android:layout_marginStart="68dp"
+            android:layout_marginTop="16dp"
+            android:ems="10"
+            android:gravity="start|top"
+            android:hint="Payment Details"
+            android:inputType="textMultiLine" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnChangePaymentDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="100dp"
-        android:layout_marginTop="28dp"
-        android:text="Email"
+        android:layout_marginTop="20dp"
+        android:text="Change Payment Details"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgProfileImage" />
+        app:layout_constraintTop_toBottomOf="@+id/paymentlayout" />
 
-    <ImageView
-        android:id="@+id/imgProfileImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="144dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:src="@tools:sample/avatars" />
 
     <Switch
         android:id="@+id/togProfileTutor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="76dp"
-        android:layout_marginTop="16dp"
-        android:text="Tutor Status"
-        app:layout_constraintStart_toStartOf="@+id/redProfilePayment"
-        app:layout_constraintTop_toBottomOf="@+id/redProfilePayment" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:text="Change Tutor Status"
+        app:layout_constraintStart_toStartOf="@+id/btnChangePaymentDetails"
+        app:layout_constraintTop_toBottomOf="@+id/btnChangePaymentDetails" />
 
-    <TextView
-        android:id="@+id/txtProfileUpgrade"
+    <Button
+        android:id="@+id/bthSaveProfile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="40dp"
-        android:text="Feel like upgrading your account?"
-        app:layout_constraintEnd_toStartOf="@+id/btnProfileLogOut"
-        app:layout_constraintTop_toBottomOf="@+id/bthSaveProfile" />
-
-    <EditText
-        android:id="@+id/redProfilePayment"
-        android:layout_width="275dp"
-        android:layout_height="123dp"
-        android:layout_marginStart="68dp"
+        android:layout_marginStart="44dp"
         android:layout_marginTop="16dp"
-        android:ems="10"
-        android:gravity="start|top"
-        android:hint="Payment Details"
-        android:inputType="textMultiLine"
+        android:text="Save Changes"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/redBio" />
+        app:layout_constraintTop_toBottomOf="@+id/togProfileTutor"
+        tools:ignore="MissingConstraints" />
 
     <Button
         android:id="@+id/btnProfileLogOut"
@@ -123,19 +226,7 @@
         android:layout_marginStart="88dp"
         android:text="Log Out"
         app:layout_constraintStart_toEndOf="@+id/bthSaveProfile"
-        app:layout_constraintTop_toBottomOf="@+id/togProfileTutor" />
+        app:layout_constraintTop_toTopOf="@+id/bthSaveProfile" />
 
-    <EditText
-        android:id="@+id/redBio"
-        android:layout_width="220dp"
-        android:layout_height="149dp"
-        android:layout_marginTop="32dp"
-        android:ems="10"
-        android:gravity="start|top"
-        android:inputType="textMultiLine"
-        android:hint="Tell us about yourself..."
-        app:layout_constraintStart_toStartOf="@+id/edtProfileRePassword"
-        app:layout_constraintTop_toBottomOf="@+id/edtProfileRePassword"
-        android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
