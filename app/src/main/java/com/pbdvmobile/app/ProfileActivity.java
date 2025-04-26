@@ -59,7 +59,6 @@ public class ProfileActivity extends AppCompatActivity {
         email.setText(current_user.getUser().getEmail());
         name.setText(current_user.getUser().getFirstName());
         surname.setText(current_user.getUser().getLastName());
-        password.setText(current_user.getUser().getPassword());
         tutor.setChecked(current_user.getUser().isTutor());
 
         if (tutor.isChecked()){
