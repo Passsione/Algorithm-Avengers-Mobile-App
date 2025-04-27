@@ -97,6 +97,12 @@ public class MainActivity extends AppCompatActivity {
             startActivity(toProfile);
             return false;
         });
+        menu.findItem(R.id.nav_payments).setOnMenuItemClickListener(v ->{
+            Intent toPayment = new Intent(MainActivity.this, PaymentGaywayActivity.class);
+            startActivity(toPayment);
+            return false;
+        });
+
         menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
             current_user.logOut();
             Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);

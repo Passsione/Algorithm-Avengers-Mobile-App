@@ -36,11 +36,14 @@ android {
 
 dependencies {
     implementation(libs.recyclerview)
+    implementation(libs.firebase.crashlytics.buildtools)
     // Room components
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
 
+    // Gson dependency
+    implementation("com.google.code.gson:gson:2.12")
     // Optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
 
