@@ -16,7 +16,7 @@
             android:name=".NotificationsActivity"
             android:exported="false" />
         <activity
-            android:name=".RedeemCredit"
+            android:name=".RedeemCreditActivity"
             android:exported="false" />
         <activity
             android:name=".AIBaseActivity"

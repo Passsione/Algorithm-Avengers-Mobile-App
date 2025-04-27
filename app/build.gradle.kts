@@ -43,7 +43,7 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
 
     // Gson dependency
-    implementation("com.google.code.gson:gson:2.12")
+    implementation("com.google.code.gson:gson:2.10.1")
     // Optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
 

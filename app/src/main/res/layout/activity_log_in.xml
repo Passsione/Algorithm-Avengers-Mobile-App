@@ -8,18 +8,14 @@
     tools:context=".LogInActivity">
 
     <TextView
-        android:id="@+id/txtSignUp"
+        android:id="@+id/txtLogin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="136dp"
-        android:clickable="true"
-        android:text="Don't have an account? Sign Up"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnLogIn"
-        app:layout_constraintVertical_bias="0.881" />
+        android:layout_marginStart="180dp"
+        android:layout_marginTop="196dp"
+        android:text="Log In"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/edtLoginEmail"
@@ -28,7 +24,7 @@
         android:layout_marginStart="112dp"
         android:layout_marginTop="48dp"
         android:ems="10"
-        android:hint="Email"
+        android:hint="DUT Email"
         android:inputType="textEmailAddress"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtLogin" />
@@ -45,15 +41,6 @@
         app:layout_constraintStart_toStartOf="@+id/edtLoginEmail"
         app:layout_constraintTop_toBottomOf="@+id/edtLoginEmail" />
 
-    <TextView
-        android:id="@+id/txtLogin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="180dp"
-        android:layout_marginTop="196dp"
-        android:text="Log In"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/btnLogIn"
@@ -65,13 +52,27 @@
         app:layout_constraintStart_toStartOf="@+id/edtLoginPassword"
         app:layout_constraintTop_toBottomOf="@+id/edtLoginPassword" />
 
+
+    <TextView
+        android:id="@+id/txtSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="136dp"
+        android:clickable="true"
+        android:text="Don't have an account? Sign Up"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnLogIn"
+        app:layout_constraintVertical_bias="0.881" />
+
     <TextView
         android:id="@+id/txtError"
         android:layout_width="0dp"
         android:layout_height="63dp"
         android:layout_marginStart="4dp"
         android:layout_marginTop="68dp"
-        android:text=""
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtSignUp"

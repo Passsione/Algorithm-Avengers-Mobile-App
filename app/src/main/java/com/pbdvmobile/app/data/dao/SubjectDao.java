@@ -106,6 +106,30 @@ public class SubjectDao {
         db.close();
         return userSubjects;
     }
+    public List<UserSubject> getTutoredUserSubjects(int userId) {
+        List<UserSubject> userSubjects = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        Cursor cursor = db.query(SqlOpenHelper.TABLE_USER_SUBJECTS,
+                null,
+                SqlOpenHelper.KEY_USER_SUBJECT_USER_ID + "=?"+
+                        " AND " + SqlOpenHelper.KEY_USER_SUBJECT_TUTORING + "=1",
+                new String[]{String.valueOf(userId)},
+                null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                UserSubject userSubject = new UserSubject();
+                userSubject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
+                userSubject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
+                userSubject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
+                userSubjects.add(userSubject);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return userSubjects;
+    }
     public List<UserSubject> getAllUserSubjects() {
         List<UserSubject> subjects = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
