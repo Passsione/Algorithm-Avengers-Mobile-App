@@ -39,6 +39,7 @@ UserSubject =
     int studentNum;
     int subjectId;
     double mark;
+    boolean tutoring // are them tutoring this subject?
     // primary key is userId join subjectId
 
 Session = 

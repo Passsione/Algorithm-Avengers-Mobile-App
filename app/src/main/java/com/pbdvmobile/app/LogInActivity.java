@@ -16,6 +16,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 
+import java.util.Objects;
+
 public class LogInActivity extends AppCompatActivity {
 
     TextView signUp, flash;
@@ -38,12 +40,7 @@ public class LogInActivity extends AppCompatActivity {
         dataManager = DataManager.getInstance(this);
         LogInUser current_user = LogInUser.getInstance(dataManager);
 
-        Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
-        if(current_user.isLoggedIn()){
-            startActivity(toLanding);
-            finish();
-            return;
-        }
+
 
         // Finding the elements on the front end
         signUp = findViewById(R.id.txtSignUp);
@@ -52,25 +49,28 @@ public class LogInActivity extends AppCompatActivity {
         password = findViewById(R.id.edtLoginPassword);
         flash = findViewById(R.id.txtError);
 
-        if(current_user.message != null){ // just signed up
+        if((current_user.message != null) && (dataManager.validDut(current_user.message))){ // just signed up
             email.setText(current_user.message);
             dataManager.displayError(flash, flash, "Successful Sign Up. Please log in");
             current_user.message = null;
+        }else if(current_user.message != null){ // just logged out
+            dataManager.displayError(flash, flash, current_user.message);
+            current_user.message = null;
         }
+
 
         // Switching to Main
         logIn.setOnClickListener((v) -> {
 
             // Check if edits are filled in
             if(dataManager.required(email, password)) {
-
                 // is user in database?
                 if (current_user.logIn(email.getText().toString(), password.getText().toString())) {
+                    Intent toLanding = new Intent(LogInActivity.this, MainActivity.class);
                     startActivity(toLanding);
                     finish();
-
                 } else {
-                    dataManager.displayError(v, flash, "Login information is incorrect");
+                    dataManager.displayError(v, flash, "Login information is incorrect. Remember to use you DUT email");
                 }
             }else{
                 dataManager.displayError(v, flash, "Please fill all the field");
@@ -82,5 +82,7 @@ public class LogInActivity extends AppCompatActivity {
             Intent toSignUp = new Intent(LogInActivity.this, SignUpActivity.class);
             startActivity(toSignUp);
         });
+
+
     }
 }

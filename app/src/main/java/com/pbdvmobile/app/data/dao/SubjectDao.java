@@ -70,7 +70,6 @@ public class SubjectDao {
 
 
     // User Subject section
-
     public long addUserSubject(@NonNull UserSubject userSubject) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -78,6 +77,7 @@ public class SubjectDao {
         values.put(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID, userSubject.getUserId());
         values.put(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID, userSubject.getSubjectId());
         values.put(SqlOpenHelper.KEY_USER_SUBJECT_MARK, userSubject.getMark());
+        values.put(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING, userSubject.getTutoring() ? 1 : 0);
 
         long id = db.insert(SqlOpenHelper.TABLE_USER_SUBJECTS, null, values);
         db.close();
@@ -126,12 +126,17 @@ public class SubjectDao {
         db.close();
         return subjects;
     }
-    public int updateUserSubjectMark(int userId, int subjectId, double mark) {
+    public int updateUserSubjectMark(UserSubject userSubject){
+        int userId = userSubject.getUserId();
+        int subjectId = userSubject.getSubjectId();
+        double mark = userSubject.getMark();
+        boolean tutoring = userSubject.getTutoring();
+
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(SqlOpenHelper.KEY_USER_SUBJECT_MARK, mark);
-
+        values.put(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING, tutoring ? 1 : 0);
         int rowsAffected = db.update(SqlOpenHelper.TABLE_USER_SUBJECTS, values,
                 SqlOpenHelper.KEY_USER_SUBJECT_USER_ID + "=? AND " +
                         SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID + "=?",

@@ -17,6 +17,7 @@ import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
 import com.pbdvmobile.app.data.model.UserSubject;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class DataManager {
@@ -111,8 +112,6 @@ public class DataManager {
         if (instance == null) {
             instance = new DataManager(context.getApplicationContext());
         }
-
-
         // adds subjects to database
         if(instance.getSubjectDao().getAllSubjects().isEmpty()){
             for (String subject: instance.subjects) {
@@ -122,13 +121,15 @@ public class DataManager {
 
         //assigns users random subjects
         if (instance.getSubjectDao().getAllUserSubjects().isEmpty()){
-            for (User user: instance.getUserDao().getAllUsers()) {
-                for(int s = 0; s < 8; s++) {
-                    int subID = instance.randomIndex(instance.subjects.length);
-                    instance.getSubjectDao().addUserSubject(
-                            new UserSubject(user.getStudentNum(), subID, instance.randomIndex(100)));
+            List<User> users = instance.getUserDao().getAllUsers();
+            if(!users.isEmpty())
+                for (User user: users) {
+                    for(int s = 0; s < 8; s++) {
+                        int subID = instance.randomIndex(instance.subjects.length);
+                        instance.getSubjectDao().addUserSubject(
+                                new UserSubject(user.getStudentNum(), subID, instance.randomIndex(100)));
+                    }
                 }
-            }
         }
 
         return instance;

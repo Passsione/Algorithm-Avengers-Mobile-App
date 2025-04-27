@@ -73,6 +73,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:visibility="gone"
             android:text="Average Rating as a tutor:" />
     </androidx.cardview.widget.CardView>
 
@@ -100,10 +101,6 @@
                 android:text="Subjects" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 
     <EditText
         android:id="@+id/edtProfileName"
@@ -166,7 +163,6 @@
         android:inputType="text"
         android:text="Re Enter password"
         android:visibility="gone"
-
         app:layout_constraintStart_toStartOf="@+id/edtProfileSurname"
         app:layout_constraintTop_toBottomOf="@+id/edtProfilePassword" />
 
@@ -182,14 +178,16 @@
 
     <LinearLayout
         android:id="@+id/paymentlayout"
-        android:layout_width="61dp"
-        android:layout_height="28dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginStart="168dp"
-        android:layout_marginTop="8dp"
-        android:visibility="gone"
+        android:layout_margin="8dp"
         android:orientation="vertical"
+
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnChangePassword">
+        app:layout_constraintTop_toBottomOf="@+id/btnChangePassword"
+        tools:visibility="visible">
 
         <EditText
             android:id="@+id/redProfilePayment"

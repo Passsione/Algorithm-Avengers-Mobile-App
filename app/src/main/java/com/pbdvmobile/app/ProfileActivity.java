@@ -40,9 +40,9 @@ public class ProfileActivity extends AppCompatActivity {
             finish();
             return;
         }
-        TextView email, upgrade;
+        TextView email, tutorRating;
         email = findViewById(R.id.txtProfileEmail);
-        upgrade = findViewById(R.id.txtProfileUpgrade);
+        tutorRating = findViewById(R.id.txtAvgTutorRating);
         Button save = findViewById(R.id.bthSaveProfile);
         Button logout = findViewById(R.id.btnProfileLogOut);
         EditText name, surname, password, repassword, paymentdetails, bio;
@@ -65,16 +65,18 @@ public class ProfileActivity extends AppCompatActivity {
             bio = findViewById(R.id.redBio);
             bio.setVisibility(VISIBLE);
             bio.setText(current_user.getUser().getBio());
+            tutorRating.setVisibility(VISIBLE);
         }
         logout.setOnClickListener(v ->{
             current_user.logOut();
+            current_user.message = "Successfully Logged out";
             Intent toLogin = new Intent(ProfileActivity.this, LogInActivity.class);
             startActivity(toLogin);
             finish();
+
         });
 
         save.setOnClickListener(v -> {
-
 
             current_user.message = "Changes saved";
             Intent toMain = new Intent(ProfileActivity.this, MainActivity.class);

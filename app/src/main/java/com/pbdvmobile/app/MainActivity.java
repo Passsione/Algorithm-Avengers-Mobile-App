@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
+import android.widget.HeaderViewListAdapter;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -59,21 +60,34 @@ public class MainActivity extends AppCompatActivity {
             startActivity(toLogin);
             finish(); // can't come back to main activity
             return;
+
         }
+
         flash = findViewById(R.id.txtError);
 
-        // changes from profile activity
-        if(Objects.equals(current_user.message, "Changes saved")){
+        // changes from other activities
+        if(current_user.message != null){
             dataManager.displayError(flash, flash, current_user.message);
             current_user.message = null;
         }
 
-        // navigation
+      // navigation
         nav = findViewById(R.id.nav_view);
-        nav_header = nav.getHeaderView(0).findViewById(R.id.nav_header_name);
-        nav_header_email = nav.getHeaderView(0).findViewById(R.id.nav_header_email);
-        nav_header.setText(current_user.getUser().getFirstName() +" "+ current_user.getUser().getLastName());
-        nav_header_email.setText(current_user.getUser().getEmail());
+        var headerView = nav.getHeaderView(0);
+        nav_header = headerView.findViewById(R.id.nav_header_name);
+        nav_header_email = headerView.findViewById(R.id.nav_header_email);
+
+        // Handle potential null values for first and last name
+        String firstName = current_user.getUser().getFirstName();
+        String lastName = current_user.getUser().getLastName();
+        String email = current_user.getUser().getEmail();
+        String fullName = "";
+        if(email == null) email = "";
+        if(firstName != null) fullName += firstName;
+        if(lastName != null) fullName += " " + lastName;
+
+        nav_header.setText(fullName.trim());
+        nav_header_email.setText(email.trim());
 
         //navigation menu
         Menu menu = nav.getMenu();
@@ -105,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         });
         menuswitch.setOnClickListener(v -> nav.setVisibility(VISIBLE));
 
-        tablayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+       tablayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
 

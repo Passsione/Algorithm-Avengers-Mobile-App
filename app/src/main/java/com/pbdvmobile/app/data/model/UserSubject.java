@@ -4,6 +4,7 @@ public class UserSubject {
     private int userId;
     private int subjectId;
     private double mark;
+    private boolean tutoring;
 
     // Constructor
     public UserSubject() {
@@ -13,6 +14,7 @@ public class UserSubject {
         this.userId = userId;
         this.subjectId = subjectId;
         this.mark = mark;
+        this.tutoring = false;
     }
 
     public int getUserId() {
@@ -37,5 +39,12 @@ public class UserSubject {
 
     public void setMark(double mark) {
         this.mark = mark;
+    }
+    public boolean getTutoring() {
+        return tutoring;
+    }
+
+    public void setTutoring(boolean tutoring) {
+        this.tutoring = tutoring;
     }
 }

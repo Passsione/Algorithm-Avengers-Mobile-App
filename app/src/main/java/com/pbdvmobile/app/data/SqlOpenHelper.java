@@ -51,6 +51,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String KEY_USER_SUBJECT_USER_ID = "user_id";
     public static final String KEY_USER_SUBJECT_SUBJECT_ID = "subject_id";
     public static final String KEY_USER_SUBJECT_MARK = "mark";
+    public static final String KEY_USER_SUBJECT_TUTORING = "tutoring";
 
     // Session Table Columns
     public static final String KEY_SESSION_ID = "session_id";
@@ -129,6 +130,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 KEY_USER_SUBJECT_USER_ID + " INTEGER," +
                 KEY_USER_SUBJECT_SUBJECT_ID + " INTEGER," +
                 KEY_USER_SUBJECT_MARK + " REAL DEFAULT 0," +
+                KEY_USER_SUBJECT_TUTORING + " INTEGER DEFAULT 0," +
                 "PRIMARY KEY (" + KEY_USER_SUBJECT_USER_ID + ", " + KEY_USER_SUBJECT_SUBJECT_ID + ")," +
                 "FOREIGN KEY (" + KEY_USER_SUBJECT_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_USER_SUBJECT_SUBJECT_ID + ") REFERENCES " + TABLE_SUBJECTS + "(" + KEY_SUBJECT_ID + ")" +
@@ -202,9 +204,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
             onCreate(db);
         }
     }
-    public void dropDB(SQLiteDatabase db) {
-//        db.execSQL("DROP DATABASE IF EXISTS " + DATABASE_NAME);
-    }
+
     public void dropAll(@NonNull SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_REDEEM_PRIZES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRIZES);
