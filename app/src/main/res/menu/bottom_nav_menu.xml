@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_dashboard"
+        android:icon="@android:drawable/ic_menu_slideshow" android:title="Dashboard" />
+    <item
+    android:id="@+id/navigation_explorer"
+    android:icon="@android:drawable/ic_menu_search" android:title="Explorer" />
+    <item
+    android:id="@+id/navigation_resources"
+    android:icon="@android:drawable/stat_notify_more" android:title="Resources" />
+    <item
+    android:id="@+id/navigation_tutor_center"
+    android:icon="@android:drawable/ic_media_ff" android:title="Tutor Center"
+        android:visible="false"/>
+</menu>

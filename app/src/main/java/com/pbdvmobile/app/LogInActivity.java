@@ -40,8 +40,7 @@ public class LogInActivity extends AppCompatActivity {
         dataManager = DataManager.getInstance(this);
         LogInUser current_user = LogInUser.getInstance(dataManager);
 
-
-
+        
         // Finding the elements on the front end
         signUp = findViewById(R.id.txtSignUp);
         logIn = findViewById(R.id.btnLogIn);

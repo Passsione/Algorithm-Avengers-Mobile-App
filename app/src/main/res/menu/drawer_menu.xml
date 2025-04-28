@@ -5,8 +5,7 @@
         <item
             android:id="@+id/nav_home"
             android:icon="@android:drawable/ic_menu_agenda"
-            android:title="Home"
-            android:visible="false"/>
+            android:title="Home" />
         <item
             android:id="@+id/nav_profile"
             android:icon="@android:drawable/ic_menu_myplaces"
@@ -16,30 +15,62 @@
             android:icon="@android:drawable/ic_menu_my_calendar"
             android:title="Schedule History" />
         <item
-            android:id="@+id/nav_payments"
-            android:icon="@android:drawable/ic_menu_send"
-            android:title="Payments" />
+            android:id="@+id/nav_resources"
+            android:icon="@android:drawable/stat_notify_more"
+            android:title="My Resources" />
         <item
             android:id="@+id/nav_notifications"
             android:icon="@android:drawable/ic_popup_reminder"
             android:title="Notifications" />
     </group>
 
-    <!--<item android:title="Communication">
+    <item android:title="AI Helpers">
         <menu>
             <item
-                android:id="@+id/nav_messages"
-                android:icon="@android:drawable/ic_dialog_email"
-                android:title="Messages" />
+                android:id="@+id/nav_quiz_generator"
+                android:icon="@android:drawable/ic_menu_info_details"
+                android:title="Quiz Generator" />
+            <item
+                android:id="@+id/nav_ai_summary"
+                android:icon="@android:drawable/ic_menu_upload"
+                android:title="AI Summarizer" />
+            <item
+                android:id="@+id/nav_ai_translator"
+                android:icon="@android:drawable/ic_menu_sort_alphabetically"
+                android:title="AI Translator" />
+            <item
+                android:id="@+id/nav_ai_chatbot"
+                android:icon="@android:drawable/stat_notify_voicemail"
+                android:title="AI Chatbot" />
 
         </menu>
-    </item>-->
+    </item>
+    <item android:title="Payments And Prizes">
+        <menu>
+            <item
+                android:id="@+id/nav_payments_history"
+                android:icon="@android:drawable/ic_menu_recent_history"
+                android:title="Payments History" />
+            <item
+                android:id="@+id/nav_payments_details"
+                android:icon="@android:drawable/ic_menu_info_details"
+                android:title="Payments Details" />
+            <item
+                android:id="@+id/nav_upgrade"
+                android:icon="@android:drawable/ic_menu_add"
+                android:title="Upgrade User Plan" />
+            <item
+                android:id="@+id/nav_redeem_credits"
+                android:icon="@android:drawable/ic_menu_search"
+                android:title="Redeem Credits" />
+
+        </menu>
+    </item>
 
     <item android:title="Other">
         <menu>
             <item
                 android:id="@+id/nav_theme"
-                android:icon="@android:drawable/screen_background_dark"
                 android:title="Theme" />
             <item
                 android:id="@+id/nav_help"

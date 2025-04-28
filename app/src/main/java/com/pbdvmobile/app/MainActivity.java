@@ -7,35 +7,36 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
-import android.widget.HeaderViewListAdapter;
+import android.view.MenuItem;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.viewpager2.widget.ViewPager2;
+import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.tabs.TabLayout;
-import com.pbdvmobile.app.adapters.DashboardAdapter;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
-
-import java.util.Objects;
+import com.pbdvmobile.app.fragments.DashboardFragment;
+import com.pbdvmobile.app.fragments.ExplorerFragment;
+import com.pbdvmobile.app.fragments.ResourcesFragment;
+import com.pbdvmobile.app.fragments.TutorDashboardFragment;
 
 public class MainActivity extends AppCompatActivity {
 
     RelativeLayout main;
-    TabLayout tablayout;
-    ViewPager2 viewpager2;
     ImageButton menuswitch;
     NavigationView nav;
     TextView nav_header, nav_header_email, flash;
-    DashboardAdapter dashboardAdapter;
+    private BottomNavigationView bottomNavigationView;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -54,24 +55,28 @@ public class MainActivity extends AppCompatActivity {
         DataManager dataManager = DataManager.getInstance(this);
         LogInUser current_user = LogInUser.getInstance(dataManager);
 
-        // Go to log-in page
+        // ---- Go to log-in page if not logged in
         if(!current_user.isLoggedIn()){
             Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
             startActivity(toLogin);
             finish(); // can't come back to main activity
             return;
-
         }
 
-        flash = findViewById(R.id.txtError);
 
-        // changes from other activities
-        if(current_user.message != null){
-            dataManager.displayError(flash, flash, current_user.message);
-            current_user.message = null;
-        }
 
-      // navigation
+        /* ---- Start - side navigation section */
+
+        // Side navigation Switch
+        menuswitch = findViewById(R.id.imgMenu);
+        main = findViewById(R.id.main);
+        main.setOnClickListener(v -> {
+            flash = findViewById(R.id.txtError);
+            nav.setVisibility(GONE);
+        });
+        menuswitch.setOnClickListener(v -> nav.setVisibility(VISIBLE));
+
+        // Side navigation
         nav = findViewById(R.id.nav_view);
         var headerView = nav.getHeaderView(0);
         nav_header = headerView.findViewById(R.id.nav_header_name);
@@ -98,13 +103,24 @@ public class MainActivity extends AppCompatActivity {
             startActivity(toProfile);
             return false;
         });
+        // To Schedule History page
+        menu.findItem(R.id.nav_schedule).setOnMenuItemClickListener(v ->{
+            Intent toHistory = new Intent(MainActivity.this, ScheduleHistoryActivity.class);
+            startActivity(toHistory);
+            return false;
+        });
+        // To Notifications page
+        menu.findItem(R.id.nav_notifications).setOnMenuItemClickListener(v ->{
+            Intent toNotifications = new Intent(MainActivity.this, NotificationsActivity.class);
+            startActivity(toNotifications);
+            return false;
+        });
         // To payments page
-        menu.findItem(R.id.nav_payments).setOnMenuItemClickListener(v ->{
+        menu.findItem(R.id.nav_payments_history).setOnMenuItemClickListener(v ->{
             Intent toPayment = new Intent(MainActivity.this, PaymentGaywayActivity.class);
             startActivity(toPayment);
             return false;
         });
-
         // Logout
         menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
             current_user.logOut();
@@ -115,44 +131,64 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // Main view
-        menuswitch = findViewById(R.id.imgMenu);
-        tablayout = findViewById(R.id.tab_layout);
-        viewpager2 = findViewById(R.id.view_pager);
-        dashboardAdapter = new DashboardAdapter(this);
-        viewpager2.setAdapter(dashboardAdapter);
+        /* ---- End - side navigation section */
 
-        main = findViewById(R.id.main);
-        main.setOnClickListener(v -> {
-            flash = findViewById(R.id.txtError);
-            nav.setVisibility(GONE);
-        });
-        menuswitch.setOnClickListener(v -> nav.setVisibility(VISIBLE));
 
-       tablayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
+        /* ---- Start - Bottom Navigation Section */
 
-                viewpager2.setCurrentItem(tab.getPosition());
-            }
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.getMenu().findItem(R.id.navigation_tutor_center).setVisible(current_user.getUser().isTutor());
 
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
+        // Set the listener for item selection
+        bottomNavigationView.setOnItemSelectedListener(navListener);
 
-            }
+        // Load the default fragment (e.g., Dashboard) when the activity starts
+        // Use commitNow() for the initial fragment if possible, or commit() otherwise
+        if (savedInstanceState == null) { // Load default only on initial creation
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new DashboardFragment())
+                    .commit();
+            // Optionally, set the Dashboard item as selected
+            bottomNavigationView.setSelectedItemId(R.id.navigation_dashboard);
+        }
 
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
+        flash = findViewById(R.id.txtError);
+        // changes from other activities
+        if(current_user.message != null){
+            dataManager.displayError(flash, flash, current_user.message);
+            current_user.message = null;
+        }
 
-            }
-        });
+        /* ---- End - Bottom Navigation Section */
 
-        viewpager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                Objects.requireNonNull(tablayout.getTabAt(position)).select();
-            }
-        });
     }
+
+    // Listener for BottomNavigationView item selections
+    private final NavigationBarView.OnItemSelectedListener navListener =
+            item -> {
+                Fragment selectedFragment = null;
+                int itemId = item.getItemId(); // Get item ID once
+
+                // Determine which fragment to load based on the selected item ID
+                if (itemId == R.id.navigation_dashboard) {
+                    selectedFragment = new DashboardFragment();
+                } else if (itemId == R.id.navigation_explorer) {
+                    selectedFragment = new ExplorerFragment();
+                } else if (itemId == R.id.navigation_resources) {
+                    selectedFragment = new ResourcesFragment();
+                } else if (itemId == R.id.navigation_tutor_center) {
+                    selectedFragment = new TutorDashboardFragment();
+                }
+                // Replace the current fragment with the selected one
+                if (selectedFragment != null) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, selectedFragment)
+                            // Optional: Add to back stack if you want back navigation between fragments
+//                             .addToBackStack(null)
+                            .commit();
+                    return true; // Indicate successful handling
+                }
+
+                return false; // Indicate item selection was not handled
+            };
 }
