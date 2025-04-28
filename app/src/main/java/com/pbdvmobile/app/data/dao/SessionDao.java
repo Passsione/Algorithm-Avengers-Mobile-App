@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 import com.pbdvmobile.app.data.SqlOpenHelper;
 import com.pbdvmobile.app.data.model.Session;
+import com.pbdvmobile.app.data.model.User;
+import com.pbdvmobile.app.data.schedule.TimeSlot;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,10 +15,16 @@ import java.util.List;
 public class SessionDao {
     private final SqlOpenHelper dbHelper;
 
+    // 8:00 in Milliseconds
+    private final long OPEN_TIME = hourToMseconds(8) + minutesToMseconds(0);
+    // 17:00 in Milliseconds
+    private final long CLOSE_TIME = hourToMseconds(17) + minutesToMseconds(0);
+    private final int SESSION_LIMIT = 3;
     public SessionDao(SqlOpenHelper dbHelper) {
         this.dbHelper = dbHelper;
     }
-
+    public long hourToMseconds(int hour) {return (long) hour * 60 * 60 * 1000;}
+    public long minutesToMseconds(int minutes) {return (long) minutes * 60 * 1000;}
     public long insertSession(@NonNull Session session) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -75,6 +83,29 @@ public class SessionDao {
         db.close();
         return sessions;
     }
+    public List<TimeSlot> getTakenTimeSlot(int tutorId) {
+        List<TimeSlot> sessionTimes = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
+                null,
+                SqlOpenHelper.KEY_SESSION_TUTOR_ID + "=? AND (" + // Filter by tutorId
+                SqlOpenHelper.KEY_SESSION_STATUS+ "=Comfirmed OR " +
+                SqlOpenHelper.KEY_SESSION_STATUS + "=Pending) AND",    // Filter by status (Comfirmed or Pending)
+                new String[]{String.valueOf(tutorId)},
+                null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Session session = cursorToSession(cursor);
+                sessionTimes.add(new TimeSlot(session.getStartTime(), session.getEndTime()));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return sessionTimes;
+    }
+
 
     public List<Session> getSessionsByTuteeId(int tuteeId) {
         List<Session> sessions = new ArrayList<>();
@@ -95,6 +126,36 @@ public class SessionDao {
         cursor.close();
         db.close();
         return sessions;
+    }
+
+    public boolean requestSession(User student, User tutor, TimeSlot requestedSlot, int subjectId, String location) {
+
+        // Check if the service is available for the requested time slot
+        if(OPEN_TIME < requestedSlot.getEndTime().getTime() && CLOSE_TIME > requestedSlot.getStartTime().getTime()) {
+
+            Date currentDate = new Date();
+            int tutorStudentNum = tutor.getStudentNum();
+            int tuteeStudentNum = student.getStudentNum();
+
+            for (TimeSlot slot : getTakenTimeSlot(tutorStudentNum)) {
+
+                // slots before the current date are not available
+                if (slot.getEndTime().before(currentDate) || slot.overlaps(requestedSlot)) continue;
+
+                // Booking doesn't conflict with any existing sessions
+                Session session = new Session(tuteeStudentNum, tutorStudentNum, subjectId);
+                session.setStartTime(requestedSlot.getStartTime());
+                session.setEndTime(requestedSlot.getEndTime());
+                session.setStatus(Session.Status.PENDING);
+                session.setLocation(location);
+                insertSession(session);
+                return true;
+            }
+            // Booking does conflict with any existing sessions
+            return false;
+        }
+        // Booking is outside the service hours
+        return false;
     }
 
     public int updateSessionStatus(int sessionId, @NonNull Session.Status status) {

@@ -1,6 +1,5 @@
 package com.pbdvmobile.app.data.model;
 
-
 import java.util.Date;
 
 public class Session {

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class Sum {
 		
 	public static void main(String[] args) {
-		Tutor tutor = new Tutor("Dr. Smith");
+	/*	Tutor tutor = new Tutor("Dr. Smith");
 
         // Add tutor availability
         tutor.addAvailability(new TimeSlot(LocalDateTime.of(2025, 4, 24, 10, 0),
@@ -27,6 +27,6 @@ public class Sum {
 		// Student requests a time
 		TimeSlot requested1 = new TimeSlot(LocalDateTime.of(2025, 4, 24, 10, 30),
 		        LocalDateTime.of(2025, 4, 24, 11, 30));
-		student1.requestSession(tutor, requested1); // Collision logic is checked here
+		student1.requestSession(tutor, requested1); // Collision logic is checked here*/
 	}
 }

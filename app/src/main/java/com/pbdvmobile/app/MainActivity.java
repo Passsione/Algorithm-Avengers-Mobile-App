@@ -91,20 +91,24 @@ public class MainActivity extends AppCompatActivity {
 
         //navigation menu
         Menu menu = nav.getMenu();
+        // To profile page
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
 
             Intent toProfile = new Intent(MainActivity.this, ProfileActivity.class);
             startActivity(toProfile);
             return false;
         });
+        // To payments page
         menu.findItem(R.id.nav_payments).setOnMenuItemClickListener(v ->{
             Intent toPayment = new Intent(MainActivity.this, PaymentGaywayActivity.class);
             startActivity(toPayment);
             return false;
         });
 
+        // Logout
         menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
             current_user.logOut();
+            current_user.message = "Successfully logged out";
             Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
             startActivity(toLogin);
             finish();

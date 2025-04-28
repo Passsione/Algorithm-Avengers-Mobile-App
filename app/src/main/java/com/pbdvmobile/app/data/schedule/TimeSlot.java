@@ -1,27 +1,31 @@
 package com.pbdvmobile.app.data.schedule;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 public class TimeSlot {
-	  
-          LocalDateTime startTime;
-          LocalDateTime endTime;
 
-          public TimeSlot(LocalDateTime startTime, LocalDateTime endTime) {
-              this.startTime = startTime;
-              this.endTime = endTime;
-          }
+    Date startTime;
+    Date endTime;
+    // padding (15 minutes in milliseconds) around the sessions times
+    long timePadding = 15 * 60 * 1000;
 
-          public LocalDateTime getStartTime() { return startTime; }
-          public LocalDateTime getEndTime() { return endTime; }
+    public TimeSlot(Date startTime, Date endTime) {
+        startTime.setTime(startTime.getTime() - timePadding);
+        endTime.setTime(endTime.getTime() + timePadding);
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
 
-          public boolean overlaps(TimeSlot other) {
-              return (startTime.isBefore(other.endTime) && endTime.isAfter(other.startTime));
-          }
+    public Date getStartTime() { return startTime; }
+    public Date getEndTime() { return endTime; }
 
-          @Override
-          public String toString() {
-              return "TimeSlot{" + "start=" + startTime + ", end=" + endTime + '}';
-          }
-      }
+    public boolean overlaps(TimeSlot other) {
+      return (startTime.before(other.endTime) && endTime.after(other.startTime));
+    }
+
+    @Override
+    public String toString() {
+      return "TimeSlot{" + "start=" + startTime + ", end=" + endTime + '}';
+    }
+}
 
