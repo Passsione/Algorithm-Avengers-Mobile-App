@@ -76,6 +76,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         });
 
+        /* ---- Save changes to the database */
         save.setOnClickListener(v -> {
 
             current_user.message = "Changes saved";

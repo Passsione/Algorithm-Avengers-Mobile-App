@@ -25,7 +25,7 @@
             android:name=".ScheduleHistoryActivity"
             android:exported="false" />
         <activity
-            android:name=".PaymentGaywayActivity"
+            android:name=".PaymentGatewayActivity"
             android:exported="false" />
         <activity
             android:name=".ProfileActivity"

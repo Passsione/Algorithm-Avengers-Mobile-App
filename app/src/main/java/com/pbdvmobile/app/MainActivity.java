@@ -7,13 +7,12 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -36,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     ImageButton menuswitch;
     NavigationView nav;
     TextView nav_header, nav_header_email, flash;
+    Button exit;
     private BottomNavigationView bottomNavigationView;
 
     @SuppressLint("SetTextI18n")
@@ -115,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
             startActivity(toNotifications);
             return false;
         });
-        // To payments page
-        menu.findItem(R.id.nav_payments_history).setOnMenuItemClickListener(v ->{
-            Intent toPayment = new Intent(MainActivity.this, PaymentGaywayActivity.class);
+        // To payments gateway
+        menu.findItem(R.id.nav_payments_details).setOnMenuItemClickListener(v ->{
+            Intent toPayment = new Intent(MainActivity.this, PaymentGatewayActivity.class);
             startActivity(toPayment);
             return false;
         });

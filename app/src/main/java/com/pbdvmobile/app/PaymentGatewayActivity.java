@@ -21,7 +21,7 @@ import com.pbdvmobile.app.data.LogInUser;
 
 import java.util.Calendar;
 
-public class PaymentGaywayActivity extends AppCompatActivity {
+public class PaymentGatewayActivity extends AppCompatActivity {
 
     // View declarations
     private EditText lastNameEditText, initialsEditText, cardNumberEditText;
@@ -37,7 +37,7 @@ public class PaymentGaywayActivity extends AppCompatActivity {
 
         // Enable edge-to-edge display
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_payment_gayway);
+        setContentView(R.layout.activity_payment_gateway);
 
         // Handle window insets for edge-to-edge
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

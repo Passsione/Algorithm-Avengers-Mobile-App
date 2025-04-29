@@ -6,7 +6,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".PaymentGaywayActivity">
+    tools:context=".PaymentGatewayActivity">
 
     <!-- Last Name -->
     <com.google.android.material.textfield.TextInputLayout
