@@ -4,7 +4,9 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="primary">#7727EF</color>
+
     <color name="primary_dark">#344052</color>
+    <color name="gray">#475261</color>
     <color name="primary_light">#BBDEFB</color>
     <color name="accent">#FF4081</color>
     <color name="primary_text">#212121</color>

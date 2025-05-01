@@ -1,4 +1,4 @@
-package com.pbdvmobile.app.data.schedule;
+package com.pbdvmobile.app.data.Schedule;
 
 import java.util.Date;
 

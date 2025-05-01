@@ -8,16 +8,6 @@
     tools:context=".ProfileActivity"
     >
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="300sp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        android:visibility="gone"
-        app:headerLayout="@navigation/nav_header"
-        app:menu="@menu/drawer_menu" />
-
     <ImageView
         android:id="@+id/imgProfileImage"
         android:layout_width="wrap_content"
@@ -26,6 +16,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@tools:sample/avatars" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainerView4"
+        android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="411dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/ProfileInfoCard"

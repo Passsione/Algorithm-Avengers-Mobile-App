@@ -1,7 +1,5 @@
 
-package com.pbdvmobile.app.data.schedule;
-
-import java.time.LocalDateTime;
+package com.pbdvmobile.app.data.Schedule;
 
 public class Sum {
 		

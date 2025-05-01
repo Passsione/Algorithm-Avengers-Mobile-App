@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 
 import com.pbdvmobile.app.data.SqlOpenHelper;
 import com.pbdvmobile.app.data.model.User;
+import com.pbdvmobile.app.data.model.UserSubject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -205,6 +206,5 @@ public class UserDao {
 
         return user;
     }
-
 
 }

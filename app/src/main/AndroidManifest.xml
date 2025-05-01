@@ -13,6 +13,9 @@
         android:theme="@style/Theme.PBDVMobileApp"
         tools:targetApi="31" >
         <activity
+            android:name=".ResourceUploadActivity"
+            android:exported="false" />
+        <activity
             android:name=".NotificationsActivity"
             android:exported="false" />
         <activity
@@ -22,7 +25,7 @@
             android:name=".AIBaseActivity"
             android:exported="false" />
         <activity
-            android:name=".ScheduleHistoryActivity"
+            android:name=".ScheduleActivity"
             android:exported="false" />
         <activity
             android:name=".PaymentGatewayActivity"

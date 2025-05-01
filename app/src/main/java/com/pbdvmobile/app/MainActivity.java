@@ -1,12 +1,8 @@
 package com.pbdvmobile.app;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
@@ -65,75 +61,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        /* ---- Start - side navigation section */
-
-        // Side navigation Switch
-        menuswitch = findViewById(R.id.imgMenu);
-        main = findViewById(R.id.main);
-        main.setOnClickListener(v -> {
-            flash = findViewById(R.id.txtError);
-            nav.setVisibility(GONE);
-        });
-        menuswitch.setOnClickListener(v -> nav.setVisibility(VISIBLE));
-
-        // Side navigation
-        nav = findViewById(R.id.nav_view);
-        var headerView = nav.getHeaderView(0);
-        nav_header = headerView.findViewById(R.id.nav_header_name);
-        nav_header_email = headerView.findViewById(R.id.nav_header_email);
-
-        // Handle potential null values for first and last name
-        String firstName = current_user.getUser().getFirstName();
-        String lastName = current_user.getUser().getLastName();
-        String email = current_user.getUser().getEmail();
-        String fullName = "";
-        if(email == null) email = "";
-        if(firstName != null) fullName += firstName;
-        if(lastName != null) fullName += " " + lastName;
-
-        nav_header.setText(fullName.trim());
-        nav_header_email.setText(email.trim());
-
-        //navigation menu
-        Menu menu = nav.getMenu();
-        // To profile page
-        menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
-
-            Intent toProfile = new Intent(MainActivity.this, ProfileActivity.class);
-            startActivity(toProfile);
-            return false;
-        });
-        // To Schedule History page
-        menu.findItem(R.id.nav_schedule).setOnMenuItemClickListener(v ->{
-            Intent toHistory = new Intent(MainActivity.this, ScheduleHistoryActivity.class);
-            startActivity(toHistory);
-            return false;
-        });
-        // To Notifications page
-        menu.findItem(R.id.nav_notifications).setOnMenuItemClickListener(v ->{
-            Intent toNotifications = new Intent(MainActivity.this, NotificationsActivity.class);
-            startActivity(toNotifications);
-            return false;
-        });
-        // To payments gateway
-        menu.findItem(R.id.nav_payments_details).setOnMenuItemClickListener(v ->{
-            Intent toPayment = new Intent(MainActivity.this, PaymentGatewayActivity.class);
-            startActivity(toPayment);
-            return false;
-        });
-        // Logout
-        menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
-            current_user.logOut();
-            current_user.message = "Successfully logged out";
-            Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
-            startActivity(toLogin);
-            finish();
-            return false;
-        });
-
-        /* ---- End - side navigation section */
-
-
         /* ---- Start - Bottom Navigation Section */
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -146,18 +73,18 @@ public class MainActivity extends AppCompatActivity {
         // Use commitNow() for the initial fragment if possible, or commit() otherwise
         if (savedInstanceState == null) { // Load default only on initial creation
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new DashboardFragment())
+                    .replace(R.id.mainview_fragment_container, new DashboardFragment())
                     .commit();
             // Optionally, set the Dashboard item as selected
             bottomNavigationView.setSelectedItemId(R.id.navigation_dashboard);
         }
 
-        flash = findViewById(R.id.txtError);
+        /*flash = findViewById(R.id.txtError);
         // changes from other activities
         if(current_user.message != null){
             dataManager.displayError(flash, flash, current_user.message);
             current_user.message = null;
-        }
+        }*/
 
         /* ---- End - Bottom Navigation Section */
 
@@ -182,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                 // Replace the current fragment with the selected one
                 if (selectedFragment != null) {
                     getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, selectedFragment)
+                            .replace(R.id.mainview_fragment_container, selectedFragment)
                             // Optional: Add to back stack if you want back navigation between fragments
 //                             .addToBackStack(null)
                             .commit();

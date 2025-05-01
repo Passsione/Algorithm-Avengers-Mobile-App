@@ -1,5 +1,7 @@
 package com.pbdvmobile.app.data.model;
 
+import com.pbdvmobile.app.data.DataManager;
+
 public class UserSubject {
     private int userId;
     private int subjectId;
@@ -43,6 +45,7 @@ public class UserSubject {
     public boolean getTutoring() {
         return tutoring;
     }
+
 
     public void setTutoring(boolean tutoring) {
         this.tutoring = tutoring;

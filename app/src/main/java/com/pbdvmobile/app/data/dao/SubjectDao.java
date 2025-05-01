@@ -150,7 +150,7 @@ public class SubjectDao {
         db.close();
         return subjects;
     }
-    public int updateUserSubjectMark(UserSubject userSubject){
+    public int updateUserSubject(UserSubject userSubject){
         int userId = userSubject.getUserId();
         int subjectId = userSubject.getSubjectId();
         double mark = userSubject.getMark();
@@ -177,4 +177,7 @@ public class SubjectDao {
         db.close();
         return rowsAffected;
     }
+
+
+    
 }

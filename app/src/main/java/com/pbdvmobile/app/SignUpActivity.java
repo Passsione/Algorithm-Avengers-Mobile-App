@@ -86,6 +86,7 @@ public class SignUpActivity extends AppCompatActivity {
 
                             user.setPassword(password.getText().toString());
                             user.setTutor(tutor.isChecked());
+
                             dataManager.getUserDao().insertUser(user);
 
                             // randomly assign user subjects

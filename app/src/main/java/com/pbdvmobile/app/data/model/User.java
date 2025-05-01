@@ -1,9 +1,10 @@
 package com.pbdvmobile.app.data.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class User {
+public class User implements Serializable {
     public enum TierLevel {
         BASIC,
         PREMIUM,
@@ -15,7 +16,6 @@ public class User {
         BACHELOR,
         ADV_DIP,
         DIP,
-        POSTGRAD,
         HONOURS,
         MASTER,
         PHD

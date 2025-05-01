@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -26,44 +27,56 @@
                 android:layout_marginBottom="8dp"
                 android:background="@drawable/search_background"
                 app:iconifiedByDefault="false"
-                app:queryHint="Search tutors by name or subject" />
+                app:queryHint="Search tutors by name" />
 
             <!-- Filter Section -->
-            <TextView
-                android:layout_width="match_parent"
+
+            <Button
+                android:id="@+id/btnFilter"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Filters"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginTop="8dp" />
+                />
 
             <LinearLayout
+                android:id="@+id/filter_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
 
                 <!-- Rating Filter -->
                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Filters"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Minimum Rating"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="8dp"
+                    android:text="Minimum Rating" />
 
                 <RatingBar
                     android:id="@+id/rating_filter"
+                    style="?android:attr/ratingBarStyleSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:numStars="5"
-                    android:stepSize="0.5"
-                    style="?android:attr/ratingBarStyleSmall"
-                    android:layout_marginBottom="8dp" />
+                    android:stepSize="0.5" />
 
                 <!-- Subject Filter -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Subject"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="8dp"
+                    android:text="Subject" />
 
                 <Spinner
                     android:id="@+id/subject_spinner"
@@ -75,8 +88,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Education Level"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="8dp"
+                    android:text="Education Level" />
 
                 <Spinner
                     android:id="@+id/education_level_spinner"
@@ -85,20 +98,27 @@
                     android:layout_marginBottom="8dp" />
 
                 <Button
-                    android:id="@+id/apply_filters_button"
+                    android:id="@+id/apply_filters"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Apply Filters"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="8dp"
+                    android:text="Apply Filters" />
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Tutors List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/tutors_recycler_view"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
-        android:clipToPadding="false" />
+        android:contentDescription="tutor search view">
+        <LinearLayout
+            android:id="@+id/tutor_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+
+
+    <!-- Tutors List -->
 </LinearLayout>
