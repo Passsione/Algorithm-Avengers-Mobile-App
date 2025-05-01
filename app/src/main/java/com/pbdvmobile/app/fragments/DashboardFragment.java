@@ -64,6 +64,9 @@ public class DashboardFragment extends Fragment {
 
         for(Session session : sessions){
 
+            if(session.getStatus() == Session.Status.CANCELLED ||
+                    session.getStatus() == Session.Status.COMPLETED ||
+                    session.getStatus() == Session.Status.DECLINED)continue;
 //            if(new Date().before(session.getStartTime())){
 
             sessionLayout = new LinearLayout(this.getContext());
@@ -174,11 +177,13 @@ public class DashboardFragment extends Fragment {
             // --- Create View Button ---
             // Use MaterialButton to easily apply Material styles programmatically
             // Pass the style attribute directly in the constructor
-            viewSchedule = new MaterialButton(this.getContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle); // Using outlined style as an example close to TextButton appearance
+            viewSchedule = new MaterialButton(this.getContext(), null, 1);
             viewSchedule.setText("View");
             viewSchedule.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
             viewSchedule.setOnClickListener(v ->  {
                 Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
+                scheduleIntent.putExtra("job_type", "session_details");
+                scheduleIntent.putExtra("session", session);
                 startActivity(scheduleIntent);
             });
             actions.addView(reschedule);
@@ -192,7 +197,8 @@ public class DashboardFragment extends Fragment {
             sessionLayout.addView(actions);
 
             // --- Add session to upcoming list ---
-            upcoming.addView(sessionLayout);
+            if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionLayout);
+            else if(session.getStatus() == Session.Status.PENDING)pending.addView(sessionLayout);
 //            }
         }
 

@@ -3,10 +3,11 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
+
+import com.pbdvmobile.app.data.Schedule.TimeSlot;
 import com.pbdvmobile.app.data.SqlOpenHelper;
 import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.data.Schedule.TimeSlot;
 
 import java.util.ArrayList;
 import java.util.Date;

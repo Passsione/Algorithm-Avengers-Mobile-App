@@ -1,8 +1,9 @@
 package com.pbdvmobile.app.data.Schedule;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class TimeSlot {
+public class TimeSlot implements Serializable {
 
     Date startTime;
     Date endTime;

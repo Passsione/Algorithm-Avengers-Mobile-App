@@ -1,5 +1,6 @@
 package com.pbdvmobile.app.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -8,6 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -17,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
@@ -44,9 +50,16 @@ public class ExplorerFragment extends Fragment {
     LogInUser current_user;
     LinearLayout results;
     Button apply_filter;
-    SearchView searchView;
+    EditText searchView;
 
+    RatingBar ratingBar;
+    List<User> tutors; // Make tutors an instance variable if needed across methods
+    List<Integer> itemsPositions; // Make itemsPositions an instance variable
 
+//    // Handler for debouncing search input
+    private Handler searchHandler = new Handler(Looper.getMainLooper());
+    private Runnable searchRunnable;
+    private String currentSearchQuery = ""; // Store the latest query
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -67,12 +80,41 @@ public class ExplorerFragment extends Fragment {
             startActivity(toLogin);
         }
 
-        List<User> tutors = dataManager.getUserDao().getAllTutors();
+        tutors = dataManager.getUserDao().getAllTutors();
         results = view.findViewById(R.id.tutor_list);
 
         // ---- Start - Search and filter ----
 
-        List<Integer> itemsPositions = new ArrayList<>(Arrays.asList(0, 0));
+        // --- Search tutors by name ---
+        searchView = view.findViewById(R.id.search_view); // Connect to your SearchView XML element
+        searchView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // No action needed here
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // This method is called AS the text is changing
+                final String query = s.toString();
+                currentSearchQuery = query; // Update the current query state
+
+                // Debounce mechanism (same as before)
+
+                searchHandler.removeCallbacks(searchRunnable);
+                searchRunnable = () -> display_tutors(tutors, itemsPositions, query);
+                searchHandler.postDelayed(searchRunnable, 300); // 300ms delay
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // No action needed here (logic moved to onTextChanged with debounce)
+            }
+        });
+
+
+        itemsPositions = new ArrayList<>(Arrays.asList(0, 0, -1));
+
         // --- Open / close filter section ---
         Button filter = view.findViewById(R.id.btnFilter);
         LinearLayout filterLayout = view.findViewById(R.id.filter_section);
@@ -80,7 +122,13 @@ public class ExplorerFragment extends Fragment {
             filterLayout.setVisibility(filterLayout.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
             filter.setText(filterLayout.getVisibility() == View.VISIBLE ? "Close" : "Filters");
         });
+
         // --- Rating controls ---
+//        ratingBar = view.findViewById(R.id.rating_filter);
+//        ratingBar.getRating();
+//        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+//            itemsPositions.set(2, (int)rating);
+//        });
 
 
         // --- Subjects drop down ---
@@ -102,7 +150,7 @@ public class ExplorerFragment extends Fragment {
         subjectsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter
         subject_search.setAdapter(subjectsAdapter);
-        // Optional: Handle item selection
+        // Handle item selection
         subject_search.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -136,7 +184,7 @@ public class ExplorerFragment extends Fragment {
         eduLevelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter
         education_search.setAdapter(eduLevelsAdapter);
-        // Optional: Handle item selection
+        // Handle item selection
         education_search.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -151,26 +199,36 @@ public class ExplorerFragment extends Fragment {
             }
         });
 
-//        searchView = view.findViewById(R.id.search_view);
+
+
+        // --- Apply filter button ---
         apply_filter = view.findViewById(R.id.apply_filters);
         AtomicBoolean filtered = new AtomicBoolean(false);
         apply_filter.setOnClickListener(l -> {
             filtered.set(true);
-
-            display_tutors(tutors, itemsPositions);
+            currentSearchQuery = searchView.getText().toString();
+            display_tutors(tutors, itemsPositions, currentSearchQuery);
         });
-        if(!filtered.get())display_tutors(tutors, itemsPositions);
+        if(!filtered.get())display_tutors(tutors, itemsPositions, currentSearchQuery);
     }
 
-    private void display_tutors(List<User> tutors, List<Integer> search_criteria) {
+    @SuppressLint("SetTextI18n")
+    private void display_tutors(List<User> tutors, List<Integer> search_criteria, String searchQuery) {
         results.removeAllViews();
+
+        // Convert search query to lowercase for case-insensitive comparison
+        String lowerCaseSearchQuery = searchQuery.toLowerCase();
         for(User tutor : tutors){
             if(tutor.getStudentNum() == current_user.getUser().getStudentNum()) continue;
-            int subject = search_criteria.get(0);
-            int education = search_criteria.get(1);
+            int subject = Integer.parseInt(String.valueOf(search_criteria.get(0)));
+            int education = Integer.parseInt(String.valueOf(search_criteria.get(1)));
+            double rating = search_criteria.get(2);
 
+
+            // Apply Search Filter (by subject)
+            UserSubject c_subject = null;
             if(subject != 0) {
-                UserSubject c_subject = dataManager.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum()).get(subject - 1);
+                c_subject = dataManager.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum()).get(subject - 1);
                 List<UserSubject> t_subjects = dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum());
                 boolean found = false;
                 for(UserSubject t : t_subjects) {
@@ -180,13 +238,25 @@ public class ExplorerFragment extends Fragment {
                     }
                 }
                 if(!found)continue;
+
             }
 
+            // Apply Search Filter (by education)
             if(education != 0) {
                 if(tutor.getEducationLevel() != User.EduLevel.values()[education - 1]) continue;
             }
-            // checks for common subjects
-//            if(!match_student(tutor)) continue;
+
+            // Apply Search Filter (by rating)
+            if(rating >= 0) {
+                if(tutor.getAverageRating() < rating) continue;
+            }
+
+            // Apply Search View Filter (by name)
+            String tutorFullName = (tutor.getFirstName() + tutor.getLastName()).toLowerCase();
+            if (!lowerCaseSearchQuery.isEmpty() && !tutorFullName.contains(lowerCaseSearchQuery)) continue;
+
+
+
 
             LinearLayout tutorCard = new LinearLayout(getContext());
             tutorCard.setOrientation(LinearLayout.HORIZONTAL);
@@ -241,8 +311,16 @@ public class ExplorerFragment extends Fragment {
             tutorRating.setNumStars(5);
             tutorRating.setStepSize(0.5f);
             double stars = tutor.getAverageRating();
-            tutorRating.setRating(stars < 0 ? 0f : (float)stars);
-            detailsLayout.addView(tutorRating);
+            if(stars >= 0){
+                tutorRating.setRating((float)stars);
+                detailsLayout.addView(tutorRating);
+            }else{
+                tutorRating.setVisibility(View.GONE);
+                TextView not_rating = new TextView(getContext());
+                not_rating.setText("Not rated yet");
+                not_rating.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                detailsLayout.addView(not_rating);
+            }
 
             // Create TextView for tutor subjects
             TextView tutorSubjects = new TextView(getContext());
@@ -251,8 +329,19 @@ public class ExplorerFragment extends Fragment {
                     ViewGroup.LayoutParams.WRAP_CONTENT);
             subjectsParams.topMargin = dpToPx(4);
             tutorSubjects.setLayoutParams(subjectsParams);
-            tutorSubjects.setText("Mathematics, Physics");
+
+            String subjects = "";
+            if(subject == 0)
+                for(UserSubject sub : dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum())) {
+                    if(!sub.getTutoring()) continue;
+                    String subjectName = dataManager.getSubjectDao().getSubjectById(sub.getSubjectId()).getSubjectName();
+                    subjects += subjectName.split(": ")[0] +", ";
+                }
+            else subjects = dataManager.getSubjectDao().getSubjectById(c_subject.getSubjectId()).getSubjectName();
+
+            tutorSubjects.setText(subjects);
             detailsLayout.addView(tutorSubjects);
+
 
             // Create TextView for tutor education
             TextView tutorEducation = new TextView(getContext());
@@ -275,6 +364,8 @@ public class ExplorerFragment extends Fragment {
             requestSessionButton.setOnClickListener(l ->{
                 Intent i = new Intent(getContext(), ScheduleActivity.class);
                 i.putExtra("tutor", tutor);
+                i.putExtra("current_user", current_user);
+                i.putExtra("job_type", "create_session");
                 startActivity(i);
             });
             requestSessionButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);

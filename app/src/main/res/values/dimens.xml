@@ -13,4 +13,5 @@
     <dimen name="reflow_text_block_horizontal_gap">8dp</dimen>
     <dimen name="reflow_text_title_size">22sp</dimen>
     <dimen name="reflow_text_description_size">13sp</dimen>
+    <dimen name="bottom_navigation_height" >93dp</dimen>
 </resources>

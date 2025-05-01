@@ -20,14 +20,15 @@
             android:padding="8dp">
 
             <!-- Search Bar -->
-            <androidx.appcompat.widget.SearchView
+            <EditText
                 android:id="@+id/search_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:background="@drawable/search_background"
-                app:iconifiedByDefault="false"
-                app:queryHint="Search tutors by name" />
+                android:hint="Search for tutors"
+                android:height="35dp"
+                android:text=""
+                android:background="@drawable/search_background" />
 
             <!-- Filter Section -->
 

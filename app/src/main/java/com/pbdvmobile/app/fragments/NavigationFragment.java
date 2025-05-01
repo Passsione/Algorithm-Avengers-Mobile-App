@@ -94,9 +94,14 @@ public class NavigationFragment extends Fragment {
 
         //navigation menu
         Menu menu = nav.getMenu();
+        // To Home page
+        menu.findItem(R.id.nav_home).setOnMenuItemClickListener(v ->{
+            Intent toHome = new Intent(getActivity(), MainActivity.class);
+            startActivity(toHome);
+            return false;
+        });
         // To profile page
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
-
             Intent toProfile = new Intent(getActivity(), ProfileActivity.class);
             startActivity(toProfile);
             return false;
@@ -104,6 +109,7 @@ public class NavigationFragment extends Fragment {
         // To Schedule History page
         menu.findItem(R.id.nav_schedule).setOnMenuItemClickListener(v ->{
             Intent toHistory = new Intent(getActivity(), ScheduleActivity.class);
+            toHistory.putExtra("job_type", "session_history");
             startActivity(toHistory);
             return false;
         });

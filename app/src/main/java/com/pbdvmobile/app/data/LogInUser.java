@@ -4,10 +4,11 @@ import android.widget.EditText;
 
 import com.pbdvmobile.app.data.model.User;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class LogInUser {
+public class LogInUser implements Serializable {
 
     private final DataManager dataManager;
     private static LogInUser instance;

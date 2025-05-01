@@ -192,4 +192,13 @@ public class DataManager {
         }*/
     }
 
+    public String[] formatDateTime(String date) {
+        String[] result = new String[2];
+        result[0] =date.split(" ")[0]+", "
+                + date.split(" ")[1] +
+                " "+date.split(" ")[2]
+                +", "+date.split(" ")[5];
+        result[1] = date.split(" ")[3];
+        return result;
+    }
 }

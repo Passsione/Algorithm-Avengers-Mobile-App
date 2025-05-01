@@ -321,12 +321,13 @@
                 android:text="Reschedule" />
 
             <Button
-                android:id="@+id/btn_join_session"
+                android:id="@+id/btn_confirm_session"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:background="@color/status_confirmed"
                 android:layout_weight="1"
-                android:text="Join Now" />
+                android:text="Okay" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

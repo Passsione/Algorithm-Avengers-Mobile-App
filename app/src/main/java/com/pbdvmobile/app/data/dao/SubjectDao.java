@@ -99,6 +99,7 @@ public class SubjectDao {
                 userSubject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
                 userSubject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
                 userSubject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
+                userSubject.setTutoring(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING)) == 1);
                 userSubjects.add(userSubject);
             } while (cursor.moveToNext());
         }
@@ -123,6 +124,7 @@ public class SubjectDao {
                 userSubject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
                 userSubject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
                 userSubject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
+                userSubject.setTutoring(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING)) == 1);
                 userSubjects.add(userSubject);
             } while (cursor.moveToNext());
         }
@@ -143,6 +145,7 @@ public class SubjectDao {
                 subject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
                 subject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
                 subject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
+                subject.setTutoring(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING)) == 1);
                 subjects.add(subject);
             } while (cursor.moveToNext());
         }
@@ -150,6 +153,7 @@ public class SubjectDao {
         db.close();
         return subjects;
     }
+
     public int updateUserSubject(UserSubject userSubject){
         int userId = userSubject.getUserId();
         int subjectId = userSubject.getSubjectId();

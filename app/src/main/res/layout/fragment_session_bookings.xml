@@ -1,25 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light">
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Toolbar -->
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar_session_details"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
-            android:elevation="4dp"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="Session Booking" />
 
         <!-- Tutor Info Card -->
         <androidx.cardview.widget.CardView
@@ -115,15 +107,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Subject"
+                android:orientation="horizontal"
                 app:helperText="Select the subject for your session">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_subject"
+                <RadioGroup
+                    android:id="@+id/subjects_radio_group"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@android:drawable/arrow_down_float"
-                    android:focusable="false"
-                    android:inputType="none" />
+                    android:orientation="vertical">
+
+                </RadioGroup>
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Date Selection -->
@@ -134,13 +128,13 @@
                 android:hint="Date"
                 app:helperText="Select the date for your session">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_date"
+                <CalendarView
+                    android:id="@+id/calendar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@android:drawable/ic_menu_my_calendar"
-                    android:focusable="false"
-                    android:inputType="none" />
+
+                    android:layout_weight="1" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Time Selection -->
@@ -151,13 +145,12 @@
                 android:hint="Time"
                 app:helperText="Select the time for your session">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_time"
+                <RadioGroup
+                    android:id="@+id/radio_group_time"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@android:drawable/ic_menu_recent_history"
-                    android:focusable="false"
-                    android:inputType="none" />
+                    android:layout_height="match_parent"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="vertical"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Duration Selection -->
@@ -168,76 +161,58 @@
                 android:hint="Duration"
                 app:helperText="Select the duration of your session">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_duration"
+                <RadioGroup
+                    android:id="@+id/radio_group_duration"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@android:drawable/arrow_down_float"
-                    android:focusable="false"
-                    android:inputType="none" />
+                    android:layout_height="match_parent"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="vertical"/>
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Location Selection -->
-            <TextView
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
-                android:text="Location"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                app:helperText="Select the location of your session">
+
 
             <RadioGroup
-                android:id="@+id/radio_group_location"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:orientation="vertical">
-
-                <RadioButton
-                    android:id="@+id/radio_online"
+                    android:id="@+id/radio_group_location"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="Online (Zoom)" />
+                    android:layout_marginBottom="16dp"
+                    android:orientation="vertical">
 
-                <RadioButton
-                    android:id="@+id/radio_in_person"
+                    <RadioButton
+                        android:id="@+id/radio_online"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Online (Zoom)" />
+
+                    <RadioButton
+                        android:id="@+id/radio_in_person"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="In-person" />
+                </RadioGroup>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/input_location"
+                    style="@style/InputField"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="In-person" />
-            </RadioGroup>
+                    android:hint="Meeting Location"
+                    android:visibility="gone">
 
-            <!-- In-person location (visible only when in-person is selected) -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/input_location"
-                style="@style/InputField"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Meeting Location"
-                android:visibility="gone">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edt_location"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_location"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPostalAddress" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Session Notes -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/InputField"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Notes for Tutor (optional)"
-                app:helperText="Describe what you'd like to focus on during this session">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_notes"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textMultiLine"
-                    android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
@@ -261,7 +236,7 @@
 
 
             <Button
-                android:id="@+id/btn_join_session"
+                android:id="@+id/btn_confirm_session"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
