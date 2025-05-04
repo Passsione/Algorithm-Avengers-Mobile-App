@@ -79,7 +79,7 @@ public class ResourceUploadActivity extends AppCompatActivity {
 
         selectPdfButton = findViewById(R.id.selectPdfButton);
         uploadPdfButton = findViewById(R.id.uploadPdfButton);
-        txtFileName.findViewById(R.id.resourceTitle);
+        txtFileName = findViewById(R.id.resourceTitle);
         docName = findViewById(R.id.upload_doc_name);
         uploadPdfButton.setEnabled(false);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -179,14 +179,14 @@ public class ResourceUploadActivity extends AppCompatActivity {
 
             // Create a PdfData object with the file path.
 
-        if(subjectId.get() >=  1) {
+        if(subjectId.get() >= 1) {
             Resource pdf = new Resource(current_user.getUser().getStudentNum(), subjectId.get(), savedFilePath, fileName);  // Store the path, NOT the bytes
             // Insert the PDF data into the database using a background thread
             executorService.execute(() -> {
                 pdfDao.insertResource(pdf);
 
                 runOnUiThread(() -> {
-                    Toast.makeText(ResourceUploadActivity.this, "PDF path saved to database.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ResourceUploadActivity.this, "PDF saved to database.", Toast.LENGTH_LONG).show();
                     selectedPdfUri = null;
                     uploadPdfButton.setEnabled(false);
                     finish();

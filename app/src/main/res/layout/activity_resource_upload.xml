@@ -1,33 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ResourceUploadActivity"
-    android:fillViewport="true">
+    tools:context=".ResourceUploadActivity">
+
 
   <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:orientation="vertical"
+      android:layout_marginTop="60dp"
       android:padding="24dp">
 
     <!-- Header Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="24dp"
+        android:orientation="vertical">
 
       <TextView
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:text="upload resource"
+          android:gravity="start"
+          android:text="Upload resource"
           android:textSize="24sp"
-          android:textStyle="bold"
-          android:gravity="start"/>
+          android:textStyle="bold" />
 
     </LinearLayout>
 
@@ -59,34 +60,34 @@
         android:hint="Select a subject"
         app:boxStrokeColor="@color/primary"
         app:hintTextColor="@color/primary">
-        <Spinner
+
+      <Spinner
           android:id="@+id/subjectDropdown"
           android:layout_width="match_parent"
           android:layout_height="50dp"
 
-          android:importantForAccessibility="yes"
-          android:layout_marginBottom="20dp"/>
+          android:layout_marginBottom="20dp"
+          android:importantForAccessibility="yes" />
 
     </com.google.android.material.textfield.TextInputLayout>
-
 
 
     <!-- File Upload Card -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/uploadCard"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="110dp"
         android:layout_marginBottom="24dp"
 
+        app:cardElevation="2dp"
         app:strokeColor="@color/primary"
-        app:strokeWidth="1dp"
-        app:cardElevation="2dp">
+        app:strokeWidth="1dp">
 
       <LinearLayout
           android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:orientation="vertical"
           android:gravity="center"
+          android:orientation="vertical"
           android:padding="16dp">
 
         <Button
@@ -98,12 +99,12 @@
             android:textSize="16sp" />
 
         <TextView
-            android:layout_width="wrap_content"
             android:id="@+id/upload_doc_name"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="PDF's only"
-            android:textSize="12sp"
-            android:layout_marginTop="4dp"/>
+            android:textSize="12sp" />
       </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -139,5 +140,12 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
   </LinearLayout>
-</ScrollView>
+
+  <androidx.fragment.app.FragmentContainerView
+      android:id="@+id/fragmentContainerView"
+      android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+</RelativeLayout>
 

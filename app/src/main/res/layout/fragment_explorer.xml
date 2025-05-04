@@ -19,6 +19,15 @@
             android:orientation="vertical"
             android:padding="8dp">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="10dp"
+                android:text="Search for Tutors"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
             <!-- Search Bar -->
             <EditText
                 android:id="@+id/search_view"
@@ -53,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Filters"
+                    android:text=""
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -61,7 +70,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Minimum Rating" />
+                    android:text="Minimum Rating"
+                    android:visibility="gone" />
 
                 <RatingBar
                     android:id="@+id/rating_filter"
@@ -70,7 +80,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:numStars="5"
-                    android:stepSize="0.5" />
+                    android:stepSize="0.5"
+                    android:visibility="gone" />
 
                 <!-- Subject Filter -->
                 <TextView

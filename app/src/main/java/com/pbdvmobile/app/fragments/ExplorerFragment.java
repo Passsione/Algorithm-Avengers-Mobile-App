@@ -210,6 +210,12 @@ public class ExplorerFragment extends Fragment {
             display_tutors(tutors, itemsPositions, currentSearchQuery);
         });
         if(!filtered.get())display_tutors(tutors, itemsPositions, currentSearchQuery);
+        if(results.getChildCount() == 0){
+            TextView text = new TextView(getContext());
+            text.setText("Either none of the available tutors teach your subjects or meeting your search criteria");
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            results.addView(text);
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -379,20 +385,6 @@ public class ExplorerFragment extends Fragment {
 
             results.addView(tutorCard);
         }
-    }
-
-    private boolean match_student(User tutor) {
-
-        List<UserSubject> c_subjects = dataManager.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum());
-        List<UserSubject> t_subjects = dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum());
-
-        for(UserSubject t_subject : t_subjects){
-            if((!t_subject.getTutoring())) continue;
-            for(UserSubject c_subject : c_subjects){
-                if(t_subject.getSubjectId() == c_subject.getSubjectId()) return true;
-            }
-        }
-        return false;
     }
 
 
