@@ -43,7 +43,7 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/session_detail_tutor_image"
+                        android:id="@+id/session_booking_tutor_image"
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:contentDescription="Tutor profile picture"
@@ -53,10 +53,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:id="@+id/session_booking_tutor_details">
 
                         <TextView
-                            android:id="@+id/session_detail_tutor_name"
+                            android:id="@+id/session_booking_tutor_name"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Dr. John Smith"
@@ -64,7 +65,7 @@
                             android:textStyle="bold" />
 
                         <RatingBar
-                            android:id="@+id/session_detail_tutor_rating"
+                            android:id="@+id/session_booking_tutor_rating"
                             style="?android:attr/ratingBarStyleSmall"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -74,7 +75,7 @@
                             android:rating="4.5" />
 
                         <TextView
-                            android:id="@+id/session_detail_tutor_subjects"
+                            android:id="@+id/session_booking_tutor_subjects"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
@@ -83,7 +84,7 @@
                 </LinearLayout>
 
                 <Button
-                    android:id="@+id/btn_view_tutor_profile"
+                    android:id="@+id/booking_tutor_profile"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -179,38 +180,19 @@
                 app:helperText="Select the location of your session">
 
 
-            <RadioGroup
-                    android:id="@+id/radio_group_location"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:orientation="vertical">
-
-                    <RadioButton
-                        android:id="@+id/radio_online"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Online (Zoom)" />
-
-                    <RadioButton
-                        android:id="@+id/radio_in_person"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="In-person" />
-                </RadioGroup>
-
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/input_location"
                     style="@style/InputField"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Meeting Location"
-                    android:visibility="gone">
+                    android:hint="Meeting Location">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edt_location"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:text="Steve library"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -225,7 +207,7 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/btn_cancel_session"
+                android:id="@+id/btn_cancel_booking"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -236,7 +218,7 @@
 
 
             <Button
-                android:id="@+id/btn_confirm_session"
+                android:id="@+id/btn_confirm_booking"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"

@@ -30,6 +30,7 @@ import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.ScheduleActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
+import com.pbdvmobile.app.data.model.User;
 
 public class NavigationFragment extends Fragment {
 
@@ -95,17 +96,21 @@ public class NavigationFragment extends Fragment {
         //navigation menu
         Menu menu = nav.getMenu();
         // To Home page
+        menu.findItem(R.id.nav_home).setVisible(!getActivity().getClass().getSimpleName().equals("MainActivity"));
         menu.findItem(R.id.nav_home).setOnMenuItemClickListener(v ->{
             Intent toHome = new Intent(getActivity(), MainActivity.class);
             startActivity(toHome);
             return false;
         });
+
+        menu.findItem(R.id.nav_profile).setVisible(!getActivity().getClass().getSimpleName().equals("ProfileActivity"));
         // To profile page
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
             Intent toProfile = new Intent(getActivity(), ProfileActivity.class);
             startActivity(toProfile);
             return false;
         });
+
         // To Schedule History page
         menu.findItem(R.id.nav_schedule).setOnMenuItemClickListener(v ->{
             Intent toHistory = new Intent(getActivity(), ScheduleActivity.class);
@@ -113,6 +118,7 @@ public class NavigationFragment extends Fragment {
             startActivity(toHistory);
             return false;
         });
+
         // To Notifications page
         menu.findItem(R.id.nav_notifications).setOnMenuItemClickListener(v ->{
             Intent toNotifications = new Intent(getActivity(), NotificationsActivity.class);

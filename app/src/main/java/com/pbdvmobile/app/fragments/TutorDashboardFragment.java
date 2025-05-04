@@ -1,5 +1,6 @@
 package com.pbdvmobile.app.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
 import com.pbdvmobile.app.R;
+import com.pbdvmobile.app.ResourceUploadActivity;
 import com.pbdvmobile.app.ScheduleActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
@@ -44,6 +46,7 @@ public class TutorDashboardFragment extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_tutor_dashboard, container, false);
     }
+    @SuppressLint("SetTextI18n")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -59,6 +62,8 @@ public class TutorDashboardFragment extends Fragment {
     int user_num = current_user.getUser().getStudentNum();
     List<Session> sessions = dataManager.getSessionDao().getSessionsByTutorId(user_num);
 
+    upcoming.removeAllViews();
+    requests.removeAllViews();
         for(Session session : sessions){
             if(session.getStatus() == Session.Status.CANCELLED ||
                     session.getStatus() == Session.Status.COMPLETED ||
@@ -105,13 +110,13 @@ public class TutorDashboardFragment extends Fragment {
         // --- Show subject name ---
         TextView txtSubject = new TextView(this.getContext());
         Subject subject = dataManager.getSubjectDao().getSubjectById(session.getSubjectId());
-        txtSubject.setText(subject.getSubjectName());
+        txtSubject.setText(subject.getSubjectName().split(": ")[0]);
         txtSubject.setLayoutParams(titleChildParams); // Apply weighted params
 
         // --- Show status ---
         TextView status = new TextView(this.getContext());
         status.setText(session.getStatus().name());
-        status.setTextColor(Color.GREEN);
+        status.setTextColor(session.getStatus() == Session.Status.CONFIRMED ? Color.GREEN : Color.DKGRAY);
         subjectTitle.addView(txtSubject);
         subjectTitle.addView(status);
 
@@ -126,56 +131,66 @@ public class TutorDashboardFragment extends Fragment {
         dateIcon.setLayoutParams(iconParams);
         // --- Show Date & Time ---
         TextView txtDateTime = new TextView(this.getContext());
-        txtDateTime.setText(session.getStartTime().toLocaleString());
+        txtDateTime.setText(dataManager.formatDateTime(session.getStartTime().toString())[0] +
+                ", " + dataManager.formatDateTime(session.getStartTime().toString())[1]);
         txtDateTime.setLayoutParams(titleChildParams); // Apply weighted params
         date.addView(dateIcon);
         date.addView(txtDateTime);
 
 
-        // --- Create Tutor title ---
+        // --- Create Tutee title ---
         tutorLayout = new LinearLayout(this.getContext());
         tutorLayout.setOrientation(LinearLayout.HORIZONTAL);
         tutorLayout.setLayoutParams(titleParams);
         // --- Icon ---
-        ImageView tutorIcon = new ImageView(this.getContext());
-        tutorIcon.setImageResource(android.R.drawable.ic_menu_myplaces);
-        tutorIcon.setLayoutParams(iconParams);
-        // --- Show Tutor name ---
-        TextView txtTutor = new TextView(this.getContext());
-        User tutor = dataManager.getUserDao().getUserByStudentNum(session.getTutorId());
-        txtTutor.setText(tutor.getFirstName() + " " + tutor.getLastName());
-        txtTutor.setLayoutParams(titleChildParams);
-        tutorLayout.addView(tutorIcon);
-        tutorLayout.addView(txtTutor);
+        ImageView tuteeIcon = new ImageView(this.getContext());
+        tuteeIcon.setImageResource(android.R.drawable.ic_menu_myplaces);
+        tuteeIcon.setLayoutParams(iconParams);
+
+        // --- Show Tutee name ---
+        TextView txtTutee = new TextView(this.getContext());
+        User tutee = dataManager.getUserDao().getUserByStudentNum(session.getTuteeId());
+        txtTutee.setText(tutee.getFirstName() + " " + tutee.getLastName());
+        txtTutee.setLayoutParams(titleChildParams);
+        tutorLayout.addView(tuteeIcon);
+        tutorLayout.addView(txtTutee);
 
 
         // --- Create Actions title ---
         actions = new LinearLayout(this.getContext());
         actions.setOrientation(LinearLayout.HORIZONTAL);
         actions.setLayoutParams(titleParams);
+
         // --- Create Reschedule Button ---
-        reschedule = new TextView(this.getContext());
+    /*    reschedule = new TextView(this.getContext());
         reschedule.setText("Reschedule");
         reschedule.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
-        reschedule.setTextColor(getResources().getColor(R.color.primary));
+        reschedule.setTextColor(getResources().getColor(R.color.primary, null));
         reschedule.setLayoutParams(titleChildParams);
         reschedule.setOnClickListener(v ->  {
+            Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
+            scheduleIntent.putExtra("job_type", "session_details");
+            scheduleIntent.putExtra("session", session);
+            startActivity(scheduleIntent);
+        });*/
 
-        });
         // --- Create Cancel Button ---
         cancel = new TextView(this.getContext());
-        cancel.setText("Cancel");
+        cancel.setText(session.getStatus() == Session.Status.PENDING ? "Decline" : "Cancel");
         cancel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
         cancel.setTextColor(Color.RED);
         cancel.setLayoutParams(titleChildParams);
         cancel.setOnClickListener(v ->  {
-
+            dataManager.getSessionDao().updateSessionStatus(session.getId(),
+                    session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
+            upcoming.removeView(sessionLayout);
         });
+
         // --- Create View Button ---
         // Use MaterialButton to easily apply Material styles programmatically
         // Pass the style attribute directly in the constructor
         viewSchedule = new MaterialButton(this.getContext(), null, 1);
-        viewSchedule.setText("View");
+        viewSchedule.setText("View in detail");
         viewSchedule.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
         viewSchedule.setOnClickListener(v ->  {
             Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
@@ -183,7 +198,7 @@ public class TutorDashboardFragment extends Fragment {
             scheduleIntent.putExtra("session", session);
             startActivity(scheduleIntent);
         });
-        actions.addView(reschedule);
+//        actions.addView(reschedule);
         actions.addView(cancel);
         actions.addView(viewSchedule);
 
@@ -196,8 +211,20 @@ public class TutorDashboardFragment extends Fragment {
         // --- Add session to upcoming list ---
         if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionLayout);
         else if(session.getStatus() == Session.Status.PENDING)requests.addView(sessionLayout);
-//            }
+
     }
+        if(upcoming.getChildCount() == 0){
+            TextView text = new TextView(getContext());
+            text.setText("No upcoming sessions");
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
+            upcoming.addView(text);
+        }
+        if(requests.getChildCount() == 0){
+            TextView text = new TextView(getContext());
+            text.setText("No requested sessions");
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
+            requests.addView(text);
+        }
 
 }
 // Helper method to convert dp to pixels

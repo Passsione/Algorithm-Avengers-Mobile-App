@@ -256,8 +256,6 @@ public class ExplorerFragment extends Fragment {
             if (!lowerCaseSearchQuery.isEmpty() && !tutorFullName.contains(lowerCaseSearchQuery)) continue;
 
 
-
-
             LinearLayout tutorCard = new LinearLayout(getContext());
             tutorCard.setOrientation(LinearLayout.HORIZONTAL);
             // Set LayoutParams for the parent (e.g., fill width, wrap height)
@@ -361,14 +359,20 @@ public class ExplorerFragment extends Fragment {
             buttonParams.gravity = Gravity.BOTTOM;
             requestSessionButton.setLayoutParams(buttonParams);
             requestSessionButton.setText("Request");
-            requestSessionButton.setOnClickListener(l ->{
+            requestSessionButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            requestSessionButton.setOnClickListener(l -> {
                 Intent i = new Intent(getContext(), ScheduleActivity.class);
+                String subjectsExtra = "";
+                for(UserSubject sub : dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum())) {
+                    if(!sub.getTutoring()) continue;
+                    String subjectName = dataManager.getSubjectDao().getSubjectById(sub.getSubjectId()).getSubjectName();
+                    subjectsExtra += subjectName.split(": ")[0] +", ";
+                }
                 i.putExtra("tutor", tutor);
-                i.putExtra("current_user", current_user);
+                i.putExtra("subjects", subjectsExtra);
                 i.putExtra("job_type", "create_session");
                 startActivity(i);
             });
-            requestSessionButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
 
             tutorCard.addView(detailsLayout);
             tutorCard.addView(requestSessionButton);

@@ -3,6 +3,7 @@ import android.content.Context;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.pbdvmobile.app.data.dao.PrizeDao;
@@ -15,11 +16,12 @@ import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
 import com.pbdvmobile.app.data.model.UserSubject;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class DataManager {
+public class DataManager implements Serializable {
     private static DataManager instance;
     private final SqlOpenHelper dbHelper;
     private final UserDao userDao;
@@ -106,16 +108,20 @@ public class DataManager {
                     }
             }
             // dumby session
-            if(instance.getSessionDao().getSessionsByTuteeId(22323809) == null){
+            if(instance.getSessionDao().getSessionsByTuteeId(22323809) == null) {
                 List<UserSubject> userSubject = instance.getSubjectDao().getUserSubjects(22323809);
-                int subId =  userSubject.get(instance.randomIndex(userSubject.size())).getSubjectId();
+                int subId = userSubject.get(instance.randomIndex(userSubject.size())).getSubjectId();
                 Session session = new Session(11111111, 22323809, subId);
-                session.setStartTime(new Date(2025, 10, 25, 12, 0));
-                session.setEndTime(new Date(2025, 10, 25, 14, 0));
+                Date startTime = new Date();
+                startTime.setTime(startTime.getTime() + 34 * 60 * 60 * 1000);
+                Date endTime = new Date();
+                endTime.setTime(startTime.getTime() + 2 * 60 * 60 * 1000);
+                session.setStartTime(startTime);
+                session.setEndTime(endTime);
                 session.setStatus(Session.Status.CONFIRMED);
-                instance.getSessionDao().insertSession(session);
+                Toast.makeText(context, String.valueOf(instance.getSessionDao().insertSession(session)), Toast.LENGTH_SHORT).show();
 
-        }
+            }
 
     }
 
@@ -182,23 +188,27 @@ public class DataManager {
 
     // the rule for qualifying as a tutor
     public boolean qualifies(UserSubject userSubject, User tutor) {
-
-        return  true;
-        /*if(userSubject.getMark() >= 65){
+        if(userSubject.getMark() >= 65){
             return true;
         }
         else{
             return false;
-        }*/
+        }
     }
 
     public String[] formatDateTime(String date) {
-        String[] result = new String[2];
+        String[] result = new String[3];
+        // dow, mon dd yyyy
         result[0] =date.split(" ")[0]+", "
                 + date.split(" ")[1] +
                 " "+date.split(" ")[2]
                 +", "+date.split(" ")[5];
-        result[1] = date.split(" ")[3];
+        // hh:mm:ss
+        result[2] = date.split(" ")[3];
+        // hh:mm
+        result[1] = result[2].split(":")[0] +":"+result[2].split(":")[1];
+
+
         return result;
     }
 }

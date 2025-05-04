@@ -23,6 +23,7 @@ public class ResourceDao {
         values.put(SqlOpenHelper.KEY_RESOURCE_URL, resource.getResource());
         values.put(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID, resource.getTutorId());
         values.put(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID, resource.getSubjectId());
+        values.put(SqlOpenHelper.KEY_RESOURCE_NAME, resource.getName());
 
         long id = db.insert(SqlOpenHelper.TABLE_RESOURCES, null, values);
         db.close();
@@ -45,6 +46,7 @@ public class ResourceDao {
             resource.setResource(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_URL)));
             resource.setTutorId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID)));
             resource.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID)));
+            resource.setName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_NAME)));
             cursor.close();
         }
         db.close();
@@ -68,6 +70,7 @@ public class ResourceDao {
                 resource.setResource(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_URL)));
                 resource.setTutorId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID)));
                 resource.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID)));
+                resource.setName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_NAME)));
                 resources.add(resource);
             } while (cursor.moveToNext());
         }
@@ -81,6 +84,8 @@ public class ResourceDao {
 
         ContentValues values = new ContentValues();
         values.put(SqlOpenHelper.KEY_RESOURCE_URL, resource.getResource());
+        values.put(SqlOpenHelper.KEY_RESOURCE_NAME, resource.getName());
+        values.put(SqlOpenHelper.KEY_SUBJECT_ID, resource.getSubjectId());
 
         int rowsAffected = db.update(SqlOpenHelper.TABLE_RESOURCES, values,
                 SqlOpenHelper.KEY_RESOURCE_ID + "=?",

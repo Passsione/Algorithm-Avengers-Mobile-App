@@ -3,7 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:id="@+id/main"
+    tools:context=".TutorProfile">
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -366,12 +369,12 @@
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
                                 android:layout_marginBottom="4dp">
-<!--
-                                <de.hdodenhof.circleimageview.CircleImageView
-                                    android:layout_width="32dp"
-                                    android:layout_height="32dp"
-                                    android:src="@drawable/avatar_default"
-                                    android:layout_marginEnd="8dp" />-->
+                                <!--
+                                                                <de.hdodenhof.circleimageview.CircleImageView
+                                                                    android:layout_width="32dp"
+                                                                    android:layout_height="32dp"
+                                                                    android:src="@drawable/avatar_default"
+                                                                    android:layout_marginEnd="8dp" />-->
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -408,13 +411,13 @@
                                 android:gravity="center_vertical"
                                 android:layout_marginBottom="4dp">
 
-<!--
-                                <de.hdodenhof.circleimageview.CircleImageView
-                                    android:layout_width="32dp"
-                                    android:layout_height="32dp"
-                                    android:src="@drawable/avatar_default"
-                                    android:layout_marginEnd="8dp" />
--->
+                                <!--
+                                                                <de.hdodenhof.circleimageview.CircleImageView
+                                                                    android:layout_width="32dp"
+                                                                    android:layout_height="32dp"
+                                                                    android:src="@drawable/avatar_default"
+                                                                    android:layout_marginEnd="8dp" />
+                                -->
 
                                 <TextView
                                     android:layout_width="0dp"

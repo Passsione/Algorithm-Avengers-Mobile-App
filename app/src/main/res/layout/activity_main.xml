@@ -16,19 +16,6 @@
         android:orientation="vertical">
 
         <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/nav_fragment_container"
-            android:name="com.pbdvmobile.app.fragments.NavigationFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/bottom_navigation_height"
-            app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/mainview_fragment_container"
             android:name="com.pbdvmobile.app.fragments.DashboardFragment"
             android:layout_width="match_parent"
@@ -36,8 +23,18 @@
             android:layout_marginTop="60dp"
             android:layout_marginBottom="@dimen/bottom_navigation_height"
             app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
-            app:layout_constraintTop_toBottomOf="@+id/nav_fragment_container"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/nav_fragment_container" />
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_fragment_container"
+            android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
@@ -46,6 +43,18 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:menu="@menu/bottom_nav_menu" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/dashboard_add_resources"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone"
+            android:clickable="true"
+            app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@android:drawable/ic_input_add" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -42,11 +42,12 @@ public class SessionDetailsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        LogInUser current_user = (LogInUser) getArguments().get("current_user");
-        User tutor = (User) getArguments().get("tutor");
         DataManager dataManager = DataManager.getInstance(getContext());
-        Session session = (Session) getArguments().get("session");
+        LogInUser current_user = LogInUser.getInstance(dataManager);
+        assert getArguments() != null;
+        User tutor = (User) getArguments().getSerializable("tutor");
+        String subjects = (String) getArguments().get("subjects");
+        Session session = (Session) getArguments().getSerializable("session");
 
 
         // ---- Start - Session Details ----
@@ -81,9 +82,9 @@ public class SessionDetailsFragment extends Fragment {
 
         // Button Listeners
         viewProfile = view.findViewById(R.id.btn_view_tutor_profile);
-        cancelSession = view.findViewById(R.id.btn_cancel_session);
+        cancelSession = view.findViewById(R.id.btn_cancel_booking);
         rescheduleSession = view.findViewById(R.id.btn_reschedule_session);
-        confirmSession = view.findViewById(R.id.btn_confirm_session);
+        confirmSession = view.findViewById(R.id.btn_confirm_booking);
 
 
 

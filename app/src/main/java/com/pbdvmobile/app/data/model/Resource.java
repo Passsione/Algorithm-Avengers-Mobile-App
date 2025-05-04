@@ -3,6 +3,8 @@ package com.pbdvmobile.app.data.model;
 public class Resource {
     private int resourcesId;// Id set to AUTO INCREMENT
     private String resource; // url
+    private String name; // Display Name
+
     private int tutorId;
     private int subjectId;
 
@@ -10,10 +12,11 @@ public class Resource {
     public Resource() {
     }
 
-    public Resource(int tutorId, int subjectId, String resLink) {
+    public Resource(int tutorId, int subjectId, String resLink, String name) {
         this.tutorId = tutorId;
         this.resource = resLink;
         this.subjectId = subjectId;
+        this.name = name;
     }
 
     // Getters and Setters
@@ -38,6 +41,14 @@ public class Resource {
 
     public void setResource(String resource) {
         this.resource = resource;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getTutorId() {

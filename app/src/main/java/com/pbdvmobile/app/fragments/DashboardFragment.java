@@ -20,9 +20,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 import com.pbdvmobile.app.R;
+import com.pbdvmobile.app.ResourceUploadActivity;
 import com.pbdvmobile.app.ScheduleActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
@@ -36,8 +38,8 @@ public class DashboardFragment extends Fragment {
 
     TextView reschedule, cancel;
     Button viewSchedule;
-    CardView upcoming, pending;
-    LinearLayout sessionLayout, subjectTitle, date, tutorLayout, actions;
+
+    LinearLayout upcoming, pending, sessionLayout, subjectTitle, date, tutorLayout, actions;
     DataManager dataManager;
     LogInUser current_user;
     @SuppressLint("SetTextI18n")
@@ -47,6 +49,7 @@ public class DashboardFragment extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_dashboard, container, false);
     }
+    @SuppressLint("SetTextI18n")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -62,6 +65,8 @@ public class DashboardFragment extends Fragment {
         int user_num = current_user.getUser().getStudentNum();
         List<Session> sessions = dataManager.getSessionDao().getSessionsByTuteeId(user_num);
 
+        upcoming.removeAllViews();
+        pending.removeAllViews();
         for(Session session : sessions){
 
             if(session.getStatus() == Session.Status.CANCELLED ||
@@ -71,6 +76,7 @@ public class DashboardFragment extends Fragment {
 
             sessionLayout = new LinearLayout(this.getContext());
             sessionLayout.setOrientation(LinearLayout.VERTICAL);
+            sessionLayout.setBackgroundColor(Color.argb(2, 34, 0, 34));
 
             // Set LayoutParams for the parent (e.g., fill width, wrap height)
             LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
@@ -114,7 +120,7 @@ public class DashboardFragment extends Fragment {
             // --- Show status ---
             TextView status = new TextView(this.getContext());
             status.setText(session.getStatus().name());
-            status.setTextColor(Color.GREEN);
+            status.setTextColor(session.getStatus() == Session.Status.CONFIRMED ? Color.GREEN : Color.DKGRAY);
             subjectTitle.addView(txtSubject);
             subjectTitle.addView(status);
 
@@ -129,7 +135,8 @@ public class DashboardFragment extends Fragment {
             dateIcon.setLayoutParams(iconParams);
             // --- Show Date & Time ---
             TextView txtDateTime = new TextView(this.getContext());
-            txtDateTime.setText(session.getStartTime().toLocaleString());
+            txtDateTime.setText(dataManager.formatDateTime(session.getStartTime().toString())[0] +
+                    ", " + dataManager.formatDateTime(session.getStartTime().toString())[1]);
             txtDateTime.setLayoutParams(titleChildParams); // Apply weighted params
             date.addView(dateIcon);
             date.addView(txtDateTime);
@@ -157,14 +164,18 @@ public class DashboardFragment extends Fragment {
             actions.setOrientation(LinearLayout.HORIZONTAL);
             actions.setLayoutParams(titleParams);
             // --- Create Reschedule Button ---
-            reschedule = new TextView(this.getContext());
+          /*  reschedule = new TextView(this.getContext());
             reschedule.setText("Reschedule");
             reschedule.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
-            reschedule.setTextColor(getResources().getColor(R.color.primary));
+            reschedule.setTextColor(getResources().getColor(R.color.primary, null));
             reschedule.setLayoutParams(titleChildParams);
             reschedule.setOnClickListener(v ->  {
+                Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
+                scheduleIntent.putExtra("job_type", "session_details");
+                scheduleIntent.putExtra("session", session);
+                startActivity(scheduleIntent);
 
-            });
+            });*/
             // --- Create Cancel Button ---
             cancel = new TextView(this.getContext());
             cancel.setText("Cancel");
@@ -172,13 +183,17 @@ public class DashboardFragment extends Fragment {
             cancel.setTextColor(Color.RED);
             cancel.setLayoutParams(titleChildParams);
             cancel.setOnClickListener(v ->  {
+                dataManager.getSessionDao().updateSessionStatus(session.getId(),
+                        session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
+                Toast.makeText(getContext(), "Session can successful!", Toast.LENGTH_LONG).show();
 
+                upcoming.removeView(sessionLayout);
             });
             // --- Create View Button ---
             // Use MaterialButton to easily apply Material styles programmatically
             // Pass the style attribute directly in the constructor
-            viewSchedule = new MaterialButton(this.getContext(), null, 1);
-            viewSchedule.setText("View");
+            viewSchedule = new MaterialButton(getContext(), null, 1);
+            viewSchedule.setText("View in detail");
             viewSchedule.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
             viewSchedule.setOnClickListener(v ->  {
                 Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
@@ -186,7 +201,7 @@ public class DashboardFragment extends Fragment {
                 scheduleIntent.putExtra("session", session);
                 startActivity(scheduleIntent);
             });
-            actions.addView(reschedule);
+//            actions.addView(reschedule);
             actions.addView(cancel);
             actions.addView(viewSchedule);
 
@@ -199,8 +214,20 @@ public class DashboardFragment extends Fragment {
             // --- Add session to upcoming list ---
             if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionLayout);
             else if(session.getStatus() == Session.Status.PENDING)pending.addView(sessionLayout);
-//            }
         }
+        if(upcoming.getChildCount() == 0){
+            TextView text = new TextView(getContext());
+            text.setText("No upcoming sessions");
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
+            upcoming.addView(text);
+        }
+        if(pending.getChildCount() == 0){
+            TextView text = new TextView(getContext());
+            text.setText("No pending sessions");
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
+            pending.addView(text);
+        }
+
 
     }
     // Helper method to convert dp to pixels

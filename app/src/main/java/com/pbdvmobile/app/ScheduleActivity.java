@@ -40,32 +40,30 @@ public class ScheduleActivity extends AppCompatActivity {
             return insets;
         });
 
-        User tutor = (User) getIntent().getSerializableExtra("tutor");
-        LogInUser current_user = (LogInUser) getIntent().getSerializableExtra("current_user");
-        Session session = (Session) getIntent().getSerializableExtra("session");
         String job_type = getIntent().getStringExtra("job_type");
-
 
         Fragment selectedFragment = null;
         assert job_type != null;
         Bundle bundle = new Bundle();
         switch (job_type) {
             case "create_session":
+                bundle.putSerializable("tutor", (User) getIntent().getSerializableExtra("tutor"));
+                bundle.putSerializable("subjects", getIntent().getStringExtra("subjects"));
                 selectedFragment = new SessionBookingsFragment();
                 break;
             case "session_details":
+                bundle.putSerializable("tutor", (User) getIntent().getSerializableExtra("tutor"));
+                bundle.putSerializable("subjects", getIntent().getStringExtra("subjects"));
+                bundle.putSerializable("session", (Session) getIntent().getSerializableExtra("session"));
                 selectedFragment = new SessionDetailsFragment();
-                bundle.putSerializable("session", session);
                 break;
             case "session_history":
                 selectedFragment = new ScheduleHistoryFragment();
                 break;
+
         }
         // Replace the current fragment with the selected one
         if (selectedFragment != null) {
-
-            bundle.putSerializable("tutor", tutor);
-            bundle.putSerializable("current_user", current_user);
             selectedFragment.setArguments(bundle);
 
             getSupportFragmentManager().beginTransaction()

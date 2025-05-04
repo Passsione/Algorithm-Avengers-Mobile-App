@@ -1,8 +1,12 @@
 package com.pbdvmobile.app;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.service.controls.actions.FloatAction;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
@@ -16,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.pbdvmobile.app.data.DataManager;
@@ -79,15 +84,6 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.setSelectedItemId(R.id.navigation_dashboard);
         }
 
-        /*flash = findViewById(R.id.txtError);
-        // changes from other activities
-        if(current_user.message != null){
-            dataManager.displayError(flash, flash, current_user.message);
-            current_user.message = null;
-        }*/
-
-        /* ---- End - Bottom Navigation Section */
-
     }
 
     // Listener for BottomNavigationView item selections
@@ -95,16 +91,25 @@ public class MainActivity extends AppCompatActivity {
             item -> {
                 Fragment selectedFragment = null;
                 int itemId = item.getItemId(); // Get item ID once
+                FloatingActionButton fab = findViewById(R.id.dashboard_add_resources);
 
                 // Determine which fragment to load based on the selected item ID
                 if (itemId == R.id.navigation_dashboard) {
                     selectedFragment = new DashboardFragment();
+                    fab.setVisibility(GONE);
                 } else if (itemId == R.id.navigation_explorer) {
                     selectedFragment = new ExplorerFragment();
+                    fab.setVisibility(GONE);
                 } else if (itemId == R.id.navigation_resources) {
                     selectedFragment = new ResourcesFragment();
+                    fab.setVisibility(GONE);
                 } else if (itemId == R.id.navigation_tutor_center) {
                     selectedFragment = new TutorDashboardFragment();
+                    fab.setVisibility(VISIBLE);
+                    fab.setOnClickListener( l ->{
+                        Intent toResourceUpload = new Intent(MainActivity.this, ResourceUploadActivity.class);
+                        startActivity(toResourceUpload);
+                    });
                 }
                 // Replace the current fragment with the selected one
                 if (selectedFragment != null) {

@@ -69,17 +69,18 @@
 
     <item android:title="Other">
         <menu>
-            <item
-                android:id="@+id/nav_theme"
-                android:title="Theme" />
-            <item
-                android:id="@+id/nav_help"
-                android:icon="@android:drawable/ic_menu_help"
-                android:title="Help &amp; Support" />
+
             <item
                 android:id="@+id/nav_logout"
                 android:icon="@android:drawable/ic_lock_power_off"
                 android:title="Logout" />
+            <item
+                android:id="@+id/nav_theme"
+                android:title="" />
+            <item
+                android:id="@+id/nav_help"
+                android:icon="@android:drawable/ic_menu_help"
+                android:title="Help &amp; Support"/>
         </menu>
     </item>
 </menu>

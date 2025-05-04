@@ -49,7 +49,18 @@ dependencies {
 
     // Optional - Test helpers
     testImplementation("androidx.room:room-testing:$roomVersion")
+/*
+    // calendar
+    // The view calendar library
+    implementation("com.kizitonwose.calendar:view:<2.4.1>")
 
+    // The compose calendar library
+    implementation("com.kizitonwose.calendar:compose:<2.4.1")*/
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0") // Or the latest version
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0") // For JSON conversion
+    implementation("com.squareup.okhttp3:okhttp:4.11.0") // Or the latest version
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0") // Optional, for logging requests
     // If you're using Kotlin instead of Java, you should use kapt instead of annotationProcessor
     // kapt("androidx.room:room-compiler:$roomVersion")
 

@@ -68,6 +68,7 @@ Resources =
     String resource // url
     int tutorId
     int SubjectId
+    String Name // Display name
 
 RedeemPrize =
     enum Status {
