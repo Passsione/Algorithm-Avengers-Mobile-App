@@ -18,15 +18,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
 import com.pbdvmobile.app.AIBaseActivity;
+import com.pbdvmobile.app.AIQuizActivity;
 import com.pbdvmobile.app.LogInActivity;
 import com.pbdvmobile.app.MainActivity;
 import com.pbdvmobile.app.NotificationsActivity;
 import com.pbdvmobile.app.PaymentGatewayActivity;
+import com.pbdvmobile.app.PaymentHistoryActivity;
 import com.pbdvmobile.app.ProfileActivity;
 import com.pbdvmobile.app.R;
+import com.pbdvmobile.app.RedeemCreditActivity;
 import com.pbdvmobile.app.ScheduleActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
@@ -131,16 +135,34 @@ public class NavigationFragment extends Fragment {
             startActivity(toAISummarize);
             return false;
         });
+        // To AI Quiz generator page
+        menu.findItem(R.id.nav_quiz_generator).setOnMenuItemClickListener(v ->{
+            Intent toAIQuiz = new Intent(getActivity(), AIQuizActivity.class);
+            startActivity(toAIQuiz);
+            return false;
+        });
         // To payments gateway
         menu.findItem(R.id.nav_payments_details).setOnMenuItemClickListener(v ->{
             Intent toPayment = new Intent(getActivity(), PaymentGatewayActivity.class);
             startActivity(toPayment);
             return false;
         });
+        // To payments history
+        menu.findItem(R.id.nav_payments_history).setOnMenuItemClickListener(v ->{
+            Intent toPayment = new Intent(getActivity(), PaymentHistoryActivity.class);
+            startActivity(toPayment);
+            return false;
+        });
+        // To redeem credits
+        menu.findItem(R.id.nav_redeem_credits).setOnMenuItemClickListener(v ->{
+            Intent toCredits = new Intent(getActivity(), RedeemCreditActivity.class);
+            startActivity(toCredits);
+            return false;
+        });
         // Logout
         menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
             current_user.logOut();
-            current_user.message = "Successfully logged out";
+            Toast.makeText(getContext(), "Successfully logged out", Toast.LENGTH_SHORT).show();
             Intent toLogin = new Intent(getActivity(), LogInActivity.class);
             startActivity(toLogin);
             return false;

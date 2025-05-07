@@ -303,83 +303,7 @@ public class SessionDao {
 
         return result != -1; // Return true if insert was successful (result is the row ID or -1 on error)
     }
-/*
-    public boolean requestSession(int tuteeStudentNum, int tutorStudentNum, TimeSlot requestedSlot, int subjectId, String location) {
 
-        Date currentDate = new Date();
-
-        // 1. Check if the requested start time itself is in the past (critical check)
-        if (requestedSlot.getStartTime().before(currentDate)) {
-            android.util.Log.e("SessionDAO", "Requested start time is in the past. Request: " + requestedSlot.getStartTime() + ", Current: " + currentDate);
-            return false;
-        }
-
-        // 2. Check against tutor's operating hours (OPEN_TIME, CLOSE_TIME in UTC)
-        // OPEN_TIME and CLOSE_TIME are assumed to be millisecond values for a UTC time of day
-        // e.g., OPEN_TIME = 6 AM UTC, CLOSE_TIME = 4 PM UTC (16:00 UTC)
-        Calendar reqCalUTC = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
-
-        reqCalUTC.setTime(requestedSlot.getStartTime());
-        long reqStartTimeOfDayMillisUTC = reqCalUTC.get(Calendar.HOUR_OF_DAY) * 3600000L +
-                reqCalUTC.get(Calendar.MINUTE) * 60000L;
-
-        reqCalUTC.setTime(requestedSlot.getEndTime());
-        long reqEndTimeOfDayMillisUTC = reqCalUTC.get(Calendar.HOUR_OF_DAY) * 3600000L +
-                reqCalUTC.get(Calendar.MINUTE) * 60000L;
-
-        // If end time is 00:00 and it's because duration made it wrap, it might be 0.
-        // If it strictly means "within the day", then if startTimeOfDay > endTimeOfDay, it's an issue unless endTime is 00:00 of next day.
-        // For simple day schedule (e.g. 6AM to 4PM), endTimeOfDay should be > startTimeOfDay.
-        if (reqEndTimeOfDayMillisUTC == 0 && reqStartTimeOfDayMillisUTC > 0 && (requestedSlot.getEndTime().getTime() > requestedSlot.getStartTime().getTime())) {
-            // This means endTime is midnight of the next day in UTC.
-            // For check against CLOSE_TIME (e.g. 16:00 UTC), this slot would be considered as ending at 24:00 UTC for boundary purposes.
-            // However, if CLOSE_TIME itself is not 24:00, this needs careful handling.
-            // For now, let's assume CLOSE_TIME is within a day (like 16:00 UTC).
-            // If a session ends exactly at CLOSE_TIME, reqEndTimeOfDayMillisUTC would be CLOSE_TIME.
-        }
-        // Check if the session is within the defined OPEN_TIME and CLOSE_TIME (UTC)
-        boolean withinOperatingHours = reqStartTimeOfDayMillisUTC >= OPEN_TIME &&
-                reqEndTimeOfDayMillisUTC <= CLOSE_TIME &&
-                reqStartTimeOfDayMillisUTC < reqEndTimeOfDayMillisUTC; // Ensures positive duration
-
-        // Handle case where session ends exactly at CLOSE_TIME and CLOSE_TIME is represented as 00:00 (unlikely with 16:00)
-        // If CLOSE_TIME was, for instance, hourToMseconds(24-2), then reqEndTimeOfDayMillisUTC could be 0.
-        // For current values (OPEN_TIME = 6AM UTC, CLOSE_TIME = 4PM UTC), simple check is fine.
-
-        if (!withinOperatingHours) {
-            android.util.Log.e("SessionDAO", "Requested slot outside UTC operating hours. " +
-                    "ReqStartUTC: " + reqStartTimeOfDayMillisUTC + " (OPEN: " + OPEN_TIME + "), " +
-                    "ReqEndUTC: " + reqEndTimeOfDayMillisUTC + " (CLOSE: " + CLOSE_TIME + ")");
-            return false;
-        }
-
-        // 3. Check for overlaps with existing 'Confirmed' or 'Pending' sessions for the TUTOR
-        List<TimeSlot> takenSlots = getTakenTimeSlot(tutorStudentNum); // Fetches for the correct tutor
-        for (TimeSlot existingSlot : takenSlots) {
-            if (requestedSlot.overlaps(existingSlot)) {
-                android.util.Log.d("SessionDAO", "Requested slot overlaps with an existing session: " + existingSlot.getStartTime() + " - " + existingSlot.getEndTime());
-                return false; // Conflict found
-            }
-        }
-
-        // 4. If all checks pass, create and insert the session
-        // The Session constructor should be Session(tutorId, tuteeId, subjectId)
-        Session session = new Session(tutorStudentNum, tuteeStudentNum, subjectId); // Correct: params are already the actual IDs
-        session.setStartTime(requestedSlot.getStartTime());
-        session.setEndTime(requestedSlot.getEndTime());
-        session.setStatus(Session.Status.PENDING);
-        session.setLocation(location);
-
-        long insertResult = insertSession(session);
-        if (insertResult != -1) {
-            android.util.Log.d("SessionDAO", "Session inserted successfully with ID: " + insertResult);
-            return true;
-        } else {
-            android.util.Log.e("SessionDAO", "Failed to insert session into database.");
-            return false;
-        }
-    }
-*/
     /**
      * Retrieves a list of historical sessions (Completed, Cancelled, DECLINED) for a user,
      * with optional filters.
@@ -781,7 +705,7 @@ public class SessionDao {
         return rowsAffected;
     }
 
-    /*public int addTuteeReview(int sessionId, String review) {
+    public int addTuteeReview(int sessionId, String review) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -804,7 +728,7 @@ public class SessionDao {
                 new String[]{String.valueOf(sessionId)});
         db.close();
         return rowsAffected;
-    }*/
+    }
 
 
 

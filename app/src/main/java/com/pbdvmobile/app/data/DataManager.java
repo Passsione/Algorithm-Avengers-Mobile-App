@@ -100,7 +100,8 @@ public class DataManager implements Serializable {
                     for (User user : users) {
                         for (int s = 0; s < 8; s++) {
                             int subID = s + 1;
-                            UserSubject userSubject = new UserSubject(user.getStudentNum(), subID, instance.randomIndex(101));
+                            UserSubject userSubject = new UserSubject(user.getStudentNum(), subID,
+                                    user.getStudentNum() == 11111111 ? 80 : instance.randomIndex(101));
                             userSubject.setTutoring(instance.qualifies(userSubject, user));
                             instance.getSubjectDao().addUserSubject(userSubject);
                         }
@@ -113,13 +114,14 @@ public class DataManager implements Serializable {
                 Session session = new Session(11111111, subId);
                 session.setTuteeIds(List.of(22323809));
                 Date startTime = new Date();
-                // Set start time to 34 hours from now
-                startTime.setTime(startTime.getTime() + 34L * 60 * 60 * 1000);
+                // Set start time to 24 hours from now
+                startTime.setTime(startTime.getTime() + 24L * 60 * 60 * 1000);
                 Date endTime = new Date();
                 // Set end time to 2 hours after the start time
                 endTime.setTime(startTime.getTime() + 2L * 60 * 60 * 1000);
 
                 session.setStartTime(startTime);
+                session.setLocation("Steve Library");
                 session.setEndTime(endTime);
                 session.setStatus(Session.Status.CONFIRMED);
                 // Make sure insertSession returns a meaningful value (e.g., new row ID or 1 for success)

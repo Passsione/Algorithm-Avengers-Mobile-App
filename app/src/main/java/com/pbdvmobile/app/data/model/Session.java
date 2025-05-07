@@ -61,14 +61,6 @@ public class Session implements Serializable{
         this.tutorId = tutorId;
     }
 
-    /*public int getTuteeId() {
-        return tuteeId;
-    }
-
-    public void setTuteeId(int tuteeId) {
-        this.tuteeId = tuteeId;
-    }
-*/
     public int getSubjectId() {
         return subjectId;
     }
