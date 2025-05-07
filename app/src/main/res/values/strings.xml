@@ -120,4 +120,5 @@
         item
     </string>
     <string name="title_activity_dashboard">Dashboard</string>
+    <string name="active_session_warning">You already have a session with this tutor</string>
 </resources>

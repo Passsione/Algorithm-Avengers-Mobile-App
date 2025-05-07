@@ -9,6 +9,7 @@ import android.text.Layout;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -20,10 +21,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.bumptech.glide.Glide;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.UserSubject;
+
+import java.util.List;
 
 public class ProfileActivity extends AppCompatActivity {
 
@@ -59,24 +63,35 @@ public class ProfileActivity extends AppCompatActivity {
         email = findViewById(R.id.txtProfileEmail);
         tutorRating = findViewById(R.id.txtAvgTutorRating);
         eduLvl = findViewById(R.id.txtProfileEduLvl);
-        tier = findViewById(R.id.txtProfileTier);
+//        tier = findViewById(R.id.txtProfileTier);
         credits = findViewById(R.id.txtCredit);
         tuteeRating = findViewById(R.id.txtAvgRating);
 
+        ImageView profileImageView = findViewById(R.id.imgProfileImage);
+        String imageUrl = current_user.getUser().getProfileImageUrl();
+
+
+        Glide.with(this)
+        .load(imageUrl)
+        .placeholder(R.drawable.avatar_1) // Optional placeholder
+        .error(R.drawable.ic_menu_camera) // Optional error image
+        .circleCrop() // Optional: if you want circular images
+        .into(profileImageView);
 
         email.setText("Email: "+ current_user.getUser().getEmail());
         eduLvl.setText("Education Level: "+current_user.getUser().getEducationLevel().name());
-        tier.setText("Tier Level: " + current_user.getUser().getTierLevel().name());
+//        tier.setText("Tier Level: " + current_user.getUser().getTierLevel().name());
         credits.setText("Credits: "+ current_user.getUser().getCredits());
 //        tuteeRating.setText(current_user.getUser().get() > 0?"Rating: " + current_user.getUser().getAverageRating() : "No ratings yet");
 
+        List<UserSubject> userSubjects = dataManager.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum());
 
         if(isTutor){
             subjectLayout.setVisibility(VISIBLE);
             tutorRating.setVisibility(VISIBLE);
-
             tutorRating.setText(current_user.getUser().getAverageRating() > 0 ?"Rating: " + current_user.getUser().getAverageRating() : "No ratings yet");
-            displaySubjects(subjectLayout);
+
+            displaySubjects(subjectLayout, userSubjects);
         }
         // ---- End - User Info ----
 
@@ -125,12 +140,10 @@ public class ProfileActivity extends AppCompatActivity {
                 subjectLayout.setVisibility(GONE);
             }else{
                 subjectLayout.setVisibility(VISIBLE);
-                displaySubjects(subjectLayout);
+                displaySubjects(subjectLayout, userSubjects);
                 Toast.makeText(this, "Choose subjects to tutor", Toast.LENGTH_LONG).show();
             }
         });
-
-
 
 
         // ---- Start - Controller Buttons ----
@@ -153,7 +166,14 @@ public class ProfileActivity extends AppCompatActivity {
             if(!name.getText().toString().isEmpty())current_user.getUser().setFirstName(name.getText().toString());
             if(!surname.getText().toString().isEmpty())current_user.getUser().setLastName(surname.getText().toString());
             if(!password.getText().toString().isEmpty())current_user.getUser().setPassword(password.getText().toString());
-            current_user.getUser().setTutor(tutor.isChecked());
+            int count = userSubjects.size();
+            for(UserSubject subject : userSubjects){
+                dataManager.getSubjectDao().updateUserSubject(subject);
+                if(!subject.getTutoring()){
+                    count--;
+                }
+            }
+            current_user.getUser().setTutor(count > 0 ? tutor.isChecked() : false);
             if(bio != null && !bio.getText().toString().isEmpty())current_user.getUser().setBio(bio.getText().toString());
             dataManager.getUserDao().updateUser(current_user.getUser());
             Toast.makeText(this, "Changes saved", Toast.LENGTH_LONG).show();
@@ -164,20 +184,19 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void displaySubjects(LinearLayout subjectLayout) {
+    private void displaySubjects(LinearLayout subjectLayout, List<UserSubject> userSubjects) {
         subjectLayout.removeAllViews();
         TextView textView = new TextView(this);
         textView.setText("Check subjects you would like to tutor (Disabled subjects mean you don't quailfy)");
         textView.setTextSize(16);
         subjectLayout.addView(textView);
-        for(UserSubject subject : dataManager.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum())){
+        for(UserSubject subject : userSubjects){
             CheckBox subjectName = new CheckBox(this);
             Subject dUserSubject = dataManager.getSubjectDao().getSubjectById(subject.getSubjectId());
             subjectName.setText(dUserSubject.getSubjectName() + ", Grade: "+subject.getMark());
             subjectName.setChecked(subject.getTutoring());
             subjectName.setOnClickListener(l ->{
                 subject.setTutoring(!subject.getTutoring());
-                dataManager.getSubjectDao().updateUserSubject(subject);
             });
             subjectName.setEnabled(dataManager.qualifies(subject, current_user.getUser()));
             subjectLayout.addView(subjectName);

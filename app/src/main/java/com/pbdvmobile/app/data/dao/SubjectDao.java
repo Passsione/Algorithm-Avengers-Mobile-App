@@ -183,5 +183,17 @@ public class SubjectDao {
     }
 
 
-    
+    public Subject cursorToSubject(Cursor cursor) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Subject subject = null;
+        if (cursor.moveToFirst()) {
+            subject = new Subject();
+            subject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SUBJECT_ID)));
+            subject.setSubjectName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SUBJECT_NAME)));
+            cursor.close();
+        }
+        db.close();
+        return subject;
+
+    }
 }

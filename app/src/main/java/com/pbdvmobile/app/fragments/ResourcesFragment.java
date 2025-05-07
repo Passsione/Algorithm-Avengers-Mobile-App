@@ -2,14 +2,19 @@ package com.pbdvmobile.app.fragments;
 
 import static android.view.View.GONE;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,7 +107,7 @@ public class ResourcesFragment extends Fragment {
                 myResources.add(resource);
             }else{
                 for(Session session : dataManager.getSessionDao().getSessionsByTuteeId(resource.getTutorId())){
-                    if(session.getTuteeId() == current_user.getUser().getStudentNum()){
+                    if(session.getTuteeIds().contains(current_user.getUser().getStudentNum())){
                         allResources.add(resource);
                     }
                 }
@@ -271,12 +276,10 @@ public class ResourcesFragment extends Fragment {
             // Set download button action
             downloadButton.setOnClickListener(v -> {
                 if(selectedTutor != MY_RESOURCES) {
-                    // ** TODO: Implement actual download logic here **
-                    // For now, show a Toast message
-                    Toast.makeText(context, "Downloading: " + resource.getName(), Toast.LENGTH_SHORT).show();
-                    // Example: startDownload(resource.getDownloadUrl());
+                    Toast.makeText(context, "Downloading: " + resource.getName() + ".pdf", Toast.LENGTH_SHORT).show();
+                    startDownload(resource);
                 }else{
-                    Toast.makeText(context, "To edit resource" + resource.getName(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "To edit resource" + resource.getName() + ".pdf", Toast.LENGTH_SHORT).show();
 
                 }
             });
@@ -296,11 +299,18 @@ public class ResourcesFragment extends Fragment {
         toggleMathButton.setImageResource((mathResourcesContainer.getVisibility() == GONE) ? android.R.drawable.arrow_down_float : android.R.drawable.arrow_up_float);
     }
 
-    // --- TODO: Helper Methods (Example) ---
-    /*
-    private void startDownload(String urlOrPath) {
-        // Implement download logic using DownloadManager or other libraries
-        Log.d("ResourcesFragment", "Attempting download for: " + urlOrPath);
+
+    private void startDownload(Resource resource) {
+         String downloadUrl = resource.getResource();
+         String fileName = resource.getName() + ".pdf"; // Or derive extension from URL/MIME type
+
+         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadUrl));
+         request.setTitle(fileName);
+         request.setDescription("Downloading resource...");
+         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+         DownloadManager dm = getSystemService(getContext(), DownloadManager.class);
+         dm.enqueue(request);
     }
-    */
+
 }

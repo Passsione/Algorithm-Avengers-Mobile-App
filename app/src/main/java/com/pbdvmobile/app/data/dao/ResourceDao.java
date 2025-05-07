@@ -52,7 +52,6 @@ public class ResourceDao {
         db.close();
         return resource;
     }
-
     public List<Resource> getResourcesByTutorId(int tutorId) {
         List<Resource> resources = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -79,6 +78,31 @@ public class ResourceDao {
         return resources;
     }
 
+    public List<Resource> getResourcesBySubject(int subjectId){
+        List<Resource> resources = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        Cursor cursor = db.query(SqlOpenHelper.TABLE_RESOURCES,
+                null,
+                SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID + "=?",
+                new String[]{String.valueOf(subjectId)},
+                null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Resource resource = new Resource();
+                resource.setResourcesId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_ID)));
+                resource.setResource(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_URL)));
+                resource.setTutorId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_TUTOR_ID)));
+                resource.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_SUBJECT_ID)));
+                resource.setName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_RESOURCE_NAME)));
+                resources.add(resource);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return resources;
+    }
     public int updateResource(Resource resource) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 

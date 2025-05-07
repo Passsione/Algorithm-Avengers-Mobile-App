@@ -1,8 +1,11 @@
 package com.pbdvmobile.app.data;
 
+import androidx.room.TypeConverter;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 
 public class ListJsonConverter {
@@ -40,5 +43,23 @@ public class ListJsonConverter {
      */
     public static <T> Type getListType(Class<T> clazz) {
         return TypeToken.getParameterized(List.class, clazz).getType();
+    }
+
+    public class Converters {
+        private Gson gson = new Gson();
+
+        @TypeConverter
+        public  List<Integer> fromStringToListInt(String data) {
+            if (data == null) {
+                return Collections.emptyList();
+            }
+            Type listType = new TypeToken<List<Integer>>() {}.getType();
+            return gson.fromJson(data, listType);
+        }
+
+        @TypeConverter
+        public String fromListIntToString(List<Integer> integers) {
+            return gson.toJson(integers);
+        }
     }
 }

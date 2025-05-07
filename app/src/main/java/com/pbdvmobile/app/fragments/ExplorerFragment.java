@@ -1,5 +1,7 @@
 package com.pbdvmobile.app.fragments;
 
+
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -14,6 +16,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -262,7 +265,10 @@ public class ExplorerFragment extends Fragment {
             if (!lowerCaseSearchQuery.isEmpty() && !tutorFullName.contains(lowerCaseSearchQuery)) continue;
 
 
-            LinearLayout tutorCard = new LinearLayout(getContext());
+
+
+
+        LinearLayout tutorCard = new LinearLayout(getContext());
             tutorCard.setOrientation(LinearLayout.HORIZONTAL);
             // Set LayoutParams for the parent (e.g., fill width, wrap height)
             LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
@@ -358,30 +364,38 @@ public class ExplorerFragment extends Fragment {
             detailsLayout.addView(tutorEducation);
 
             // Create Button for requesting session
-            Button requestSessionButton = new Button(getContext());
-            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            buttonParams.gravity = Gravity.BOTTOM;
-            requestSessionButton.setLayoutParams(buttonParams);
-            requestSessionButton.setText("Request");
-            requestSessionButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-            requestSessionButton.setOnClickListener(l -> {
-                Intent i = new Intent(getContext(), ScheduleActivity.class);
-                String subjectsExtra = "";
-                for(UserSubject sub : dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum())) {
-                    if(!sub.getTutoring()) continue;
-                    String subjectName = dataManager.getSubjectDao().getSubjectById(sub.getSubjectId()).getSubjectName();
-                    subjectsExtra += subjectName.split(": ")[0] +", ";
-                }
-                i.putExtra("tutor", tutor);
-                i.putExtra("subjects", subjectsExtra);
-                i.putExtra("job_type", "create_session");
-                startActivity(i);
-            });
-
+            // --- Check for Existing Active Session ---
+            boolean hasActive = dataManager.getSessionDao().hasActiveSession(
+                    current_user.getUser().getStudentNum(),
+                    tutor.getStudentNum()
+            );
+                Button requestSessionButton = new Button(getContext());
+                LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+                buttonParams.gravity = Gravity.BOTTOM;
+                requestSessionButton.setLayoutParams(buttonParams);
+                requestSessionButton.setText("Request");
+                requestSessionButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                requestSessionButton.setOnClickListener(l -> {
+                    Intent i = new Intent(getContext(), ScheduleActivity.class);
+                    String subjectsExtra = "";
+                    for (UserSubject sub : dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum())) {
+                        if (!sub.getTutoring()) continue;
+                        String subjectName = dataManager.getSubjectDao().getSubjectById(sub.getSubjectId()).getSubjectName();
+                        subjectsExtra += subjectName.split(": ")[0] + ", ";
+                    }
+                    i.putExtra("tutor", tutor);
+                    i.putExtra("subjects", subjectsExtra);
+                    i.putExtra("job_type", "create_session");
+                    startActivity(i);
+                });
+                TextView hasSession = new TextView(getContext());
+                hasSession.setText("You have an active session with this tutor");
+                hasSession.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                if(hasActive)detailsLayout.addView(hasSession);
             tutorCard.addView(detailsLayout);
-            tutorCard.addView(requestSessionButton);
+            if(!hasActive)tutorCard.addView(requestSessionButton);
 
             results.addView(tutorCard);
         }

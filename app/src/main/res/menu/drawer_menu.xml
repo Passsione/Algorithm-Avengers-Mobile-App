@@ -14,10 +14,10 @@
             android:id="@+id/nav_schedule"
             android:icon="@android:drawable/ic_menu_my_calendar"
             android:title="Schedule History" />
-        <item
+       <!-- <item
             android:id="@+id/nav_resources"
             android:icon="@android:drawable/stat_notify_more"
-            android:title="My Resources" />
+            android:title="My Resources" />-->
         <item
             android:id="@+id/nav_notifications"
             android:icon="@android:drawable/ic_popup_reminder"

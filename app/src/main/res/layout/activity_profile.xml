@@ -52,12 +52,12 @@
                 android:layout_height="wrap_content"
                 android:text="Education level" />
 
-            <TextView
+          <!--  <TextView
                 android:id="@+id/txtProfileTier"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="User tier" />
-
+-->
             <TextView
                 android:id="@+id/txtCredit"
                 android:layout_width="wrap_content"

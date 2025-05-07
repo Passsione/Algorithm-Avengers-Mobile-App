@@ -73,6 +73,11 @@
                             android:isIndicator="true"
                             android:numStars="5"
                             android:rating="4.5" />
+                        <TextView
+                            android:id="@+id/not_rated_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Not yet rated" />
 
                         <TextView
                             android:id="@+id/session_booking_tutor_subjects"
@@ -80,6 +85,20 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:text="Mathematics, Physics" />
+                       <!-- <TextView
+                            android:id="@+id/tv_active_session_message"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#FFF3E0"
+                        android:textColor="#E65100"
+                        android:visibility="gone"
+                        android:text="@string/active_session_warning"
+                        android:padding="12dp"
+                        android:layout_marginBottom="16dp"
+                        android:drawableStart="@drawable/ic_settings_black_24dp"
+                        android:drawablePadding="8dp"
+                        tools:visibility="visible"/>-->
+
                     </LinearLayout>
                 </LinearLayout>
 
@@ -167,7 +186,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginBottom="16dp"
-                    android:orientation="vertical"/>
+                    android:orientation="horizontal"/>
 
             </com.google.android.material.textfield.TextInputLayout>
 

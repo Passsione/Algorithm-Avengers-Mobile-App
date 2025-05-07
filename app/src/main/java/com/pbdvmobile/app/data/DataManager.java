@@ -91,7 +91,6 @@ public class DataManager implements Serializable {
                 mainUser.setEmail("22323809@dut4life.ac.za");
                 mainUser.setPassword("password1");
                 mainUser.setEducationLevel(User.EduLevel.BACHELOR);
-
                 instance.getUserDao().insertUser(mainUser);
             }
             //assigns users random subjects, marks and qualifies them
@@ -108,18 +107,24 @@ public class DataManager implements Serializable {
                     }
             }
             // dumby session
-            if(instance.getSessionDao().getSessionsByTuteeId(22323809) == null) {
+            if(instance.getSessionDao().getSessionsByTuteeId(22323809).isEmpty()) {
                 List<UserSubject> userSubject = instance.getSubjectDao().getUserSubjects(22323809);
                 int subId = userSubject.get(instance.randomIndex(userSubject.size())).getSubjectId();
-                Session session = new Session(11111111, 22323809, subId);
+                Session session = new Session(11111111, subId);
+                session.setTuteeIds(List.of(22323809));
                 Date startTime = new Date();
-                startTime.setTime(startTime.getTime() + 34 * 60 * 60 * 1000);
+                // Set start time to 34 hours from now
+                startTime.setTime(startTime.getTime() + 34L * 60 * 60 * 1000);
                 Date endTime = new Date();
-                endTime.setTime(startTime.getTime() + 2 * 60 * 60 * 1000);
+                // Set end time to 2 hours after the start time
+                endTime.setTime(startTime.getTime() + 2L * 60 * 60 * 1000);
+
                 session.setStartTime(startTime);
                 session.setEndTime(endTime);
                 session.setStatus(Session.Status.CONFIRMED);
-                Toast.makeText(context, String.valueOf(instance.getSessionDao().insertSession(session)), Toast.LENGTH_SHORT).show();
+                // Make sure insertSession returns a meaningful value (e.g., new row ID or 1 for success)
+                long insertResult = instance.getSessionDao().insertSession(session);
+                Toast.makeText(context, "Dummy session creation result: " + insertResult, Toast.LENGTH_SHORT).show();
 
             }
 

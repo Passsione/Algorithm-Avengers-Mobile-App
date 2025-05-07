@@ -23,7 +23,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String TABLE_PRIZES = "prizes";
     public static final String TABLE_REDEEM_PRIZES = "redeem_prizes";
     public static final String TABLE_USER_SUBJECTS = "user_subjects";
-//  public static final String TABLE_CHAT = "chats";
+
 
 
     // User Table Columns
@@ -45,7 +45,6 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     // Subject Table Columns
     public static final String KEY_SUBJECT_ID = "subject_id";
     public static final String KEY_SUBJECT_NAME = "subject_name";
-//    public static final String KEY_SUBJECT_MARK = "mark";
 
     // User-Subject Join Table Columns
     public static final String KEY_USER_SUBJECT_USER_ID = "user_id";
@@ -56,7 +55,8 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     // Session Table Columns
     public static final String KEY_SESSION_ID = "session_id";
     public static final String KEY_SESSION_TUTOR_ID = "tutor_id";
-    public static final String KEY_SESSION_TUTEE_ID = "tutee_id";
+    public static final String KEY_SESSION_TUTEE_IDS_JSON = "tutees_id";
+//    public static final String KEY_SESSION_TUTEE_ID = "tutee_id";
     public static final String KEY_SESSION_SUBJECT_ID = "subject_id";
     public static final String KEY_SESSION_LOCATION = "location";
     public static final String KEY_SESSION_START_TIME = "start_time";
@@ -141,20 +141,22 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 "(" +
                 KEY_SESSION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_SESSION_TUTOR_ID + " INTEGER NOT NULL," +
-                KEY_SESSION_TUTEE_ID + " INTEGER NOT NULL," +
+                // KEY_SESSION_TUTEE_ID + " INTEGER," + // Optional: Keep for legacy 1-on-1 support? Decide based on needs.
+                KEY_SESSION_TUTEE_IDS_JSON + " TEXT," + // Stores JSON array of tutee IDs
                 KEY_SESSION_SUBJECT_ID + " INTEGER NOT NULL," +
                 KEY_SESSION_LOCATION + " TEXT," +
-                KEY_SESSION_START_TIME + " TIMESTAMP NOT NULL," + // Android Cookbook pdf page: 494
-                KEY_SESSION_END_TIME + " TIMESTAMP," +
-                KEY_SESSION_STATUS + " VARCHAR(15) NOT NULL," +
+                KEY_SESSION_START_TIME + " INTEGER NOT NULL," + // Store as Long (milliseconds)
+                KEY_SESSION_END_TIME + " INTEGER," + // Store as Long (milliseconds)
+                KEY_SESSION_STATUS + " TEXT NOT NULL," + // Changed from VARCHAR(15)
                 KEY_SESSION_TUTOR_REVIEW + " TEXT," +
-                KEY_SESSION_TUTEE_RATING + "REAL,"+
-                KEY_SESSION_TUTOR_RATING + "REAL,"+
                 KEY_SESSION_TUTEE_REVIEW + " TEXT," +
+                KEY_SESSION_TUTOR_RATING + " REAL," + // Changed from REAL,
+                KEY_SESSION_TUTEE_RATING + " REAL," + // Changed from REAL,
                 "FOREIGN KEY (" + KEY_SESSION_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
-                "FOREIGN KEY (" + KEY_SESSION_TUTEE_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
+                // Cannot have FK for a list in tutee_ids_json
                 "FOREIGN KEY (" + KEY_SESSION_SUBJECT_ID + ") REFERENCES " + TABLE_SUBJECTS + "(" + KEY_SUBJECT_ID + ")" +
                 ")";
+
 
         String CREATE_RESOURCES_TABLE = "CREATE TABLE " + TABLE_RESOURCES +
                 "(" +

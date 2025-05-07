@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 import com.pbdvmobile.app.R;
@@ -37,7 +38,7 @@ public class TutorDashboardFragment extends Fragment {
     DataManager dataManager;
     LogInUser current_user;
     CardView upcoming, requests;
-    TextView reschedule, cancel;
+    TextView reschedule, cancel, confirm;
     Button viewSchedule;
     LinearLayout sessionLayout, subjectTitle, date, tutorLayout, actions;
     @Override
@@ -149,8 +150,10 @@ public class TutorDashboardFragment extends Fragment {
 
         // --- Show Tutee name ---
         TextView txtTutee = new TextView(this.getContext());
-        User tutee = dataManager.getUserDao().getUserByStudentNum(session.getTuteeId());
-        txtTutee.setText(tutee.getFirstName() + " " + tutee.getLastName());
+        for (int tuteeId : session.getTuteeIds()) {
+            User tutee = dataManager.getUserDao().getUserByStudentNum(tuteeId);
+            txtTutee.setText(txtTutee.getText() +", "+tutee.getFirstName() + " " + tutee.getLastName());
+        }
         txtTutee.setLayoutParams(titleChildParams);
         tutorLayout.addView(tuteeIcon);
         tutorLayout.addView(txtTutee);
@@ -195,13 +198,33 @@ public class TutorDashboardFragment extends Fragment {
         viewSchedule.setOnClickListener(v ->  {
             Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
             scheduleIntent.putExtra("job_type", "session_details");
+            scheduleIntent.putExtra("subjects", txtSubject.getText().toString());
             scheduleIntent.putExtra("session", session);
+            scheduleIntent.putExtra("tutor", current_user.getUser());
             startActivity(scheduleIntent);
         });
-//        actions.addView(reschedule);
-        actions.addView(cancel);
-        actions.addView(viewSchedule);
 
+        actions.addView(cancel);
+
+        if(session.getStatus() == Session.Status.PENDING) {
+            // --- Create Confirm Button ---
+            confirm = new TextView(this.getContext());
+            confirm.setText("Confirm session");
+            confirm.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
+            confirm.setTextColor(Color.GREEN);
+            confirm.setLayoutParams(titleChildParams);
+            confirm.setOnClickListener(v -> {
+                dataManager.getSessionDao().updateSessionStatus(session.getId(),
+                        Session.Status.CONFIRMED);
+                requests.removeView(sessionLayout);
+                sessionLayout.removeView(confirm);
+                upcoming.addView(sessionLayout);
+                updateSessionList();
+                Toast.makeText(getContext(), "Session confirmed", Toast.LENGTH_SHORT);
+            });
+            actions.addView(confirm);
+        }
+            actions.addView(viewSchedule);
         // --- Add children to the session layout ---
         sessionLayout.addView(subjectTitle);
         sessionLayout.addView(date);
@@ -213,11 +236,16 @@ public class TutorDashboardFragment extends Fragment {
         else if(session.getStatus() == Session.Status.PENDING)requests.addView(sessionLayout);
 
     }
+        updateSessionList();
+
+}
+
+    private void updateSessionList() {
         if(upcoming.getChildCount() == 0){
-            TextView text = new TextView(getContext());
-            text.setText("No upcoming sessions");
-            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
-            upcoming.addView(text);
+            TextView noComingSession = new TextView(getContext());
+            noComingSession.setText("No upcoming sessions");
+            noComingSession.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
+            upcoming.addView(noComingSession);
         }
         if(requests.getChildCount() == 0){
             TextView text = new TextView(getContext());
@@ -226,8 +254,10 @@ public class TutorDashboardFragment extends Fragment {
             requests.addView(text);
         }
 
-}
-// Helper method to convert dp to pixels
+
+    }
+
+    // Helper method to convert dp to pixels
 private int dpToPx(int dp) {
     DisplayMetrics displayMetrics = requireContext().getResources().getDisplayMetrics();
     // A simpler way to convert dp to pixels

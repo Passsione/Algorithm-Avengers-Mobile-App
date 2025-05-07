@@ -171,7 +171,7 @@ public class UserDao {
     }
 
     @NonNull
-    private User cursorToUser(@NonNull Cursor cursor) {
+    public User cursorToUser(@NonNull Cursor cursor) {
         User user = new User();
         user.setStudentNum(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_STUDENT_NUM)));
         user.setFirstName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_FIRST_NAME)));

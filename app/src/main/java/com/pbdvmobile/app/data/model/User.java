@@ -146,6 +146,15 @@ public class User implements Serializable {
     public void setCredits(double credits) {
         this.credits = credits;
     }
+    // Method to add/remove credits safely
+    public void addCredits(int amount) { this.credits += amount; }
+    public boolean deductCredits(int amount) {
+        if (this.credits >= amount) {
+            this.credits -= amount;
+            return true;
+        }
+        return false;
+    }
 
     public String getSubjects() {
         return subjects;

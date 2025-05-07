@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -28,6 +30,8 @@ public class SessionDetailsFragment extends Fragment {
     Button viewProfile, cancelSession, rescheduleSession, confirmSession;
     ImageView tutorImage;
     RatingBar tutorRating, detailsRating;
+    LinearLayout reviewSection;
+    CardView tutorCard;
     EditText detailsReview;
 
 
@@ -67,23 +71,36 @@ public class SessionDetailsFragment extends Fragment {
         time.setText(dateTime[1]);
         location.setText(session.getLocation() == null ? "Unknown" : session.getLocation());
 
-
         // ---- End - Session Details ----
 
         // ---- Start - Tutor Details ----
+        tutorCard = view.findViewById(R.id.session_detail_tutor_card);
+        tutorCard.setVisibility(session.getTutorId() == current_user.getUser().getStudentNum()? View.GONE : View.VISIBLE);
+        tutorName.setText(tutor.getFirstName() + " " + tutor.getLastName());
+        tutorSubject.setText(subjects);
         tutorImage = view.findViewById(R.id.session_detail_tutor_image);
         tutorRating = view.findViewById(R.id.session_detail_tutor_rating);
+        if(tutor.getAverageRating() == -1){
+            tutorRating.setVisibility(View.GONE);
+            view.findViewById(R.id.session_detail_no_rating).setVisibility(View.VISIBLE);
+        }
         detailsRating = view.findViewById(R.id.rabDetails);
         detailsReview = view.findViewById(R.id.redDetailsReview);
 
 
         // ---- End - Tutor Details ----
 
+        // ---- Start - Review Section ----
+        reviewSection = view.findViewById(R.id.cardReview);
+
+        reviewSection.setVisibility(session.getStatus() == Session.Status.COMPLETED ? View.VISIBLE : View.GONE);
+
+        // ---- End - Review Section ----
 
         // Button Listeners
         viewProfile = view.findViewById(R.id.btn_view_tutor_profile);
         cancelSession = view.findViewById(R.id.btn_cancel_booking);
-        rescheduleSession = view.findViewById(R.id.btn_reschedule_session);
+//        rescheduleSession = view.findViewById(R.id.btn_reschedule_session);
         confirmSession = view.findViewById(R.id.btn_confirm_booking);
 
 

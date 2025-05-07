@@ -184,10 +184,11 @@ public class DashboardFragment extends Fragment {
             cancel.setLayoutParams(titleChildParams);
             cancel.setOnClickListener(v ->  {
                 dataManager.getSessionDao().updateSessionStatus(session.getId(),
-                        session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
-                Toast.makeText(getContext(), "Session can successful!", Toast.LENGTH_LONG).show();
-
+                        Session.Status.CANCELLED);
+                Toast.makeText(getContext(), "Session cancelled successful!", Toast.LENGTH_LONG).show();
                 upcoming.removeView(sessionLayout);
+                pending.removeView(sessionLayout);
+
             });
             // --- Create View Button ---
             // Use MaterialButton to easily apply Material styles programmatically
@@ -198,7 +199,9 @@ public class DashboardFragment extends Fragment {
             viewSchedule.setOnClickListener(v ->  {
                 Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);
                 scheduleIntent.putExtra("job_type", "session_details");
+                scheduleIntent.putExtra("subjects", txtSubject.getText().toString());
                 scheduleIntent.putExtra("session", session);
+                scheduleIntent.putExtra("tutor", tutor);
                 startActivity(scheduleIntent);
             });
 //            actions.addView(reschedule);
