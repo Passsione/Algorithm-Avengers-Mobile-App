@@ -48,12 +48,12 @@ public class LogInActivity extends AppCompatActivity {
         password = findViewById(R.id.edtLoginPassword);
         flash = findViewById(R.id.txtError);
 
-        if((current_user.message != null) && (dataManager.validDut(current_user.message))){ // just signed up
+        if((dataManager.validDut(current_user.message))){ // just signed up
             email.setText(current_user.message);
-            dataManager.displayError(flash, flash, "Successful Sign Up. Please log in");
+            dataManager.displayError("Successful Sign Up. Please log in");
             current_user.message = null;
         }else if(current_user.message != null){ // just logged out
-            dataManager.displayError(flash, flash, current_user.message);
+            dataManager.displayError(current_user.message);
             current_user.message = null;
         }
 
@@ -69,10 +69,10 @@ public class LogInActivity extends AppCompatActivity {
                     startActivity(toLanding);
                     finish();
                 } else {
-                    dataManager.displayError(v, flash, "Login information is incorrect. Remember to use you DUT email");
+                    dataManager.displayError("Login information is incorrect. Remember to use you DUT email");
                 }
             }else{
-                dataManager.displayError(v, flash, "Please fill all the field");
+                dataManager.displayError("Please fill all the field");
             }
         });
 

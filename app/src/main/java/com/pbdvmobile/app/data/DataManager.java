@@ -29,6 +29,7 @@ public class DataManager implements Serializable {
     private final SessionDao sessionDao;
     private final ResourceDao resourceDao;
     private final PrizeDao prizeDao;
+    private final Context context;
 
     private final String[] subjects = {
         "RESK401: RESEARCH SKILLS: [SEM1]",
@@ -64,6 +65,7 @@ public class DataManager implements Serializable {
         sessionDao = new SessionDao(dbHelper);
         resourceDao = new ResourceDao(dbHelper);
         prizeDao = new PrizeDao(dbHelper);
+        this.context = context;
 
     }
 
@@ -91,7 +93,6 @@ public class DataManager implements Serializable {
                 mainUser.setEmail("22323809@dut4life.ac.za");
                 mainUser.setPassword("password1");
                 mainUser.setEducationLevel(User.EduLevel.BACHELOR);
-
                 instance.getUserDao().insertUser(mainUser);
             }
             //assigns users random subjects, marks and qualifies them
@@ -108,21 +109,20 @@ public class DataManager implements Serializable {
                     }
             }
             // dumby session
-            if(instance.getSessionDao().getSessionsByTuteeId(22323809) == null) {
+            if(instance.getSessionDao().getSessionsByTuteeId(22323809).isEmpty()) {
                 List<UserSubject> userSubject = instance.getSubjectDao().getUserSubjects(22323809);
-                int subId = userSubject.get(instance.randomIndex(userSubject.size())).getSubjectId();
+                int subId = userSubject.get(1 + instance.randomIndex(userSubject.size())).getSubjectId();
                 Session session = new Session(11111111, 22323809, subId);
+                session.setLocation("Steve Library");
                 Date startTime = new Date();
-                startTime.setTime(startTime.getTime() + 34 * 60 * 60 * 1000);
+                startTime.setTime(startTime.getTime() + 24L * 60 * 60 * 1000);
                 Date endTime = new Date();
-                endTime.setTime(startTime.getTime() + 2 * 60 * 60 * 1000);
+                endTime.setTime(startTime.getTime() + 2L * 60 * 60 * 1000);
                 session.setStartTime(startTime);
                 session.setEndTime(endTime);
                 session.setStatus(Session.Status.CONFIRMED);
-                Toast.makeText(context, String.valueOf(instance.getSessionDao().insertSession(session)), Toast.LENGTH_SHORT).show();
-
+//                Toast.makeText(context, String.valueOf(instance.getSessionDao().insertSession(session)), Toast.LENGTH_SHORT).show();
             }
-
     }
 
         return instance;
@@ -168,10 +168,8 @@ public class DataManager implements Serializable {
         return fill;
     }
 
-    public void displayError(View v, TextView anchor, String error){
-        Snackbar.make(v, error, Snackbar.LENGTH_LONG)
-                .setAnchorView(anchor)
-                .setAction("Action", null).show();
+    public void displayError(String error){
+        Toast.makeText(instance.context, error, Toast.LENGTH_LONG).show();
     }
     public boolean validDut(String email){
         Pattern pattern = Pattern.compile("[0-9]{8}+@dut4life.ac.za");

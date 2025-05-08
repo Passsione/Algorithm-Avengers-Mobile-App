@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         DataManager dataManager = DataManager.getInstance(this);
         LogInUser current_user = LogInUser.getInstance(dataManager);
 
+/*
         // ---- Go to log-in page if not logged in
         if(!current_user.isLoggedIn()){
             Intent toLogin = new Intent(MainActivity.this, LogInActivity.class);
@@ -63,13 +64,13 @@ public class MainActivity extends AppCompatActivity {
             finish(); // can't come back to main activity
             return;
         }
+*/
 
-
-
-        /* ---- Start - Bottom Navigation Section */
+        // ---- Start - Bottom Navigation Section
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.getMenu().findItem(R.id.navigation_tutor_center).setVisible(current_user.getUser().isTutor());
+//        bottomNavigationView.getMenu().findItem(R.id.navigation_tutor_center).setVisible(current_user.getUser().isTutor());
+        dataManager.displayError("Welcome");
 
         // Set the listener for item selection
         bottomNavigationView.setOnItemSelectedListener(navListener);

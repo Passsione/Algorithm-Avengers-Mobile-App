@@ -41,7 +41,7 @@ public class DashboardFragment extends Fragment {
 
     LinearLayout upcoming, pending, sessionLayout, subjectTitle, date, tutorLayout, actions;
     DataManager dataManager;
-    LogInUser current_user;
+//    LogInUser current_user;
     @SuppressLint("SetTextI18n")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -57,12 +57,12 @@ public class DashboardFragment extends Fragment {
         // --- Step 3: Find views within the inflated hierarchy ('view') ---
         // Initialize context-dependent instances here safely
         dataManager = DataManager.getInstance(getContext()); // Use requireContext() for safety
-        current_user = LogInUser.getInstance(dataManager);
+//        current_user = LogInUser.getInstance(dataManager);
 
         upcoming = view.findViewById(R.id.upcoming_sessions_card);
         pending = view.findViewById(R.id.pending_sessions_card);
 
-        int user_num = current_user.getUser().getStudentNum();
+        int user_num = 22323809; //current_user.getUser().getStudentNum();
         List<Session> sessions = dataManager.getSessionDao().getSessionsByTuteeId(user_num);
 
         upcoming.removeAllViews();

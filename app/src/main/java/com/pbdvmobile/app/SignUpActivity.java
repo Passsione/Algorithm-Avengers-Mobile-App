@@ -101,19 +101,19 @@ public class SignUpActivity extends AppCompatActivity {
 
                         }else{
                             rePassword.setError("Doesn't match password");
-                            dataManager.displayError(v, flash, "Passwords don't match");
+                            dataManager.displayError("Passwords don't match");
                         }
                     }else{
 
-                        dataManager.displayError(v, flash, "Email already exists. Try logging in");
+                        dataManager.displayError("Email already exists. Try logging in");
                     }
                 }else{
                     email.setError("Not a valid DUT email");
-                    dataManager.displayError(v, flash, "Not a valid DUT email");
+                    dataManager.displayError("Not a valid DUT email");
 
                 }
             }else{
-                dataManager.displayError(v, flash, "Please fill in all fields");
+                dataManager.displayError("Please fill in all fields");
 
             }
 

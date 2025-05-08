@@ -4,6 +4,7 @@ import static android.view.View.GONE;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pbdvmobile.app.R;
+import com.pbdvmobile.app.ResourceUploadActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.model.Resource;
@@ -253,21 +255,6 @@ public class ResourcesFragment extends Fragment {
 //            date.setText(dateFormat.format(resource.getDate()));
             icon.setImageResource(android.R.drawable.ic_menu_agenda); // Example icon
 
-            // Set icon based on type (example)
-            /*switch (resource.getType().toLowerCase()) {
-                case "pdf":
-                    icon.setImageResource(android.R.drawable.ic_menu_agenda); // Example icon
-                    break;
-                case "video":
-                    icon.setImageResource(android.R.drawable.ic_media_play); // Example icon
-                    break;
-                case "link":
-                    icon.setImageResource(android.R.drawable.ic_menu_mapmode); // Example icon
-                    break;
-                default:
-                    icon.setImageResource(android.R.drawable.ic_menu_help); // Default
-            }*/
-
             // Set download button action
             downloadButton.setOnClickListener(v -> {
                 if(selectedTutor != MY_RESOURCES) {
@@ -276,6 +263,10 @@ public class ResourcesFragment extends Fragment {
                     Toast.makeText(context, "Downloading: " + resource.getName(), Toast.LENGTH_SHORT).show();
                     // Example: startDownload(resource.getDownloadUrl());
                 }else{
+                    Intent toEdit = new Intent(context, ResourceUploadActivity.class);
+//                    toEdit.putExtra("mode", "edit");
+//                    toEdit.putExtra("resource", resource);
+                    startActivity(toEdit);
                     Toast.makeText(context, "To edit resource" + resource.getName(), Toast.LENGTH_SHORT).show();
 
                 }

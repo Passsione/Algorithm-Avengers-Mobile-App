@@ -1,8 +1,5 @@
 package com.pbdvmobile.app.fragments;
 
-import static androidx.constraintlayout.widget.ConstraintSet.GONE;
-import static androidx.constraintlayout.widget.ConstraintSet.VISIBLE;
-
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -15,22 +12,24 @@ import android.view.Menu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
 import com.pbdvmobile.app.AIBaseActivity;
+import com.pbdvmobile.app.AIQuizActivity;
 import com.pbdvmobile.app.LogInActivity;
 import com.pbdvmobile.app.MainActivity;
 import com.pbdvmobile.app.NotificationsActivity;
 import com.pbdvmobile.app.PaymentGatewayActivity;
+import com.pbdvmobile.app.PaymentHistoryActivity;
 import com.pbdvmobile.app.ProfileActivity;
 import com.pbdvmobile.app.R;
+import com.pbdvmobile.app.RedeemCreditActivity;
 import com.pbdvmobile.app.ScheduleActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
-import com.pbdvmobile.app.data.model.User;
 
 public class NavigationFragment extends Fragment {
 
@@ -125,10 +124,22 @@ public class NavigationFragment extends Fragment {
             startActivity(toNotifications);
             return false;
         });
+        // To AI Quiz page
+        menu.findItem(R.id.nav_quiz_generator).setOnMenuItemClickListener(v ->{
+            Intent toAISummarize = new Intent(getActivity(), AIQuizActivity.class);
+            startActivity(toAISummarize);
+            return false;
+        });
         // To AI Summarizer page
         menu.findItem(R.id.nav_ai_summary).setOnMenuItemClickListener(v ->{
-            Intent toAISummarize = new Intent(getActivity(), AIBaseActivity.class);
-            startActivity(toAISummarize);
+            Intent toAIQuiz = new Intent(getActivity(), AIBaseActivity.class);
+            startActivity(toAIQuiz);
+            return false;
+        });
+        // To Redeem Credits
+        menu.findItem(R.id.nav_redeem_credits).setOnMenuItemClickListener(v ->{
+            Intent toRedeem = new Intent(getActivity(), RedeemCreditActivity.class);
+            startActivity(toRedeem);
             return false;
         });
         // To payments gateway
@@ -137,10 +148,17 @@ public class NavigationFragment extends Fragment {
             startActivity(toPayment);
             return false;
         });
+        // To payments history
+        menu.findItem(R.id.nav_payments_history).setOnMenuItemClickListener(v ->{
+            Intent toPayHistory = new Intent(getActivity(), PaymentHistoryActivity.class);
+            startActivity(toPayHistory);
+            return false;
+        });
+
         // Logout
         menu.findItem(R.id.nav_logout).setOnMenuItemClickListener(v ->{
             current_user.logOut();
-            current_user.message = "Successfully logged out";
+            Toast.makeText(getContext(), "Successfully logged out", Toast.LENGTH_LONG).show();
             Intent toLogin = new Intent(getActivity(), LogInActivity.class);
             startActivity(toLogin);
             return false;

@@ -34,35 +34,32 @@
                 android:id="@+id/nav_ai_summary"
                 android:icon="@android:drawable/ic_menu_upload"
                 android:title="AI Summarizer" />
-            <item
+            <!--<item
                 android:id="@+id/nav_ai_translator"
                 android:icon="@android:drawable/ic_menu_sort_alphabetically"
                 android:title="AI Translator" />
             <item
                 android:id="@+id/nav_ai_chatbot"
                 android:icon="@android:drawable/stat_notify_voicemail"
-                android:title="AI Chatbot" />
+                android:title="AI Chatbot" />-->
 
         </menu>
     </item>
     <item android:title="Payments And Prizes">
         <menu>
             <item
-                android:id="@+id/nav_payments_history"
-                android:icon="@android:drawable/ic_menu_recent_history"
-                android:title="Payments History" />
+                android:id="@+id/nav_redeem_credits"
+                android:icon="@android:drawable/ic_menu_search"
+                android:title="Redeem Credits" />
             <item
                 android:id="@+id/nav_payments_details"
                 android:icon="@android:drawable/ic_menu_info_details"
                 android:title="Payments Details" />
             <item
-                android:id="@+id/nav_upgrade"
-                android:icon="@android:drawable/ic_menu_add"
-                android:title="Upgrade User Plan" />
-            <item
-                android:id="@+id/nav_redeem_credits"
-                android:icon="@android:drawable/ic_menu_search"
-                android:title="Redeem Credits" />
+                android:id="@+id/nav_payments_history"
+                android:icon="@android:drawable/ic_menu_recent_history"
+                android:title="Payments History" />
+
 
         </menu>
     </item>

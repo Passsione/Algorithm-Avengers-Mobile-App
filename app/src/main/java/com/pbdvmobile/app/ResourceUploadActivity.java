@@ -95,7 +95,30 @@ public class ResourceUploadActivity extends AppCompatActivity {
 
         subjects = findViewById(R.id.subjectDropdown);
 
+//        String mode = getIntent().getStringExtra("mode");
+        createSubjectDropDown();
 
+        selectPdfButton.setOnClickListener(v -> {
+            selectPdfFile();
+        });
+
+        uploadPdfButton.setOnClickListener(v -> {
+            if (selectedPdfUri != null) {
+                uploadPdf(selectedPdfUri);
+            } else {
+                Toast.makeText(this, "No PDF selected for upload", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        cancel = findViewById(R.id.upload_cancel_button);
+        cancel.setOnClickListener(v -> {
+            finish();
+            Toast.makeText(this, "Upload cancelled", Toast.LENGTH_SHORT).show();
+        });
+
+    }
+
+    private void createSubjectDropDown() {
         List<UserSubject> userSubjects = db.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum());
         List<Integer> added = new ArrayList<>();
         List<String> subjectsName = new ArrayList<>();
@@ -133,24 +156,6 @@ public class ResourceUploadActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
-        });
-
-        selectPdfButton.setOnClickListener(v -> {
-            selectPdfFile();
-        });
-
-        uploadPdfButton.setOnClickListener(v -> {
-            if (selectedPdfUri != null) {
-                uploadPdf(selectedPdfUri);
-            } else {
-                Toast.makeText(this, "No PDF selected for upload", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        cancel = findViewById(R.id.upload_cancel_button);
-        cancel.setOnClickListener(v -> {
-            finish();
-            Toast.makeText(this, "Upload cancelled", Toast.LENGTH_SHORT).show();
         });
 
     }

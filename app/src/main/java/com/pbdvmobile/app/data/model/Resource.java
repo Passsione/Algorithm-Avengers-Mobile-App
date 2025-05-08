@@ -1,6 +1,8 @@
 package com.pbdvmobile.app.data.model;
 
-public class Resource {
+import java.io.Serializable;
+
+public class Resource implements Serializable {
     private int resourcesId;// Id set to AUTO INCREMENT
     private String resource; // url
     private String name; // Display Name

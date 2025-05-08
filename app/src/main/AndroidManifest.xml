@@ -15,6 +15,12 @@
         android:theme="@style/Theme.PBDVMobileApp"
         tools:targetApi="31">
         <activity
+            android:name=".PaymentHistoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AIQuizActivity"
+            android:exported="false" />
+        <activity
             android:name=".TutorProfile"
             android:exported="false" />
         <activity
