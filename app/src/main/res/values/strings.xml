@@ -84,6 +84,36 @@
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
 
+    <string name="default_subject_name">Subject Information Unavailable</string>
+    <string name="location_unknown">Location not specified</string>
+    <string name="error_session_data_unavailable">Session data is unavailable.</string>
+    <string name="tutor_details_unavailable">Tutor details unavailable</string>
+    <string name="label_tutor_subjects_prefix">Teaches: </string>
+    <string name="review_section_title">Rate and Review Session</string>
+    <string name="review_prompt_rate_session">How would you rate this session?</string>
+    <string name="review_prompt_add_review">Share your feedback (optional):</string>
+    <string name="button_submit_review">Submit Review</string>
+    <string name="review_submitted_toast">Review submitted. Thank you!</string>
+    <string name="review_not_available_placeholder">Reviews can be added after the session is completed.</string>
+    <string name="button_text_cancel">Cancel Session</string>
+    <string name="button_text_reschedule">Reschedule</string>
+    <string name="button_text_confirm_booking">Confirm Booking</string>
+    <string name="button_text_okay">Okay</string>
+    <string name="button_text_view_profile">View Tutor Profile</string>
+    <string name="session_status_pending">Pending</string>
+    <string name="session_status_confirmed">Confirmed</string>
+    <string name="session_status_cancelled">Cancelled</string>
+    <string name="session_status_declined">Declined</string>
+    <string name="session_status_completed">Completed</string>
+
+    <string name="dialog_title_cancel_session">Cancel Session?</string>
+    <string name="dialog_message_cancel_session">Are you sure you want to cancel this session?</string>
+    <string name="dialog_button_yes">Yes</string>
+    <string name="dialog_button_no">No</string>
+    <string name="session_cancelled_toast">Session cancelled successfully.</string>
+    <string name="session_cancellation_failed_toast">Failed to cancel session.</string>
+    <string name="session_confirmed_toast">Session confirmed!</string>
+    <string name="session_confirmation_failed_toast">Failed to confirm session.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
@@ -120,4 +150,15 @@
         item
     </string>
     <string name="title_activity_dashboard">Dashboard</string>
+    <string name="not_rated_yet">Not rated yet</string>
+    <string name="no_common_subjects_tutor">no common subjects to tutor</string>
+    <string name="select_duration_prompt">Please select a duration for the section</string>
+    <string name="no_available_times">No times available</string>
+    <string name="select_subject_validation">No subject selected</string>
+    <string name="select_valid_date_validation">No date selected</string>
+    <string name="select_duration_validation">No duration selected</string>
+    <string name="select_location_validation">Location not selected</string>
+    <string name="select_time_validation">No time selected</string>
+    <string name="no_available_times_for_booking">No times for this session</string>
+    <string name="session_request_success">Session requested successfully </string>
 </resources>

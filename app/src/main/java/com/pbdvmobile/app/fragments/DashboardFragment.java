@@ -41,7 +41,7 @@ public class DashboardFragment extends Fragment {
 
     LinearLayout upcoming, pending, sessionLayout, subjectTitle, date, tutorLayout, actions;
     DataManager dataManager;
-//    LogInUser current_user;
+    LogInUser current_user;
     @SuppressLint("SetTextI18n")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -57,12 +57,12 @@ public class DashboardFragment extends Fragment {
         // --- Step 3: Find views within the inflated hierarchy ('view') ---
         // Initialize context-dependent instances here safely
         dataManager = DataManager.getInstance(getContext()); // Use requireContext() for safety
-//        current_user = LogInUser.getInstance(dataManager);
+        current_user = LogInUser.getInstance(dataManager);
 
         upcoming = view.findViewById(R.id.upcoming_sessions_card);
         pending = view.findViewById(R.id.pending_sessions_card);
 
-        int user_num = 22323809; //current_user.getUser().getStudentNum();
+        int user_num = current_user.getUser().getStudentNum();
         List<Session> sessions = dataManager.getSessionDao().getSessionsByTuteeId(user_num);
 
         upcoming.removeAllViews();
@@ -120,7 +120,10 @@ public class DashboardFragment extends Fragment {
             // --- Show status ---
             TextView status = new TextView(this.getContext());
             status.setText(session.getStatus().name());
-            status.setTextColor(session.getStatus() == Session.Status.CONFIRMED ? Color.GREEN : Color.DKGRAY);
+            status.setTextColor(session.getStatus() == Session.Status.CONFIRMED ?
+                    getResources().getColor(R.color.status_confirmed, null):
+                    getResources().getColor(R.color.status_pending, null));
+            ;
             subjectTitle.addView(txtSubject);
             subjectTitle.addView(status);
 
@@ -180,20 +183,23 @@ public class DashboardFragment extends Fragment {
             cancel = new TextView(this.getContext());
             cancel.setText("Cancel");
             cancel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
-            cancel.setTextColor(Color.RED);
+            cancel.setTextColor(getResources().getColor(R.color.status_canceled, null));
             cancel.setLayoutParams(titleChildParams);
             cancel.setOnClickListener(v ->  {
                 dataManager.getSessionDao().updateSessionStatus(session.getId(),
                         session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
-                Toast.makeText(getContext(), "Session can successful!", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Session cancelled successful!", Toast.LENGTH_LONG).show();
 
                 upcoming.removeView(sessionLayout);
+                pending.removeView(sessionLayout);
             });
             // --- Create View Button ---
             // Use MaterialButton to easily apply Material styles programmatically
             // Pass the style attribute directly in the constructor
             viewSchedule = new MaterialButton(getContext(), null, 1);
             viewSchedule.setText("View in detail");
+
+
             viewSchedule.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
             viewSchedule.setOnClickListener(v ->  {
                 Intent scheduleIntent = new Intent(getActivity(), ScheduleActivity.class);

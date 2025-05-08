@@ -52,8 +52,6 @@ public class ScheduleActivity extends AppCompatActivity {
                 selectedFragment = new SessionBookingsFragment();
                 break;
             case "session_details":
-                bundle.putSerializable("tutor", (User) getIntent().getSerializableExtra("tutor"));
-                bundle.putSerializable("subjects", getIntent().getStringExtra("subjects"));
                 bundle.putSerializable("session", (Session) getIntent().getSerializableExtra("session"));
                 selectedFragment = new SessionDetailsFragment();
                 break;

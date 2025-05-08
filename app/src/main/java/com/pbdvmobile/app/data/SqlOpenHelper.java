@@ -148,8 +148,8 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 KEY_SESSION_END_TIME + " TIMESTAMP," +
                 KEY_SESSION_STATUS + " VARCHAR(15) NOT NULL," +
                 KEY_SESSION_TUTOR_REVIEW + " TEXT," +
-                KEY_SESSION_TUTEE_RATING + "REAL,"+
-                KEY_SESSION_TUTOR_RATING + "REAL,"+
+                KEY_SESSION_TUTEE_RATING + " REAL,"+
+                KEY_SESSION_TUTOR_RATING + " REAL,"+
                 KEY_SESSION_TUTEE_REVIEW + " TEXT," +
                 "FOREIGN KEY (" + KEY_SESSION_TUTOR_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_SESSION_TUTEE_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
@@ -171,7 +171,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 "(" +
                 KEY_PRIZE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 KEY_PRIZE_NAME + " TEXT," +
-                KEY_PRIZE_COST + "REAL DEFAULT 1"+
+                KEY_PRIZE_COST + " REAL DEFAULT 1"+
                 ")";
 
         String CREATE_REDEEM_PRIZES_TABLE = "CREATE TABLE " + TABLE_REDEEM_PRIZES +

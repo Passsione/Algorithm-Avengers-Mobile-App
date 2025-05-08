@@ -101,8 +101,9 @@ public class DataManager implements Serializable {
                 if (!users.isEmpty())
                     for (User user : users) {
                         for (int s = 0; s < 8; s++) {
-                            int subID = s + 1;
-                            UserSubject userSubject = new UserSubject(user.getStudentNum(), subID, instance.randomIndex(101));
+                            int subID = user.getStudentNum() == 11111111 ? 1 + s : 1 + instance.randomIndex(7);
+                            UserSubject userSubject = new UserSubject(user.getStudentNum(), subID,
+                                    user.getStudentNum() == 11111111 ? 80 : instance.randomIndex(101));
                             userSubject.setTutoring(instance.qualifies(userSubject, user));
                             instance.getSubjectDao().addUserSubject(userSubject);
                         }
@@ -115,13 +116,15 @@ public class DataManager implements Serializable {
                 Session session = new Session(11111111, 22323809, subId);
                 session.setLocation("Steve Library");
                 Date startTime = new Date();
+                // Set start time to 24 hours from now
                 startTime.setTime(startTime.getTime() + 24L * 60 * 60 * 1000);
                 Date endTime = new Date();
+                // Set end time to 2 hours after the start time
                 endTime.setTime(startTime.getTime() + 2L * 60 * 60 * 1000);
                 session.setStartTime(startTime);
                 session.setEndTime(endTime);
                 session.setStatus(Session.Status.CONFIRMED);
-//                Toast.makeText(context, String.valueOf(instance.getSessionDao().insertSession(session)), Toast.LENGTH_SHORT).show();
+                instance.getSessionDao().insertSession(session);
             }
     }
 
@@ -172,6 +175,7 @@ public class DataManager implements Serializable {
         Toast.makeText(instance.context, error, Toast.LENGTH_LONG).show();
     }
     public boolean validDut(String email){
+        if (email == null) return false;
         Pattern pattern = Pattern.compile("[0-9]{8}+@dut4life.ac.za");
         return pattern.matcher(email).matches();
     }

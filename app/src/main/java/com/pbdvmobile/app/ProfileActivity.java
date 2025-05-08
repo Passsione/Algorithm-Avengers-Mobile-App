@@ -49,33 +49,38 @@ public class ProfileActivity extends AppCompatActivity {
             finish();
             return;
         }
+        dataManager.getSessionDao().updatePastSessionsToCompleted();
+
         boolean isTutor = current_user.getUser().isTutor();
 
         // ---- Start - User Info ----
         LinearLayout profileInfoCard = findViewById(R.id.ProfileInfoCard);
         LinearLayout subjectLayout = findViewById(R.id.profile_subjects);
 
-        TextView email,tutorRating, eduLvl, tier, credits, tuteeRating;
+        TextView email,tutorRating, eduLvl, credits, tuteeRating;
         email = findViewById(R.id.txtProfileEmail);
+        tuteeRating = findViewById(R.id.txtAvgRating);
         tutorRating = findViewById(R.id.txtAvgTutorRating);
         eduLvl = findViewById(R.id.txtProfileEduLvl);
-        tier = findViewById(R.id.txtProfileTier);
-        credits = findViewById(R.id.txtCredit);
-        tuteeRating = findViewById(R.id.txtAvgRating);
 
+        credits = findViewById(R.id.txtCredit);
+
+        double[] ratingUser = dataManager.getSessionDao().getAverageRatingByStudentNum(current_user.getUser().getStudentNum());
 
         email.setText("Email: "+ current_user.getUser().getEmail());
         eduLvl.setText("Education Level: "+current_user.getUser().getEducationLevel().name());
-        tier.setText("Tier Level: " + current_user.getUser().getTierLevel().name());
+
         credits.setText("Credits: "+ current_user.getUser().getCredits());
-//        tuteeRating.setText(current_user.getUser().get() > 0?"Rating: " + current_user.getUser().getAverageRating() : "No ratings yet");
+
+        tuteeRating.setText(ratingUser[0] > 0?
+                "Average Rating as a tutee: " +  ratingUser[0]: "No ratings yet (as a tutee)");
 
 
         if(isTutor){
             subjectLayout.setVisibility(VISIBLE);
             tutorRating.setVisibility(VISIBLE);
-
-            tutorRating.setText(current_user.getUser().getAverageRating() > 0 ?"Rating: " + current_user.getUser().getAverageRating() : "No ratings yet");
+            tutorRating.setText(ratingUser[1] > 0?
+                    "Average Rating as a tutee: " +  ratingUser[1]: "No ratings yet (as a tutor)");
             displaySubjects(subjectLayout);
         }
         // ---- End - User Info ----
@@ -123,8 +128,10 @@ public class ProfileActivity extends AppCompatActivity {
         tutor.setOnClickListener(l ->{
             if(subjectLayout.getVisibility() != GONE){
                 subjectLayout.setVisibility(GONE);
+                tutorRating.setVisibility(GONE);
             }else{
                 subjectLayout.setVisibility(VISIBLE);
+                tutorRating.setVisibility(VISIBLE);
                 displaySubjects(subjectLayout);
                 Toast.makeText(this, "Choose subjects to tutor", Toast.LENGTH_LONG).show();
             }

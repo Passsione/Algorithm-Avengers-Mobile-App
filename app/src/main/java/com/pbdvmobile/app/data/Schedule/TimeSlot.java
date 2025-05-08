@@ -8,7 +8,7 @@ public class TimeSlot implements Serializable {
     Date startTime;
     Date endTime;
     // padding (15 minutes in milliseconds) around the sessions times
-    long timePadding = 15 * 60 * 1000;
+    long timePadding = 0; //15 * 60 * 1000;
 
     public TimeSlot(Date startTime, Date endTime) {
         startTime.setTime(startTime.getTime() - timePadding);

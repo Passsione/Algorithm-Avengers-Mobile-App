@@ -48,7 +48,7 @@ public class LogInActivity extends AppCompatActivity {
         password = findViewById(R.id.edtLoginPassword);
         flash = findViewById(R.id.txtError);
 
-        if((dataManager.validDut(current_user.message))){ // just signed up
+        if((current_user.message != null) && (dataManager.validDut(current_user.message))){ // just signed up
             email.setText(current_user.message);
             dataManager.displayError("Successful Sign Up. Please log in");
             current_user.message = null;

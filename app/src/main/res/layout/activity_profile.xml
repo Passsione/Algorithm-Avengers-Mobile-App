@@ -23,13 +23,14 @@
 
         <ImageView
             android:id="@+id/imgProfileImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_centerHorizontal="true"
             android:layout_marginStart="144dp"
             android:layout_marginTop="16dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/fragmentContainerView4"
-            tools:src="@tools:sample/avatars" />
+            tools:src="@drawable/ic_settings_black_24dp" />
 
         <LinearLayout
             android:id="@+id/ProfileInfoCard"
@@ -52,11 +53,6 @@
                 android:layout_height="wrap_content"
                 android:text="Education level" />
 
-            <TextView
-                android:id="@+id/txtProfileTier"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="User tier" />
 
             <TextView
                 android:id="@+id/txtCredit"
@@ -70,7 +66,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Average Rating as a tutee:"
-                android:visibility="gone"
 
                 />
 

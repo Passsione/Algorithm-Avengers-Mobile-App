@@ -102,8 +102,9 @@ public class NavigationFragment extends Fragment {
             return false;
         });
 
-        menu.findItem(R.id.nav_profile).setVisible(!getActivity().getClass().getSimpleName().equals("ProfileActivity"));
+
         // To profile page
+        menu.findItem(R.id.nav_profile).setVisible(!getActivity().getClass().getSimpleName().equals("ProfileActivity"));
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
             Intent toProfile = new Intent(getActivity(), ProfileActivity.class);
             startActivity(toProfile);
@@ -126,14 +127,14 @@ public class NavigationFragment extends Fragment {
         });
         // To AI Quiz page
         menu.findItem(R.id.nav_quiz_generator).setOnMenuItemClickListener(v ->{
-            Intent toAISummarize = new Intent(getActivity(), AIQuizActivity.class);
-            startActivity(toAISummarize);
+            Intent toAIQuiz = new Intent(getActivity(), AIQuizActivity.class);
+            startActivity(toAIQuiz);
             return false;
         });
         // To AI Summarizer page
         menu.findItem(R.id.nav_ai_summary).setOnMenuItemClickListener(v ->{
-            Intent toAIQuiz = new Intent(getActivity(), AIBaseActivity.class);
-            startActivity(toAIQuiz);
+            Intent toAISummarizer = new Intent(getActivity(), AIBaseActivity.class);
+            startActivity(toAISummarizer);
             return false;
         });
         // To Redeem Credits

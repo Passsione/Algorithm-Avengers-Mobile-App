@@ -155,7 +155,7 @@ public class ExplorerFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 itemsPositions.set(0, position);
-                String selectedItem = parent.getItemAtPosition(position).toString();
+//                String selectedItem = parent.getItemAtPosition(position).toString();
 //                Toast.makeText(getContext(), "Selected: " + selectedItem, Toast.LENGTH_SHORT).show();
             }
             @Override
@@ -314,8 +314,8 @@ public class ExplorerFragment extends Fragment {
             tutorRating.setLayoutParams(ratingParams);
             tutorRating.setNumStars(5);
             tutorRating.setStepSize(0.5f);
-            double stars = tutor.getAverageRating();
-            if(stars >= 0){
+            double stars = dataManager.getSessionDao().getAverageRatingByStudentNum(tutor.getStudentNum())[1];
+            if(stars > 0){
                 tutorRating.setRating((float)stars);
                 detailsLayout.addView(tutorRating);
             }else{
