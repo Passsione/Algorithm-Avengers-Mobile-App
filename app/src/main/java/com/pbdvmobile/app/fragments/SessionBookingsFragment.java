@@ -1,6 +1,8 @@
 
 package com.pbdvmobile.app.fragments;
 
+import static com.pbdvmobile.app.data.Schedule.TimeSlot.DEFAULT_TIME_PADDING;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,10 +32,10 @@ import com.pbdvmobile.app.TutorProfile;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.Schedule.TimeSlot;
-import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.User;
 import com.pbdvmobile.app.data.model.UserSubject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -47,20 +49,24 @@ public class SessionBookingsFragment extends Fragment {
 
     DataManager dataManager;
     LogInUser currentUserSession;
-    TextView tutorNameDisplay, tutorSubjectsDisplay; // Renamed for clarity
-    Spinner locationSpinner; // Renamed
-    RatingBar tutorRatingBar; // Renamed
+    TextView tutorNameDisplay, tutorSubjectsDisplay;
+    Spinner locationSpinner; 
+    RatingBar tutorRatingBar;
     ImageView tutorProfileImage;
-    Button viewProfileButton, cancelButton, submitButton; // Renamed
-    RadioGroup subjectsRadioGroup, timeRadioGroup, durationRadioGroup; // Renamed
+    Button viewProfileButton, cancelButton, submitButton;
+    RadioGroup subjectsRadioGroup, durationRadioGroup;
+    Spinner timeSpinner;
     CalendarView calendarView;
-    Long startOfTodayMillis;
+    // Use startOfTomorrowMillis for minDate logic, selectedDate for the actual chosen date (normalized)
+    long startOfTomorrowMillis; // Used for CalendarView minDate
+    // private long startOfTodayMillis; // Kept for reference if needed for other logic
+
 
     private final String[] locations = {
             "Steve Biko Library",
             "ML Sultan Library",
     };
-    private String selectedLocationId; // Renamed
+    private String selectedLocationId; 
 
     // Declare AtomicInteger fields here to be accessible by helper methods and listeners
     private AtomicInteger selectedSubjectId = new AtomicInteger(0);
@@ -69,6 +75,28 @@ public class SessionBookingsFragment extends Fragment {
     private Date selectedDate = new Date(); // Initialize to prevent null issues
     private User currentTutor;
 
+    // Helper class to store displayable time and its value for the Spinner
+    private static class TimeSpinnerItem {
+        private final String displayTime;
+        private final int timeOffsetMillis;
+
+        public TimeSpinnerItem(String displayTime, int timeOffsetMillis) {
+            this.displayTime = displayTime;
+            this.timeOffsetMillis = timeOffsetMillis;
+        }
+
+        public int getTimeOffsetMillis() {
+            return timeOffsetMillis;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return displayTime; // This is what ArrayAdapter will display in the Spinner
+        }
+    }
+
+    private List<TimeSpinnerItem> availableTimeSlots = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -89,70 +117,59 @@ public class SessionBookingsFragment extends Fragment {
         String subjectsArg = getArguments().getString("subjects");
 
         // Initialize Views
+
         initializeViews(view);
-/*
-        // ---- Start: Calculate Start of Tomorrow for minDate ----
-        Calendar tomorrowCalendar = Calendar.getInstance();
-        // Add one day to the current date
-        tomorrowCalendar.add(Calendar.DAY_OF_YEAR, 1);
-        // Set the time to the beginning of that day (midnight)
-        tomorrowCalendar.set(Calendar.HOUR_OF_DAY, 0);
-        tomorrowCalendar.set(Calendar.MINUTE, 0);
-        tomorrowCalendar.set(Calendar.SECOND, 0);
-        tomorrowCalendar.set(Calendar.MILLISECOND, 0);
-        long startOfTomorrowMillis = tomorrowCalendar.getTimeInMillis();
-        // ---- End: Calculate Start of Tomorrow ----
-        // Set min date for calendar to the start of tomorrow
+
+        // Calculate Start of Tomorrow for minDate
+        Calendar tomorrowCal = Calendar.getInstance();
+        tomorrowCal.add(Calendar.DAY_OF_YEAR, 1);
+        normalizeCalendarToStartOfDay(tomorrowCal); // Helper method
+        startOfTomorrowMillis = tomorrowCal.getTimeInMillis();
+
         calendarView.setMinDate(startOfTomorrowMillis);
-*/
 
-        // Set min date for calendar
-        calendarView.setMinDate(System.currentTimeMillis());
-        selectedDate.setTime(calendarView.getDate()); // Initialize with Calendar's current effective date
-/*
-
-        // Initialize selectedDate:
-        // If calendarView.getDate() is somehow before startOfTomorrowMillis (it shouldn't be after setMinDate),
-        // then default selectedDate to startOfTomorrowMillis. Otherwise, use calendarView's current date.
-        if (calendarView.getDate() < startOfTomorrowMillis) {
+        // Initialize selectedDate to the start of the initially displayed/selected date in CalendarView
+        Calendar initialCalendarDate = Calendar.getInstance();
+        initialCalendarDate.setTimeInMillis(calendarView.getDate()); // Get current date from CalendarView
+        normalizeCalendarToStartOfDay(initialCalendarDate);
+        if (initialCalendarDate.getTimeInMillis() < startOfTomorrowMillis) {
+            // If CalendarView's date is somehow before minDate, set to minDate
             selectedDate.setTime(startOfTomorrowMillis);
-            calendarView.setDate(startOfTomorrowMillis); // Also update the calendar view itself
+            calendarView.setDate(startOfTomorrowMillis); // Update the calendar view itself
         } else {
-            selectedDate.setTime(calendarView.getDate());
+            selectedDate.setTime(initialCalendarDate.getTimeInMillis());
         }
-        Log.d(TAG, "Initial selectedDate: " + selectedDate.toString());
+        Log.d(TAG, "Initial selectedDate (normalized): " + selectedDate.toString());
 
-*/
 
-        // ---- Start - startOfTodayMillis (midnight today) ----
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        startOfTodayMillis = cal.getTimeInMillis();
-        // ---- End - startOfTodayMillis ----
+        // For reference, startOfTodayMillis (midnight today)
+        Calendar todayCal = Calendar.getInstance();
+        normalizeCalendarToStartOfDay(todayCal);
+        // startOfTodayMillis = todayCal.getTimeInMillis(); // If needed for other logic
+
 
         populateTutorInfo(currentTutor, subjectsArg, view);
         populateSubjectsRadioGroup(currentTutor);
-        populateDurationRadioGroup(); // No need to pass tutor if not used
+        populateDurationRadioGroup();
         createLocationDropDown();
+        setupTimeSpinnerListener(); // Added this call
+
 
         calendarView.setOnDateChangeListener((cv, year, month, dayOfMonth) -> {
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(year, month, dayOfMonth, 0, 0, 0); // Normalize to start of day
-            calendar.set(Calendar.MILLISECOND, 0);
+            Calendar newlySelectedCalendar = Calendar.getInstance();
+            newlySelectedCalendar.set(year, month, dayOfMonth);
+            normalizeCalendarToStartOfDay(newlySelectedCalendar); // Normalize to 00:00:00
 
-            // Check if selected date is before minDate (should not happen with setMinDate but good for safety)
-            if (calendar.getTimeInMillis() < calendarView.getMinDate()) {
-                cv.setDate(calendarView.getMinDate()); // Reset to minDate if somehow invalid
-                selectedDate.setTime(calendarView.getMinDate());
+            if (newlySelectedCalendar.getTimeInMillis() < startOfTomorrowMillis) {
+                // This case should ideally be prevented by CalendarView's setMinDate
+                selectedDate.setTime(startOfTomorrowMillis);
+                cv.setDate(startOfTomorrowMillis); // Force calendar back to min date
             } else {
-                cv.setDate(calendar.getTimeInMillis());
-                selectedDate.setTime(calendar.getTimeInMillis());
+                selectedDate.setTime(newlySelectedCalendar.getTimeInMillis());
+                // cv.setDate is not strictly needed here if user interaction caused change
             }
-            Log.d(TAG, "Date selected: " + selectedDate.toString());
-            createTimesRadioButtons();
+            Log.d(TAG, "Date selected via listener (normalized): " + selectedDate.toString());
+            populateTimeSpinner();
         });
 
         cancelButton.setOnClickListener(l -> {
@@ -160,8 +177,14 @@ public class SessionBookingsFragment extends Fragment {
         });
         submitButton.setOnClickListener(l -> handleSubmitBooking());
 
-        // Initial population of time slots (after default duration is set)
-        createTimesRadioButtons();
+        populateTimeSpinner();
+    }
+
+    private void normalizeCalendarToStartOfDay(Calendar calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
     }
 
     private void initializeViews(View view) {
@@ -171,7 +194,7 @@ public class SessionBookingsFragment extends Fragment {
         tutorRatingBar = view.findViewById(R.id.session_booking_tutor_rating);
         viewProfileButton = view.findViewById(R.id.booking_tutor_profile);
         subjectsRadioGroup = view.findViewById(R.id.subjects_radio_group);
-        timeRadioGroup = view.findViewById(R.id.radio_group_time);
+        timeSpinner = view.findViewById(R.id.spinner_time);
         durationRadioGroup = view.findViewById(R.id.radio_group_duration);
         locationSpinner = view.findViewById(R.id.locations);
         cancelButton = view.findViewById(R.id.btn_cancel_booking);
@@ -263,7 +286,7 @@ public class SessionBookingsFragment extends Fragment {
             radioButton.setOnClickListener(l -> {
                 selectedDurationMillis.set(durationValueMillis);
                 Log.d(TAG, "Duration selected: " + durationValueMillis + "ms");
-                createTimesRadioButtons();
+                populateTimeSpinner();
             });
             durationRadioGroup.addView(radioButton);
             if (isFirstDuration) {
@@ -274,114 +297,123 @@ public class SessionBookingsFragment extends Fragment {
         }
     }
 
-    private void createTimesRadioButtons() {
-        timeRadioGroup.removeAllViews();
-        selectedTimeOffsetMillis.set(0); // Reset
+    private void populateTimeSpinner() {
+        selectedTimeOffsetMillis.set(0); // Reset when repopulating
+        availableTimeSlots.clear();
 
         if (getContext() == null || currentTutor == null) {
-            Log.e(TAG, "Context or Tutor is null. Cannot create times.");
+            Log.e(TAG, "Context or Tutor is null. Cannot populate time spinner.");
+            // Clear spinner and show a placeholder if necessary
+            ArrayAdapter<TimeSpinnerItem> emptyAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new ArrayList<>());
+            emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            timeSpinner.setAdapter(emptyAdapter);
+            timeSpinner.setEnabled(false);
             return;
         }
-        if (selectedDurationMillis.get() == 0) {
-            Log.d(TAG, "No duration selected. Time slots will not be populated.");
-            TextView noDurationMsg = new TextView(getContext());
-            noDurationMsg.setText(R.string.select_duration_prompt); // Use string resource
-            timeRadioGroup.addView(noDurationMsg);
+        int currentSelectedDurationMillis = selectedDurationMillis.get();
+        if (currentSelectedDurationMillis == 0) {
+            Log.d(TAG, "No duration selected. Time spinner will be empty.");
+            availableTimeSlots.add(new TimeSpinnerItem(getString(R.string.select_duration_first_for_time), 0));
+            ArrayAdapter<TimeSpinnerItem> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, availableTimeSlots);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            timeSpinner.setAdapter(adapter);
+            timeSpinner.setEnabled(false);
             return;
         }
+        timeSpinner.setEnabled(true);
 
         List<TimeSlot> takenSlotsForTutor = dataManager.getSessionDao().getTakenTimeSlot(currentTutor.getStudentNum());
-        // You might also want to get taken slots for the current tutee
-        // List<TimeSlot> takenSlotsForTutee = dataManager.getSessionDao().getTakenTimeSlotForUser(currentUserSession.getUser().getStudentNum(), true);
-        // List<TimeSlot> takenSlotsForTuteeAsTutor = dataManager.getSessionDao().getTakenTimeSlotForUser(currentUserSession.getUser().getStudentNum(), false);
 
+        long slotCheckingIntervalMillis = currentSelectedDurationMillis;
+        if (slotCheckingIntervalMillis < dataManager.getSessionDao().minutesToMseconds(30)) {
+            slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);
+        }
 
-        long slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(0); // e.g., check every 30 mins
         long serviceOpenTimeOffset = dataManager.getSessionDao().OPEN_TIME;
         long serviceCloseTimeOffset = dataManager.getSessionDao().CLOSE_TIME;
+        Date now = new Date();
 
-        Log.d(TAG, "Creating times for date: " + selectedDate + ", duration: " + selectedDurationMillis.get() + "ms");
-        Log.d(TAG, "Service hours: OPEN_TIME offset=" + serviceOpenTimeOffset + ", CLOSE_TIME offset=" + serviceCloseTimeOffset);
+        Log.d(TAG, "Populating time spinner for date: " + selectedDate + ", duration: " + currentSelectedDurationMillis + "ms, interval: " + slotCheckingIntervalMillis + "ms");
 
-        int timesAdded = 0;
-        Date now = new Date(); // Current time
-
-        // Iterate through potential start times for the selected day
         for (long currentOffsetMillis = serviceOpenTimeOffset; currentOffsetMillis < serviceCloseTimeOffset; currentOffsetMillis += slotCheckingIntervalMillis) {
-
             Calendar candidateStartCalendar = Calendar.getInstance();
-            candidateStartCalendar.setTime(selectedDate); // Base on the selected day (already normalized to 00:00)
-            candidateStartCalendar.add(Calendar.MILLISECOND, (int) currentOffsetMillis); // Add the time-of-day offset
+            candidateStartCalendar.setTime(selectedDate); // selectedDate is already normalized to 00:00:00
+            candidateStartCalendar.add(Calendar.MILLISECOND, (int) currentOffsetMillis);
+            Date actualCandidateStartTime = candidateStartCalendar.getTime();
+            Date actualCandidateEndTime = new Date(actualCandidateStartTime.getTime() + currentSelectedDurationMillis);
 
-            Date candidateStartTime = candidateStartCalendar.getTime();
-            Date candidateEndTime = new Date(candidateStartTime.getTime() + selectedDurationMillis.get());
+            if (actualCandidateStartTime.before(now)) continue;
 
-            // 1. Check if candidate slot starts in the past (only if selectedDate is today)
-            //    and also ensure it doesn't start before OPEN_TIME (already handled by loop init)
-            if (candidateStartTime.before(now)) {
-                Log.v(TAG, "Slot " + dataManager.formatDateTime(candidateStartTime.toString())[1] + " is in the past. Skipping.");
-                continue;
-            }
-
-            // 2. Check if candidate slot ends after service CLOSE_TIME for that day
             Calendar serviceCloseOfDayCalendar = Calendar.getInstance();
-            serviceCloseOfDayCalendar.setTime(selectedDate);
+            serviceCloseOfDayCalendar.setTime(selectedDate); // Normalized date
             serviceCloseOfDayCalendar.add(Calendar.MILLISECOND, (int) serviceCloseTimeOffset);
+            if (actualCandidateEndTime.after(serviceCloseOfDayCalendar.getTime())) continue;
 
-            if (candidateEndTime.after(serviceCloseOfDayCalendar.getTime())) {
-                Log.v(TAG, "Slot " + dataManager.formatDateTime(candidateStartTime.toString())[1] + " ends after service close time. Skipping.");
-                continue; // This slot would end too late.
-            }
-            // Create a TimeSlot object for the candidate (NO PADDING as per your update)
-            TimeSlot candidateSlot = new TimeSlot(new Date(candidateStartTime.getTime()), new Date(candidateEndTime.getTime()));
-
-
-            // 3. Check for overlaps with tutor's existing sessions
+            // TimeSlot constructor takes actual UNPADDED times. Padding handled internally for 'overlaps'.
+            TimeSlot candidateSlotForCheck = new TimeSlot(actualCandidateStartTime, actualCandidateEndTime);
             boolean isOverlapping = false;
-            for (TimeSlot takenSlot : takenSlotsForTutor) {
-                // Ensure takenSlot is for the same day as candidateSlot before precise overlap check
-                Calendar takenSlotCal = Calendar.getInstance();
-                takenSlotCal.setTime(takenSlot.getStartTime()); // Assuming takenSlot stores absolute date/time
+            for (TimeSlot takenSlot : takenSlotsForTutor) { // takenSlot from DAO is built from UNPADDED DB times
+                Calendar takenSlotActualStartCal = Calendar.getInstance();
+                takenSlotActualStartCal.setTime(takenSlot.getActualStartTime()); // Use actual start for day check
 
-                if (takenSlotCal.get(Calendar.YEAR) == candidateStartCalendar.get(Calendar.YEAR) &&
-                        takenSlotCal.get(Calendar.DAY_OF_YEAR) == candidateStartCalendar.get(Calendar.DAY_OF_YEAR)) {
-                    if (candidateSlot.overlaps(takenSlot)) {
+                if (takenSlotActualStartCal.get(Calendar.YEAR) == candidateStartCalendar.get(Calendar.YEAR) &&
+                        takenSlotActualStartCal.get(Calendar.DAY_OF_YEAR) == candidateStartCalendar.get(Calendar.DAY_OF_YEAR)) {
+                    if (candidateSlotForCheck.overlaps(takenSlot)) {
                         isOverlapping = true;
-                        Log.d(TAG, "Slot " + dataManager.formatDateTime(candidateStartTime.toString())[1] + " overlaps with tutor's taken slot: " + takenSlot.toString());
                         break;
                     }
                 }
             }
 
-            // Add similar overlap check for tutee's schedule if implementing that
-            // for (TimeSlot tuteeTaken : takenSlotsForTutee) { ... }
-            // for (TimeSlot tuteeTakenAsTutor : takenSlotsForTuteeAsTutor) { ... }
-
             if (!isOverlapping) {
-                RadioButton radioButton = new RadioButton(getContext());
-                radioButton.setText(dataManager.formatDateTime(candidateStartTime.toString())[1]);
-                radioButton.setId(View.generateViewId());
-                final long finalCurrentOffsetMillis = currentOffsetMillis;
-                radioButton.setOnClickListener(l -> {
-                    selectedTimeOffsetMillis.set((int) finalCurrentOffsetMillis);
-                    Log.d(TAG, "Time selected: offset " + finalCurrentOffsetMillis);
-                });
-                timeRadioGroup.addView(radioButton);
-                timesAdded++;
+                String displayTime = dataManager.formatDateTime(actualCandidateStartTime.toString())[1];
+                availableTimeSlots.add(new TimeSpinnerItem(displayTime, (int) currentOffsetMillis));
             }
+
         }
 
-        if (timesAdded == 0) {
-            TextView noTimesMsg = new TextView(getContext());
-            if (selectedDurationMillis.get() > 0) {
-                noTimesMsg.setText(R.string.no_available_times); // Use string resource
-            } else {
-                noTimesMsg.setText(R.string.select_duration_prompt); // Should have been caught earlier
-            }
-            timeRadioGroup.addView(noTimesMsg);
+        if (availableTimeSlots.isEmpty()) {
+            availableTimeSlots.add(new TimeSpinnerItem(getString(R.string.no_available_times), 0)); // Placeholder
         }
-        Log.d(TAG, "Finished creating times for " + selectedDate + ". Added: " + timesAdded);
+
+        ArrayAdapter<TimeSpinnerItem> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, availableTimeSlots);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        timeSpinner.setAdapter(adapter);
+
+        // Automatically select the first valid time slot if available
+        if (availableTimeSlots.size() > 0 && availableTimeSlots.get(0).getTimeOffsetMillis() != 0) { // Check it's not a placeholder
+            timeSpinner.setSelection(0, false); // Select first item without triggering listener immediately
+            selectedTimeOffsetMillis.set(availableTimeSlots.get(0).getTimeOffsetMillis());
+        } else if (!availableTimeSlots.isEmpty() && availableTimeSlots.get(0).getTimeOffsetMillis() == 0 &&
+                availableTimeSlots.get(0).displayTime.equals(getString(R.string.no_available_times))) {
+            selectedTimeOffsetMillis.set(0); // No valid time selected
+        }
+
+
+        Log.d(TAG, "Finished populating time spinner. Items: " + availableTimeSlots.size());
     }
+
+    private void setupTimeSpinnerListener() {
+        timeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TimeSpinnerItem selectedItem = (TimeSpinnerItem) parent.getItemAtPosition(position);
+                // Ensure it's not a placeholder item before setting the time
+                if (!selectedItem.displayTime.equals(getString(R.string.select_duration_first_for_time)) &&
+                        !selectedItem.displayTime.equals(getString(R.string.no_available_times))) {
+                    selectedTimeOffsetMillis.set(selectedItem.getTimeOffsetMillis());
+                    Log.d(TAG, "Time selected via spinner: offset " + selectedItem.getTimeOffsetMillis());
+                } else {
+                    selectedTimeOffsetMillis.set(0); // Reset if placeholder is selected
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedTimeOffsetMillis.set(0);
+            }
+        });
+    }
+
 
 
     private void createLocationDropDown() {
@@ -408,20 +440,25 @@ public class SessionBookingsFragment extends Fragment {
     }
 
     private void handleSubmitBooking() {
-        // Normalize selectedDate to the start of the day for consistent comparison
+        /*// Normalize selectedDate to the start of the day for consistent comparison
         Calendar normalizedSelectedDateCal = Calendar.getInstance();
         normalizedSelectedDateCal.setTime(selectedDate);
         normalizedSelectedDateCal.set(Calendar.HOUR_OF_DAY, 0);
         normalizedSelectedDateCal.set(Calendar.MINUTE, 0);
         normalizedSelectedDateCal.set(Calendar.SECOND, 0);
-        normalizedSelectedDateCal.set(Calendar.MILLISECOND, 0);
+        normalizedSelectedDateCal.set(Calendar.MILLISECOND, 0);*/
+        // Ensure selectedDate is purely the date part (normalized to midnight)
+        Calendar normalizedSelectedDateCal = Calendar.getInstance();
+        normalizedSelectedDateCal.setTime(selectedDate); // selectedDate should already be normalized
+        // Double check normalization if there are doubts (though it should be by now)
+        // normalizeCalendarToStartOfDay(normalizedSelectedDateCal);
 
         if (selectedSubjectId.get() == 0) {
             Toast.makeText(getContext(), R.string.select_subject_validation, Toast.LENGTH_LONG).show(); return;
         }
         // This check uses startOfTodayMillis which is midnight of the app's current day.
         // calendarView.getMinDate() should already prevent selection of past days.
-        if (normalizedSelectedDateCal.getTimeInMillis() < startOfTodayMillis) {
+        if (normalizedSelectedDateCal.getTimeInMillis() < startOfTomorrowMillis) {
             Toast.makeText(getContext(), R.string.select_valid_date_validation, Toast.LENGTH_LONG).show(); return;
         }
         if (selectedDurationMillis.get() == 0) {
@@ -430,29 +467,22 @@ public class SessionBookingsFragment extends Fragment {
         if (selectedLocationId == null || selectedLocationId.isEmpty()) {
             Toast.makeText(getContext(), R.string.select_location_validation, Toast.LENGTH_LONG).show(); return;
         }
-        // Check if a time radio button is actually selected
-        if (timeRadioGroup.getCheckedRadioButtonId() == -1 && selectedTimeOffsetMillis.get() == 0 ) {
-            // selectedTimeOffsetMillis.get() == 0 could be a valid selection if OPEN_TIME is 00:00
-            // A better check is if any radio button in the time group is selected.
-            // However, selectedTimeOffsetMillis is set on click, so if it's still 0 (and not legitimately 0 for midnight),
-            // it likely means nothing was viable or clicked.
-            boolean timeSelected = false;
-            for(int i=0; i<timeRadioGroup.getChildCount(); ++i){
-                View child = timeRadioGroup.getChildAt(i);
-                if(child instanceof RadioButton){
-                    if(((RadioButton) child).isChecked()){
-                        timeSelected = true;
-                        break;
-                    }
+        // Check if a valid time is selected from the spinner
+        if (selectedTimeOffsetMillis.get() == 0) {
+            // Check if the spinner has items and the first item isn't a placeholder that results in offset 0
+            if (timeSpinner.getSelectedItem() instanceof TimeSpinnerItem) {
+                TimeSpinnerItem currentSpinnerItem = (TimeSpinnerItem) timeSpinner.getSelectedItem();
+                if (currentSpinnerItem.getTimeOffsetMillis() == 0 &&
+                        (currentSpinnerItem.displayTime.equals(getString(R.string.select_duration_first_for_time)) ||
+                                currentSpinnerItem.displayTime.equals(getString(R.string.no_available_times)))) {
+                    Toast.makeText(getContext(), R.string.select_time_validation, Toast.LENGTH_LONG).show(); return;
                 }
-            }
-            if(!timeSelected && timeRadioGroup.getChildCount() > 0 && timeRadioGroup.getChildAt(0) instanceof RadioButton){
+                // If offset is legitimately 0 (e.g. OPEN_TIME is midnight), this check needs refinement.
+                // For now, assuming offset 0 is only for placeholders.
+            } else { // Spinner might be empty or have non-TimeSpinnerItem if something went wrong
                 Toast.makeText(getContext(), R.string.select_time_validation, Toast.LENGTH_LONG).show(); return;
-            } else if (!timeSelected && !(timeRadioGroup.getChildAt(0) instanceof RadioButton)) {
-                Toast.makeText(getContext(), R.string.no_available_times_for_booking, Toast.LENGTH_LONG).show(); return;
             }
         }
-
 
         // Construct actual start and end times for the session
         Calendar finalSessionStartCalendar = Calendar.getInstance();
@@ -488,7 +518,7 @@ public class SessionBookingsFragment extends Fragment {
             Toast.makeText(getContext(), R.string.session_request_success, Toast.LENGTH_LONG).show();
             if (getActivity() != null) getActivity().finish();
         } else {
-            Toast.makeText(getContext(),"No Insert database", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(),dataManager.getSessionDao().getLastError(), Toast.LENGTH_LONG).show();
         }
     }
 }

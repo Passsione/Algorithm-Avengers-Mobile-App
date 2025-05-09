@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -224,6 +225,7 @@ public class ResourcesFragment extends Fragment {
             TextView noResults = new TextView(context);
             noResults.setText(selectedTutor != MY_RESOURCES ? "No resource found" : "You haven't uploaded any resource yet"); // Add to strings.xml
             noResults.setPadding(16,16,16,16); // Add some padding
+
             mathResourcesContainer.addView(noResults); // Add to a default container or handle appropriately
             tutorSpinner.setVisibility(GONE);
             subjectSpinner.setVisibility(GONE);
@@ -276,8 +278,20 @@ public class ResourcesFragment extends Fragment {
                 LinearLayout resourceCard = new LinearLayout(context);
                 resourceCard.setOrientation(LinearLayout.VERTICAL);
                 resourceCard.setBackgroundColor(R.color.primary_light);
+            // Set LayoutParams for the parent (e.g., fill width, wrap height)
+            LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            // ***** ADD MARGIN HERE *****
+            // Add a bottom margin to create a gap between cards.
+            // You can adjust the dp value (e.g., 8dp) to your preference.
+            int bottomMarginInPx = dpToPx(8); // Or whatever gap you want
+            parentParams.setMargins(0, 0, 0, bottomMarginInPx);
 
                 resourceCard.addView(itemView);
+                resourceCard.setLayoutParams(parentParams);
+
                 mathResourcesContainer.addView(resourceCard);
         }
         // Ensure the Math section is visible if it contains items after filtering
@@ -294,4 +308,10 @@ public class ResourcesFragment extends Fragment {
         Log.d("ResourcesFragment", "Attempting download for: " + urlOrPath);
     }
     */
+    private int dpToPx(int dp) {
+        DisplayMetrics displayMetrics = requireContext().getResources().getDisplayMetrics();
+        // A simpler way to convert dp to pixels
+        return Math.round(dp * displayMetrics.density);
+    }
 }
+

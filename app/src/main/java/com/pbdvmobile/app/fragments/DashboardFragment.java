@@ -32,13 +32,14 @@ import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
 
+import java.util.Collections;
 import java.util.List;
 
 public class DashboardFragment extends Fragment {
 
     TextView reschedule, cancel;
     Button viewSchedule;
-
+    CardView sessionCard;
     LinearLayout upcoming, pending, sessionLayout, subjectTitle, date, tutorLayout, actions;
     DataManager dataManager;
     LogInUser current_user;
@@ -67,12 +68,18 @@ public class DashboardFragment extends Fragment {
 
         upcoming.removeAllViews();
         pending.removeAllViews();
+        sessions.sort((n1, n2) -> n1.getStartTime().compareTo(n2.getStartTime()));
+
         for(Session session : sessions){
 
             if(session.getStatus() == Session.Status.CANCELLED ||
                     session.getStatus() == Session.Status.COMPLETED ||
                     session.getStatus() == Session.Status.DECLINED)continue;
 //            if(new Date().before(session.getStartTime())){
+
+
+            sessionCard = new CardView(getContext());
+            sessionCard.setCardElevation(12f);
 
             sessionLayout = new LinearLayout(this.getContext());
             sessionLayout.setOrientation(LinearLayout.VERTICAL);
@@ -84,7 +91,14 @@ public class DashboardFragment extends Fragment {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
             sessionLayout.setLayoutParams(parentParams);
+            
+            // ***** ADD MARGIN HERE *****
+            // Add a bottom margin to create a gap between cards.
+            // You can adjust the dp value (e.g., 8dp) to your preference.
+            int bottomMarginInPx = dpToPx(8); // Or whatever gap you want
+            parentParams.setMargins(0, 0, 0, bottomMarginInPx);
 
+            sessionCard.setLayoutParams(parentParams);
             // Convert 8dp padding to pixels
             int paddingPx = dpToPx(8);
             sessionLayout.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
@@ -190,8 +204,10 @@ public class DashboardFragment extends Fragment {
                         session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
                 Toast.makeText(getContext(), "Session cancelled successful!", Toast.LENGTH_LONG).show();
 
-                upcoming.removeView(sessionLayout);
-                pending.removeView(sessionLayout);
+                upcoming.removeView(sessionCard);
+                pending.removeView(sessionCard);
+                anyUpdate();
+
             });
             // --- Create View Button ---
             // Use MaterialButton to easily apply Material styles programmatically
@@ -211,16 +227,24 @@ public class DashboardFragment extends Fragment {
             actions.addView(cancel);
             actions.addView(viewSchedule);
 
+
             // --- Add children to the session layout ---
             sessionLayout.addView(subjectTitle);
             sessionLayout.addView(date);
             sessionLayout.addView(tutorLayout);
             sessionLayout.addView(actions);
 
+            sessionCard.addView(sessionLayout);
             // --- Add session to upcoming list ---
-            if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionLayout);
-            else if(session.getStatus() == Session.Status.PENDING)pending.addView(sessionLayout);
+            if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionCard);
+            else if(session.getStatus() == Session.Status.PENDING)pending.addView(sessionCard);
+
         }
+       anyUpdate();
+
+    }
+
+    private void anyUpdate() {
         if(upcoming.getChildCount() == 0){
             TextView text = new TextView(getContext());
             text.setText("No upcoming sessions");
@@ -234,8 +258,8 @@ public class DashboardFragment extends Fragment {
             pending.addView(text);
         }
 
-
     }
+
     // Helper method to convert dp to pixels
     private int dpToPx(int dp) {
         DisplayMetrics displayMetrics = requireContext().getResources().getDisplayMetrics();

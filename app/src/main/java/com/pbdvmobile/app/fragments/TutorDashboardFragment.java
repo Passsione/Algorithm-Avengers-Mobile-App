@@ -36,10 +36,10 @@ public class TutorDashboardFragment extends Fragment {
 
     DataManager dataManager;
     LogInUser current_user;
-    CardView upcoming, requests;
+    CardView sessionCard;
     TextView reschedule, cancel;
     Button viewSchedule;
-    LinearLayout sessionLayout, subjectTitle, date, tutorLayout, actions;
+    LinearLayout sessionLayout, subjectTitle, date, tutorLayout, actions, upcoming, requests;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -64,11 +64,16 @@ public class TutorDashboardFragment extends Fragment {
 
     upcoming.removeAllViews();
     requests.removeAllViews();
-        for(Session session : sessions){
-            if(session.getStatus() == Session.Status.CANCELLED ||
-                    session.getStatus() == Session.Status.COMPLETED ||
-                    session.getStatus() == Session.Status.DECLINED)continue;
+    sessions.sort((n1, n2) -> n1.getStartTime().compareTo(n2.getStartTime()));
+
+    for(Session session : sessions){
+        if(session.getStatus() == Session.Status.CANCELLED ||
+                session.getStatus() == Session.Status.COMPLETED ||
+                session.getStatus() == Session.Status.DECLINED)continue;
 //            if(new Date().before(session.getStartTime())){
+
+        sessionCard = new CardView(getContext());
+        sessionCard.setCardElevation(12f);
 
         sessionLayout = new LinearLayout(this.getContext());
         sessionLayout.setOrientation(LinearLayout.VERTICAL);
@@ -78,11 +83,18 @@ public class TutorDashboardFragment extends Fragment {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
+        // ***** ADD MARGIN HERE *****
+        // Add a bottom margin to create a gap between cards.
+        // You can adjust the dp value (e.g., 8dp) to your preference.
+        int bottomMarginInPx = dpToPx(8); // Or whatever gap you want
+        parentParams.setMargins(0, 0, 0, bottomMarginInPx);
+
+        sessionCard.setLayoutParams(parentParams);
         sessionLayout.setLayoutParams(parentParams);
 
         // Convert 8dp padding to pixels
         int paddingPx = dpToPx(8);
-        sessionLayout.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        sessionCard.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
         // --- Define LayoutParams for title
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
@@ -183,7 +195,10 @@ public class TutorDashboardFragment extends Fragment {
         cancel.setOnClickListener(v ->  {
             dataManager.getSessionDao().updateSessionStatus(session.getId(),
                     session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
-            upcoming.removeView(sessionLayout);
+            upcoming.removeView(sessionCard);
+            requests.removeView(sessionCard);
+            anyUpdate();
+
         });
 
         // --- Create View Button ---
@@ -198,7 +213,7 @@ public class TutorDashboardFragment extends Fragment {
             scheduleIntent.putExtra("session", session);
             startActivity(scheduleIntent);
         });
-//        actions.addView(reschedule);
+    //        actions.addView(reschedule);
         actions.addView(cancel);
         actions.addView(viewSchedule);
 
@@ -208,11 +223,17 @@ public class TutorDashboardFragment extends Fragment {
         sessionLayout.addView(tutorLayout);
         sessionLayout.addView(actions);
 
+        sessionCard.addView(sessionLayout);
         // --- Add session to upcoming list ---
-        if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionLayout);
-        else if(session.getStatus() == Session.Status.PENDING)requests.addView(sessionLayout);
+        if(session.getStatus() == Session.Status.CONFIRMED)upcoming.addView(sessionCard);
+        else if(session.getStatus() == Session.Status.PENDING)requests.addView(sessionCard);
+
+}
+    anyUpdate();
 
     }
+
+    private void anyUpdate() {
         if(upcoming.getChildCount() == 0){
             TextView text = new TextView(getContext());
             text.setText("No upcoming sessions");
@@ -225,9 +246,9 @@ public class TutorDashboardFragment extends Fragment {
             text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // Set size in SP
             requests.addView(text);
         }
+    }
 
-}
-// Helper method to convert dp to pixels
+    // Helper method to convert dp to pixels
 private int dpToPx(int dp) {
     DisplayMetrics displayMetrics = requireContext().getResources().getDisplayMetrics();
     // A simpler way to convert dp to pixels

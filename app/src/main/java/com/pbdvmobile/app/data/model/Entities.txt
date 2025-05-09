@@ -1,3 +1,13 @@
+Notification =
+    int NoteId; // Auto INCREMENT
+    int StudentNum;
+    String Text;
+ enum Status {
+        OPENED;
+        SEALED;
+    }
+    Date date;
+    boolean remember;
 
 User =
     enum TierLevel { // 

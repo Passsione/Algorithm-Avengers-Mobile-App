@@ -23,6 +23,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String TABLE_PRIZES = "prizes";
     public static final String TABLE_REDEEM_PRIZES = "redeem_prizes";
     public static final String TABLE_USER_SUBJECTS = "user_subjects";
+    public static final String TABLE_NOTIFICATIONS = "notifications";
 //  public static final String TABLE_CHAT = "chats";
 
 
@@ -52,6 +53,7 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String KEY_USER_SUBJECT_SUBJECT_ID = "subject_id";
     public static final String KEY_USER_SUBJECT_MARK = "mark";
     public static final String KEY_USER_SUBJECT_TUTORING = "tutoring";
+
 
     // Session Table Columns
     public static final String KEY_SESSION_ID = "session_id";
@@ -85,6 +87,13 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
     public static final String KEY_REDEEM_PRIZE_ID = "prize_id";
     public static final String KEY_REDEEM_STATUS = "status";
 
+    // Notification Table Columns (New)
+    public static final String KEY_NOTIFICATION_ID = "note_id";
+    public static final String KEY_NOTIFICATION_STUDENT_NUM = "student_num"; // Foreign key, nullable
+    public static final String KEY_NOTIFICATION_TEXT = "text";
+    public static final String KEY_NOTIFICATION_STATUS = "status"; // OPENED, SEALED
+    public static final String KEY_NOTIFICATION_DATE = "date";     // TIMESTAMP
+    public static final String KEY_NOTIFICATION_REMEMBER = "remember"; // INTEGER (0 or 1)
     // Constructor should be private to prevent direct instantiation.
     // Make a call to the static method "getInstance()" instead.
     private SqlOpenHelper(Context context) {
@@ -183,6 +192,21 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY (" + KEY_REDEEM_STUDENT_NUM + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")," +
                 "FOREIGN KEY (" + KEY_REDEEM_PRIZE_ID + ") REFERENCES " + TABLE_PRIZES + "(" + KEY_PRIZE_ID + ")" +
                 ")";
+        // New Notification Table Creation
+        String CREATE_NOTIFICATIONS_TABLE = "CREATE TABLE " + TABLE_NOTIFICATIONS +
+                "(" +
+                KEY_NOTIFICATION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                KEY_NOTIFICATION_STUDENT_NUM + " INTEGER," + // Nullable
+                KEY_NOTIFICATION_TEXT + " TEXT NOT NULL," +
+                KEY_NOTIFICATION_STATUS + " VARCHAR(10) NOT NULL," + // OPENED, SEALED
+                KEY_NOTIFICATION_DATE + " TIMESTAMP NOT NULL," +
+                KEY_NOTIFICATION_REMEMBER + " INTEGER DEFAULT 0," + // 0 for false, 1 for true
+                // Optional columns:
+                // KEY_NOTIFICATION_TYPE + " VARCHAR(20)," +
+                // KEY_NOTIFICATION_RELATED_ITEM_ID + " INTEGER," +
+                "FOREIGN KEY (" + KEY_NOTIFICATION_STUDENT_NUM + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_STUDENT_NUM + ")" +
+                ")";
+
 
         db.execSQL(CREATE_USERS_TABLE);
         db.execSQL(CREATE_SUBJECTS_TABLE);
@@ -191,23 +215,18 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_RESOURCES_TABLE);
         db.execSQL(CREATE_PRIZES_TABLE);
         db.execSQL(CREATE_REDEEM_PRIZES_TABLE);
+        db.execSQL(CREATE_NOTIFICATIONS_TABLE);
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion != newVersion) {
-            // Simplest implementation is to drop all old tables and recreate them
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_REDEEM_PRIZES);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRIZES);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_RESOURCES);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSIONS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER_SUBJECTS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUBJECTS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+            dropAll(db);
             onCreate(db);
         }
     }
 
     public void dropAll(@NonNull SQLiteDatabase db) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_REDEEM_PRIZES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRIZES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_RESOURCES);
@@ -216,10 +235,5 @@ public class SqlOpenHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUBJECTS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
         onCreate(db);
-    }
-    public void dropTable(@NonNull SQLiteDatabase db, String name) {
-        db.execSQL("DROP TABLE IF EXISTS " + name);
-        onCreate(db);
-
     }
 }

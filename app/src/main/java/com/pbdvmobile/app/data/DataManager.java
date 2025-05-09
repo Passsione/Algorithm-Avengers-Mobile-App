@@ -6,11 +6,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.pbdvmobile.app.data.dao.NotificationDao;
 import com.pbdvmobile.app.data.dao.PrizeDao;
 import com.pbdvmobile.app.data.dao.ResourceDao;
 import com.pbdvmobile.app.data.dao.SessionDao;
 import com.pbdvmobile.app.data.dao.SubjectDao;
 import com.pbdvmobile.app.data.dao.UserDao;
+import com.pbdvmobile.app.data.model.Notification;
 import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
@@ -29,6 +31,7 @@ public class DataManager implements Serializable {
     private final SessionDao sessionDao;
     private final ResourceDao resourceDao;
     private final PrizeDao prizeDao;
+    private final NotificationDao notificationDao;
     private final Context context;
 
     private final String[] subjects = {
@@ -65,6 +68,7 @@ public class DataManager implements Serializable {
         sessionDao = new SessionDao(dbHelper);
         resourceDao = new ResourceDao(dbHelper);
         prizeDao = new PrizeDao(dbHelper);
+        notificationDao = new NotificationDao(dbHelper);
         this.context = context;
 
     }
@@ -126,6 +130,10 @@ public class DataManager implements Serializable {
                 session.setStatus(Session.Status.CONFIRMED);
                 instance.getSessionDao().insertSession(session);
             }
+            if(instance.getNotificationDao().getNotificationsByStudentNum(22323809).isEmpty()){
+                Notification note = new Notification(22323809, "Welcome to our app", false);
+                instance.getNotificationDao().insertNotification(note);
+            }
     }
 
         return instance;
@@ -151,13 +159,24 @@ public class DataManager implements Serializable {
         return prizeDao;
     }
 
+    public NotificationDao getNotificationDao() {
+        return notificationDao;
+    }
+
+
     public void fillUserSubject(int studentNum){
+        boolean settledTutor = false;
+        User update = getUserDao().getUserByStudentNum(studentNum);
         for(int s = 0; s < 8; s++) {
             int mark = randomIndex(101);
             UserSubject userSubject = new UserSubject(studentNum, 1 + randomIndex(subjects.length), mark);
-            userSubject.setTutoring(qualifies(userSubject, getUserDao().getUserByStudentNum(studentNum)));
+            if(qualifies(userSubject, update))
+                settledTutor = true;
             getSubjectDao().addUserSubject(userSubject);
         }
+
+        if((!settledTutor) && update.isTutor())displayError("None of your subjects qualify as a tutor");
+        getUserDao().updateUser(update);
     }
 
     public boolean required(EditText...args){
@@ -198,6 +217,15 @@ public class DataManager implements Serializable {
         }
     }
 
+    /**
+     * *
+     * index = 0
+     * @return  dow, mon dd yyyy
+     * index = 1
+     *@return  hh:mm:ss
+     * index = 2
+     * @return  hh:mm
+     */
     public String[] formatDateTime(String date) {
         String[] result = new String[3];
         // dow, mon dd yyyy

@@ -161,4 +161,6 @@
     <string name="select_time_validation">No time selected</string>
     <string name="no_available_times_for_booking">No times for this session</string>
     <string name="session_request_success">Session requested successfully </string>
+    <string name="select_duration_first_for_time">Select Time\n</string>
+    <string name="notification_icon">Notification Icon</string>
 </resources>

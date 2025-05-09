@@ -29,6 +29,8 @@ public class ProfileActivity extends AppCompatActivity {
 
     DataManager dataManager;
     LogInUser current_user;
+    Switch tutor;
+    boolean suitorable = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,7 +120,7 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(i);
         });
 
-        Switch tutor = findViewById(R.id.togProfileTutor);
+        tutor = findViewById(R.id.togProfileTutor);
 
 
         name.setText(current_user.getUser().getFirstName());
@@ -160,7 +162,13 @@ public class ProfileActivity extends AppCompatActivity {
             if(!name.getText().toString().isEmpty())current_user.getUser().setFirstName(name.getText().toString());
             if(!surname.getText().toString().isEmpty())current_user.getUser().setLastName(surname.getText().toString());
             if(!password.getText().toString().isEmpty())current_user.getUser().setPassword(password.getText().toString());
-            current_user.getUser().setTutor(tutor.isChecked());
+            if(suitorable){
+                current_user.getUser().setTutor(tutor.isChecked());
+            }else
+                if(tutor.isChecked()){
+                    dataManager.displayError("You don't qualify for tutoring");
+                    current_user.getUser().setTutor(false);
+                }
             if(bio != null && !bio.getText().toString().isEmpty())current_user.getUser().setBio(bio.getText().toString());
             dataManager.getUserDao().updateUser(current_user.getUser());
             Toast.makeText(this, "Changes saved", Toast.LENGTH_LONG).show();
@@ -186,7 +194,10 @@ public class ProfileActivity extends AppCompatActivity {
                 subject.setTutoring(!subject.getTutoring());
                 dataManager.getSubjectDao().updateUserSubject(subject);
             });
-            subjectName.setEnabled(dataManager.qualifies(subject, current_user.getUser()));
+            boolean test = dataManager.qualifies(subject, current_user.getUser());
+            if(test)suitorable = true;
+//            else tutor.setChecked(false);
+            subjectName.setEnabled(test);
             subjectLayout.addView(subjectName);
         }
     }

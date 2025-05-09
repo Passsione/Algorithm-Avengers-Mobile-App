@@ -164,12 +164,17 @@
                 android:hint="Time"
                 app:helperText="Select the time for your session">
 
-                <RadioGroup
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spinner_time"
+                    android:layout_marginTop="8dp"/>
+                <!--<RadioGroup
                     android:id="@+id/radio_group_time"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginBottom="16dp"
-                    android:orientation="vertical"/>
+                    android:orientation="vertical"/>-->
             </com.google.android.material.textfield.TextInputLayout>
 
 

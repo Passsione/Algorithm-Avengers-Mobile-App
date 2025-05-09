@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/imageViewNotificationIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_popup_reminder"
+            app:tint="?attr/colorPrimary"
+            android:contentDescription="@string/notification_icon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="16dp"/>
+
+        <ImageView
+            android:id="@+id/imageViewUnreadDot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:src="@drawable/ic_unread_dot"
+            android:visibility="gone"
+            tools:visibility="visible"
+            app:tint="?attr/colorAccent"
+            app:layout_constraintTop_toTopOf="@id/imageViewNotificationIcon"
+            app:layout_constraintStart_toStartOf="@id/imageViewNotificationIcon"
+            android:layout_marginStart="-2dp"
+            android:layout_marginTop="-2dp" />
+
+
+        <TextView
+            android:id="@+id/textViewNotificationText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:textColor="?android:attr/textColorPrimary"
+            android:maxLines="3"
+            android:ellipsize="end"
+            tools:text="Your tutoring session for PRGM301 with John Doe has been confirmed for tomorrow at 3 PM."
+            app:layout_constraintStart_toEndOf="@id/imageViewNotificationIcon"
+            app:layout_constraintEnd_toStartOf="@id/imageViewRememberPin"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/textViewNotificationDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textColor="?android:attr/textColorSecondary"
+            tools:text="May 7, 2025 - 10:30 AM"
+            app:layout_constraintStart_toStartOf="@id/textViewNotificationText"
+            app:layout_constraintTop_toBottomOf="@id/textViewNotificationText"
+            android:layout_marginTop="4dp"/>
+
+        <ImageView
+            android:id="@+id/imageViewRememberPin"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_pin"
+            android:visibility="gone"
+            tools:visibility="visible"
+            app:tint="?attr/colorControlNormal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

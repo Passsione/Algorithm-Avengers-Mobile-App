@@ -49,6 +49,9 @@ dependencies {
 
     // Optional - Test helpers
     testImplementation("androidx.room:room-testing:$roomVersion")
+    implementation("com.google.android.material:material:1.12.0") // Use the latest version
+    implementation("androidx.recyclerview:recyclerview:1.3.2") // Use the latest version
+
 /*
     // calendar
     // The view calendar library

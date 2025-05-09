@@ -269,10 +269,15 @@ public class ExplorerFragment extends Fragment {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
+            // ***** ADD MARGIN HERE *****
+            // Add a bottom margin to create a gap between cards.
+            // You can adjust the dp value (e.g., 8dp) to your preference.
+            int bottomMarginInPx = dpToPx(8); // Or whatever gap you want
+            parentParams.setMargins(0, 0, 0, bottomMarginInPx);
+
             tutorCard.setLayoutParams(parentParams);
             tutorCard.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
-
-            tutorCard.setBackgroundColor(getResources().getColor(R.color.primary_light));
+            tutorCard.setBackgroundColor(getResources().getColor(R.color.primary_light, null));
 
             // Create ImageView for tutor image
             ImageView tutorImage = new ImageView(getContext());

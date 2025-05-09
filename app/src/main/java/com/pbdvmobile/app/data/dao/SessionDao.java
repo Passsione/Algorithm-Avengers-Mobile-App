@@ -1,4 +1,6 @@
 package com.pbdvmobile.app.data.dao;
+import static com.pbdvmobile.app.data.Schedule.TimeSlot.DEFAULT_TIME_PADDING_MIN;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -6,15 +8,12 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.Schedule.TimeSlot;
 import com.pbdvmobile.app.data.SqlOpenHelper;
 import com.pbdvmobile.app.data.model.Session;
-import com.pbdvmobile.app.data.model.User;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -22,9 +21,9 @@ public class SessionDao {
     private final SqlOpenHelper dbHelper;
 
     // 8:00 in Milliseconds
-    public final long OPEN_TIME = hourToMseconds(8) + minutesToMseconds(0);
+    public final long OPEN_TIME = hourToMseconds(8) ;//- minutesToMseconds(DEFAULT_TIME_PADDING_MIN);
     // 17:00 in Milliseconds
-    public final long CLOSE_TIME = hourToMseconds(18) + minutesToMseconds(0);
+    public final long CLOSE_TIME = hourToMseconds(18);// + minutesToMseconds(60 - DEFAULT_TIME_PADDING_MIN);
     private String lastError = "Session request failed."; // Default error
 
     private final int SESSION_LIMIT = 3;
@@ -205,88 +204,16 @@ public class SessionDao {
                                   TimeSlot requestedActualSlot, // This is now UNPADDED
                                   int subjectId, String location,
                                   Date actualDbStartTime, Date actualDbEndTime) {
-/*public boolean requestSession(int tuteeStudentNum, int tutorStudentNum, TimeSlot requestedSlot, int subjectId, String location, Date actualStartTime, Date actualEndTime) {
-    // 0. Check if requestedSlot is within OPEN_TIME and CLOSE_TIME (on the specific date)
-    // This requires comparing the time part of requestedSlot.getStartTime() and requestedSlot.getEndTime()
-    // with OPEN_TIME and CLOSE_TIME.
-    Calendar reqStartCal = Calendar.getInstance();
-    reqStartCal.setTime(requestedSlot.getStartTime());
-    long reqStartTimeOfDayMillis = reqStartCal.get(Calendar.HOUR_OF_DAY) * 3600000L +
-            reqStartCal.get(Calendar.MINUTE) * 60000L;
 
-    Calendar reqEndCal = Calendar.getInstance();
-    reqEndCal.setTime(requestedSlot.getEndTime());
-    long reqEndTimeOfDayMillis = reqEndCal.get(Calendar.HOUR_OF_DAY) * 3600000L +
-            reqEndCal.get(Calendar.MINUTE) * 60000L;
-    if (reqEndCal.get(Calendar.MINUTE) == 0 && reqEndCal.get(Calendar.HOUR_OF_DAY) == 0) { // Midnight edge case
-        reqEndTimeOfDayMillis = 24 * 3600000L;
-    }
-
-
-    if (reqStartTimeOfDayMillis < OPEN_TIME || reqEndTimeOfDayMillis > CLOSE_TIME) {
-        Log.e("SessionDao", "Requested time is outside service hours.");
-        return false; // Outside service hours
-    }
-
-
-    // 1. Check for conflicts with tutor's schedule
-    List<TimeSlot> tutorTakenSlots = getTakenTimeSlot(tutorStudentNum); // Ensure this uses the corrected query
-    for (TimeSlot taken : tutorTakenSlots) {
-        if (requestedSlot.overlaps(taken)) {
-            Log.e("SessionDao", "Requested time overlaps with tutor's schedule.");
-            return false; // Conflict with tutor
-        }
-    }
-
-    // 2. Check for conflicts with tutee's schedule
-    // You'll need a method like getTakenTimeSlot but for any role (tutor or tutee)
-    // or call getSessionsByTuteeId and getSessionsByTutorId for the tutee.
-    List<TimeSlot> tuteeTakenSlotsAsTutee = getTakenTimeSlotForUser(tuteeStudentNum, true); // true for tutee role
-    List<TimeSlot> tuteeTakenSlotsAsTutor = getTakenTimeSlotForUser(tuteeStudentNum, false); // false for tutor role
-
-    for (TimeSlot taken : tuteeTakenSlotsAsTutee) {
-        if (requestedSlot.overlaps(taken)) {
-            Log.e("SessionDao", "Requested time overlaps with tutee's schedule (as tutee).");
-            return false; // Conflict with tutee as tutee
-        }
-    }
-    for (TimeSlot taken : tuteeTakenSlotsAsTutor) {
-        if (requestedSlot.overlaps(taken)) {
-            Log.e("SessionDao", "Requested time overlaps with tutee's schedule (as tutor).");
-            return false; // Conflict with tutee as tutor
-        }
-    }
-
-
-    // 3. Check for duplicate pending/confirmed sessions (same tutor, tutee, subject before old one passed)
-    List<Session> existingSessions = getSessionsByUsersAndSubject(tuteeStudentNum, tutorStudentNum, subjectId);
-    Date now = new Date();
-    for (Session existing : existingSessions) {
-        if ((existing.getStatus() == Session.Status.PENDING || existing.getStatus() == Session.Status.CONFIRMED) &&
-                existing.getEndTime().after(now)) {
-            Log.e("SessionDao", "Duplicate active session already exists.");
-            return false; // A duplicate, active session already exists
-        }
-    }
-
-
-    // If all checks pass, create and insert the session
-    Session session = new Session(tutorStudentNum, tuteeStudentNum, subjectId);
-    session.setStartTime(actualStartTime); // Store UNPADDED time
-    session.setEndTime(actualEndTime);   // Store UNPADDED time
-    session.setStatus(Session.Status.PENDING);
-    session.setLocation(location);
-
-    return insertSession(session) != -1;*/
 
     // 0. Check if requested ACTUAL slot is within OPEN_TIME and CLOSE_TIME
     Calendar reqStartCal = Calendar.getInstance();
-    reqStartCal.setTime(requestedActualSlot.getStartTime()); // Use unpadded start
+    reqStartCal.setTime(requestedActualSlot.getActualStartTime()); // Use unpadded start
     long reqStartTimeOfDayMillis = reqStartCal.get(Calendar.HOUR_OF_DAY) * 3600000L +
             reqStartCal.get(Calendar.MINUTE) * 60000L;
 
     Calendar reqEndCal = Calendar.getInstance();
-    reqEndCal.setTime(requestedActualSlot.getEndTime()); // Use unpadded end
+    reqEndCal.setTime(requestedActualSlot.getActualEndTime()); // Use unpadded end
     long reqEndTimeOfDayMillis = reqEndCal.get(Calendar.HOUR_OF_DAY) * 3600000L +
             reqEndCal.get(Calendar.MINUTE) * 60000L;
 

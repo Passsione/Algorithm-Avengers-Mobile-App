@@ -8,4 +8,55 @@
     android:layout_height="match_parent"
     tools:context=".NotificationsActivity">
 
-  </androidx.constraintlayout.widget.ConstraintLayout>
+  <LinearLayout
+      android:id="@+id/linearLayout2"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_marginTop="68dp"
+      android:orientation="vertical"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="Swipe left to delete"
+        android:id="@+id/delete_notification"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewNotifications"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="34dp"
+
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/list_item_notification">
+
+    </androidx.recyclerview.widget.RecyclerView>
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/textViewNoNotifications"
+      android:layout_width="149dp"
+      android:layout_height="19dp"
+      android:text="No notifications yet."
+      android:textAppearance="?attr/textAppearanceSubtitle1"
+      android:visibility="gone"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="@+id/linearLayout2"
+      tools:visibility="visible" />
+
+  <androidx.fragment.app.FragmentContainerView
+      android:id="@+id/fragmentContainerView5"
+      android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

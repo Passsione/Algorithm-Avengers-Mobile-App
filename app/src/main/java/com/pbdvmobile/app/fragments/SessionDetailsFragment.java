@@ -107,6 +107,7 @@ public class SessionDetailsFragment extends Fragment {
 
         // ---- Start - Review Section ----
         cardReviewSection = view.findViewById(R.id.card_review_section);
+        if(session.getStatus() == Session.Status.COMPLETED) cardReviewSection.setVisibility(View.GONE);
         layoutReviewInputArea = view.findViewById(R.id.layout_review_input_area);
         detailsRating = view.findViewById(R.id.rabDetails);
         detailsReview = view.findViewById(R.id.redDetailsReview);
