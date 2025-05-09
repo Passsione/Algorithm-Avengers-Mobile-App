@@ -152,8 +152,7 @@ public class SessionDao {
 
     public double[] getAverageRatingByStudentNum(int studentNum) {
         double[] ratings = {0.0, 0.0};
-        int te = 0;
-        int tr = 0;
+
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = null;
         // and we average the KEY_TUTOR_RATING column.

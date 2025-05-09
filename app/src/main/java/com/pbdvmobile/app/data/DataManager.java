@@ -120,14 +120,14 @@ public class DataManager implements Serializable {
                 Session session = new Session(11111111, 22323809, subId);
                 session.setLocation("Steve Library");
                 Date startTime = new Date();
-                // Set start time to 24 hours from now
-                startTime.setTime(startTime.getTime() + 24L * 60 * 60 * 1000);
+                // Set start time to 24 hours ago
+                startTime.setTime(startTime.getTime() - 24L * 60 * 60 * 1000);
                 Date endTime = new Date();
                 // Set end time to 2 hours after the start time
                 endTime.setTime(startTime.getTime() + 2L * 60 * 60 * 1000);
                 session.setStartTime(startTime);
                 session.setEndTime(endTime);
-                session.setStatus(Session.Status.CONFIRMED);
+                session.setStatus(Session.Status.COMPLETED);
                 instance.getSessionDao().insertSession(session);
             }
             if(instance.getNotificationDao().getNotificationsByStudentNum(22323809).isEmpty()){

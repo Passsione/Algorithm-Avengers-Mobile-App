@@ -12,15 +12,6 @@
         android:layout_height="match_parent"
         >
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragmentContainerView4"
-            android:name="com.pbdvmobile.app.fragments.NavigationFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <ImageView
             android:id="@+id/imgProfileImage"
             android:layout_width="120dp"
@@ -221,6 +212,15 @@
             android:text="Log Out"
             app:layout_constraintStart_toEndOf="@+id/bthSaveProfile"
             app:layout_constraintTop_toTopOf="@+id/bthSaveProfile" />
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragmentContainerView4"
+            android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

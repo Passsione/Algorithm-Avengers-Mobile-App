@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 import com.pbdvmobile.app.R;
-import com.pbdvmobile.app.ResourceUploadActivity;
 import com.pbdvmobile.app.ScheduleActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
@@ -32,7 +31,6 @@ import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
 
-import java.util.Collections;
 import java.util.List;
 
 public class DashboardFragment extends Fragment {
@@ -91,7 +89,7 @@ public class DashboardFragment extends Fragment {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
             sessionLayout.setLayoutParams(parentParams);
-            
+
             // ***** ADD MARGIN HERE *****
             // Add a bottom margin to create a gap between cards.
             // You can adjust the dp value (e.g., 8dp) to your preference.
@@ -197,7 +195,7 @@ public class DashboardFragment extends Fragment {
             cancel = new TextView(this.getContext());
             cancel.setText("Cancel");
             cancel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12); // Set size in SP
-            cancel.setTextColor(getResources().getColor(R.color.status_canceled, null));
+            cancel.setTextColor(getResources().getColor(R.color.status_cancelled, null));
             cancel.setLayoutParams(titleChildParams);
             cancel.setOnClickListener(v ->  {
                 dataManager.getSessionDao().updateSessionStatus(session.getId(),

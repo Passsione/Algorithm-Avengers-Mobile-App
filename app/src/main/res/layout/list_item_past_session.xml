@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/imageViewPartner"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@mipmap/ic_launcher_round"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="Partner profile picture" />
+
+        <TextView
+            android:id="@+id/textViewPastSessionSubject"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceListItem"
+            android:textStyle="bold"
+            tools:text="Programming III"
+            app:layout_constraintStart_toEndOf="@id/imageViewPartner"
+            app:layout_constraintEnd_toStartOf="@id/textViewPastSessionStatus"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/textViewPastSessionPartnerName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody2"
+            tools:text="With: John Doe"
+            app:layout_constraintStart_toStartOf="@id/textViewPastSessionSubject"
+            app:layout_constraintEnd_toEndOf="@id/textViewPastSessionSubject"
+            app:layout_constraintTop_toBottomOf="@id/textViewPastSessionSubject"
+            android:layout_marginTop="2dp"/>
+
+        <TextView
+            android:id="@+id/textViewPastSessionDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceCaption"
+            tools:text="May 01, 2025 - 09:00 AM"
+            app:layout_constraintStart_toStartOf="@id/textViewPastSessionPartnerName"
+            app:layout_constraintEnd_toEndOf="@id/textViewPastSessionPartnerName"
+            app:layout_constraintTop_toBottomOf="@id/textViewPastSessionPartnerName"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/textViewPastSessionLocation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceCaption"
+            tools:text="Location: Steve Biko Library"
+            app:layout_constraintStart_toStartOf="@id/textViewPastSessionDate"
+            app:layout_constraintEnd_toEndOf="@id/textViewPastSessionDate"
+            app:layout_constraintTop_toBottomOf="@id/textViewPastSessionDate"
+            android:layout_marginTop="2dp"/>
+
+        <TextView
+            android:id="@+id/textViewPastSessionStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textColor="@color/status_confirmed"
+            android:textStyle="bold"
+            tools:text="COMPLETED"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

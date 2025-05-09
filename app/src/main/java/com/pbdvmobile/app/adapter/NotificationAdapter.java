@@ -84,7 +84,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             if (notification.getStatus() == Notification.Status.SEALED) {
                 // Directly call toggle or just update the specific notification
                 // For simplicity, let's assume toggleNotificationStatus updates DB and UI
-                toggleNotificationStatus(holder.getAdapterPosition()); // Use adapter position
+                toggleNotificationStatus(holder.getBindingAdapterPosition()); // Use adapter position
             }
             Toast.makeText(context, "Clicked: " + notification.getText(), Toast.LENGTH_SHORT).show();
         });

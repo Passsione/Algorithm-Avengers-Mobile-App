@@ -16,6 +16,9 @@
     <color name="divider">#BDBDBD</color>
     <color name="status_confirmed">#4CAF50</color>
     <color name="status_pending">#FFC107</color>
-    <color name="status_canceled">#F44336</color>
+    <color name="status_cancelled">#F44336</color>
     <color name="background_light">#F5F5F5</color>
+    <color name="status_completed">#00FFE5</color>
+    <color name="status_declined">#7E403D</color>
+    <color name="status_generic_gray">#483E3E</color>
 </resources>
