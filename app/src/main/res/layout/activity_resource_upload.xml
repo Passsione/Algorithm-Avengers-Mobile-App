@@ -2,6 +2,129 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainResourceUploadLayout" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ResourceUploadActivity">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="60dp"
+      android:orientation="vertical"
+      android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:orientation="vertical">
+
+      <TextView
+          android:id="@+id/textViewUploadTitle"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:gravity="start"
+          android:text="Upload Resource"
+          android:textSize="24sp"
+          android:textStyle="bold" />
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:hint="Resource Display Name"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary">
+
+      <com.google.android.material.textfield.TextInputEditText
+          android:id="@+id/resourceNameEditText"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Spinner
+        android:id="@+id/subjectDropdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/uploadCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        app:cardElevation="2dp"
+        app:strokeColor="@color/primary"
+        app:strokeWidth="1dp">
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:gravity="center"
+          android:orientation="vertical"
+          android:padding="16dp">
+
+        <Button
+            android:id="@+id/selectPdfButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select File" />
+
+        <TextView
+            android:id="@+id/upload_doc_name_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="No file selected"
+            android:textSize="12sp" />
+      </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+      <com.google.android.material.button.MaterialButton
+          android:id="@+id/upload_cancel_button"
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_marginEnd="8dp"
+          android:layout_weight="1"
+          android:text="Cancel"
+          app:cornerRadius="8dp" />
+
+      <com.google.android.material.button.MaterialButton
+          android:id="@+id/uploadPdfButton"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp"
+          android:layout_weight="1"
+          android:elevation="1dp"
+          android:visibility="gone"
+          android:text="Upload Resource"
+          app:backgroundTint="@color/primary"
+          app:cornerRadius="8dp" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <androidx.fragment.app.FragmentContainerView
+      android:id="@+id/fragmentContainerView3"
+      android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+</RelativeLayout>
+<!--
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -15,7 +138,7 @@
       android:layout_marginTop="60dp"
       android:padding="24dp">
 
-    <!-- Header Section -->
+    &lt;!&ndash; Header Section &ndash;&gt;
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +155,7 @@
 
     </LinearLayout>
 
-    <!-- Resource Title -->
+    &lt;!&ndash; Resource Title &ndash;&gt;
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
@@ -49,7 +172,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
 
-    <!-- Subject Dropdown -->
+    &lt;!&ndash; Subject Dropdown &ndash;&gt;
 
 
     <com.google.android.material.textfield.TextInputLayout
@@ -72,7 +195,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
 
-    <!-- File Upload Card -->
+    &lt;!&ndash; File Upload Card &ndash;&gt;
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/uploadCard"
         android:layout_width="match_parent"
@@ -108,7 +231,7 @@
       </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Upload Button -->
+    &lt;!&ndash; Upload Button &ndash;&gt;
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -149,3 +272,4 @@
 
 </RelativeLayout>
 
+-->

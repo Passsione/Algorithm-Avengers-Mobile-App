@@ -36,7 +36,7 @@ public class UserDao {
         values.put(SqlOpenHelper.KEY_USER_EDUCATION_LEVEL, user.getEducationLevel().name());
         values.put(SqlOpenHelper.KEY_USER_IS_TUTOR, user.isTutor() ? 1 : 0);
         values.put(SqlOpenHelper.KEY_USER_TIER_LEVEL, user.getTierLevel().name());
-        values.put(SqlOpenHelper.KEY_USER_AVERAGE_RATING, user.getAverageRating());
+//        values.put(SqlOpenHelper.KEY_USER_AVERAGE_RATING, user.getAverageRating());
         values.put(SqlOpenHelper.KEY_USER_PROFILE_IMAGE_URL, user.getProfileImageUrl());
         values.put(SqlOpenHelper.KEY_USER_CREDITS, user.getCredits());
         values.put(SqlOpenHelper.KEY_USER_SUBJECTS, user.getSubjects());
@@ -135,7 +135,7 @@ public class UserDao {
         values.put(SqlOpenHelper.KEY_USER_EDUCATION_LEVEL, user.getEducationLevel().name());
         values.put(SqlOpenHelper.KEY_USER_IS_TUTOR, user.isTutor() ? 1 : 0);
         values.put(SqlOpenHelper.KEY_USER_TIER_LEVEL, user.getTierLevel().name());
-        values.put(SqlOpenHelper.KEY_USER_AVERAGE_RATING, user.getAverageRating());
+//        values.put(SqlOpenHelper.KEY_USER_AVERAGE_RATING, user.getAverageRating());
         values.put(SqlOpenHelper.KEY_USER_PROFILE_IMAGE_URL, user.getProfileImageUrl());
         values.put(SqlOpenHelper.KEY_USER_CREDITS, user.getCredits());
         values.put(SqlOpenHelper.KEY_USER_SUBJECTS, user.getSubjects());
@@ -186,7 +186,7 @@ public class UserDao {
             user.setTierLevel(User.TierLevel.BASIC); // Default value
         }
 
-        user.setAverageRating(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_AVERAGE_RATING)));
+//        user.setAverageRating(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_AVERAGE_RATING)));
         user.setProfileImageUrl(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_PROFILE_IMAGE_URL)));
         user.setCredits(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_CREDITS)));
         user.setSubjects(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECTS)));

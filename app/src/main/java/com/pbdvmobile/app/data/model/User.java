@@ -1,5 +1,7 @@
 package com.pbdvmobile.app.data.model;
 
+import com.pbdvmobile.app.data.DataManager;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +32,7 @@ public class User implements Serializable {
     private EduLevel educationLevel;
     private boolean tutor;
     private TierLevel tierLevel;
-    private double averageRating;
+//    private double averageRating;
     private String profileImageUrl;
     private double credits;
     private String subjects; // JSON string of subjects
@@ -39,7 +41,7 @@ public class User implements Serializable {
     // Constructor
     public User() {
         this.tutor = false;
-        this.averageRating = -1; // Never been rated
+//        this.averageRating = -1; // Never been rated
         this.tierLevel = TierLevel.BASIC;
     }
     public User(int stuNum, String fName, String lName) {
@@ -47,7 +49,7 @@ public class User implements Serializable {
         this.firstName = fName;
         this.lastName = lName;
         this.tutor = false;
-        this.averageRating = -1;
+//        this.averageRating = -1;
         this.tierLevel = TierLevel.BASIC;
     }
     public int getStudentNum() {
@@ -122,14 +124,15 @@ public class User implements Serializable {
         this.tierLevel = tierLevel;
     }
 
-    public double getAverageRating() {
-        return averageRating;
+    public double[] getAverageRating(DataManager dataManager) {
+        return dataManager.getSessionDao().getAverageRatingByStudentNum(
+                studentNum);
     }
 
-    public void setAverageRating(double averageRating) {
+    /*public void setAverageRating(double averageRating) {
         this.averageRating = averageRating;
     }
-
+*/
 
     public String getProfileImageUrl() {
         return profileImageUrl;

@@ -1,5 +1,4 @@
 package com.pbdvmobile.app.data.dao;
-import static com.pbdvmobile.app.data.Schedule.TimeSlot.DEFAULT_TIME_PADDING_MIN;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -187,14 +186,19 @@ public class SessionDao {
         return ratings;
     }
 
-    public void updatePastSessionsToCompleted() {
+    public void updatePastSessions(Session.Status status) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_STATUS, Session.Status.COMPLETED.name());
+        values.put(SqlOpenHelper.KEY_SESSION_STATUS, status.name());
 
         String whereClause = SqlOpenHelper.KEY_SESSION_END_TIME + " < ? AND " +
+                SqlOpenHelper.KEY_SESSION_STATUS + " = ? OR"+
                 SqlOpenHelper.KEY_SESSION_STATUS + " = ?";
-        String[] whereArgs = new String[]{String.valueOf(new Date().getTime()), Session.Status.CONFIRMED.name()};
+        String[] whereArgs = new String[]{String.valueOf(
+                new Date().getTime()),
+                Session.Status.PENDING.name(),
+                Session.Status.CONFIRMED.name(),
+                };
 
         db.update(SqlOpenHelper.TABLE_SESSIONS, values, whereClause, whereArgs);
         db.close();

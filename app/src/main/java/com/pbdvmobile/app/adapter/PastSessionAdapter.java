@@ -125,7 +125,7 @@ public class PastSessionAdapter extends RecyclerView.Adapter<PastSessionAdapter.
                     statusColorRes = R.color.status_generic_gray;
                     break;
             }
-            // Create a drawable with this color or use a pre-defined background
+      /*      // Create a drawable with this color or use a pre-defined background
             // For simplicity, just setting text color based on status for now
             this.textViewPastSessionStatus.setBackgroundResource(getStatusBackground(session.getStatus())); // Using a helper
             this.textViewPastSessionStatus.setTextColor(ContextCompat.getColor(context, android.R.color.white));
@@ -134,11 +134,11 @@ public class PastSessionAdapter extends RecyclerView.Adapter<PastSessionAdapter.
         }
         private int getStatusBackground(Session.Status status) {
             switch (status) {
-                case COMPLETED: return R.drawable.avatar_2; // Greenish
-                case CANCELLED: return R.drawable.avatar_1; // Reddish
-                case DECLINED: return R.drawable.avatar_3;   // Orange/Yellowish
-                default: return R.drawable.avatar_16; // Grayish
-            }
+                case COMPLETED: return R.drawable.status_background_completed; // Greenish
+                case CANCELLED: return R.drawable.status_background_cancelled; // Reddish
+                case DECLINED: return R.drawable.status_background_declined;   // Orange/Yellowish
+                default: return R.drawable.status_background_generic; // Grayish
+            }*/
         }
     }
 }

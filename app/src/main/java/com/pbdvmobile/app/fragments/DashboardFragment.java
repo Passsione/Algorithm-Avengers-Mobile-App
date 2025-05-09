@@ -61,6 +61,12 @@ public class DashboardFragment extends Fragment {
         upcoming = view.findViewById(R.id.upcoming_sessions_card);
         pending = view.findViewById(R.id.pending_sessions_card);
 
+        drawSessions();
+       anyUpdate();
+
+    }
+
+    private void drawSessions() {
         int user_num = current_user.getUser().getStudentNum();
         List<Session> sessions = dataManager.getSessionDao().getSessionsByTuteeId(user_num);
 
@@ -202,8 +208,10 @@ public class DashboardFragment extends Fragment {
                         session.getStatus() == Session.Status.PENDING ? Session.Status.DECLINED: Session.Status.CANCELLED);
                 Toast.makeText(getContext(), "Session cancelled successful!", Toast.LENGTH_LONG).show();
 
-                upcoming.removeView(sessionCard);
-                pending.removeView(sessionCard);
+                if(session.getStatus() == Session.Status.PENDING)
+                    pending.removeView(sessionCard);
+                else upcoming.removeView(sessionCard);
+                drawSessions();
                 anyUpdate();
 
             });
@@ -220,6 +228,8 @@ public class DashboardFragment extends Fragment {
                 scheduleIntent.putExtra("job_type", "session_details");
                 scheduleIntent.putExtra("session", session);
                 startActivity(scheduleIntent);
+                drawSessions();
+                anyUpdate();
             });
 //            actions.addView(reschedule);
             actions.addView(cancel);
@@ -238,8 +248,6 @@ public class DashboardFragment extends Fragment {
             else if(session.getStatus() == Session.Status.PENDING)pending.addView(sessionCard);
 
         }
-       anyUpdate();
-
     }
 
     private void anyUpdate() {

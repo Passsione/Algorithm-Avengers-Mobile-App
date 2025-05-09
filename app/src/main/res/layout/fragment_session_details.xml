@@ -59,7 +59,7 @@
                         android:paddingTop="4dp"
                         android:paddingEnd="12dp"
                         android:paddingBottom="4dp"
-                        android:text="Pending" />
+                        android:text="Completed" />
 
                     <View
                         android:layout_width="match_parent"
@@ -233,12 +233,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:visibility="gone"
-                        app:cardCornerRadius="8dp"
                         app:cardElevation="2dp"
-                        app:layout_constraintEnd_toEndOf="parent"
+                        app:cardCornerRadius="8dp"
+                        android:visibility="gone"
+                        app:layout_constraintTop_toBottomOf="@id/card_review_section"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/card_review_section">
+                        app:layout_constraintEnd_toEndOf="parent">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -250,9 +250,9 @@
                                 android:id="@+id/textViewPartnerReviewTitle"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginBottom="8dp"
                                 android:text="Partner's Feedback"
-                                android:textAppearance="?attr/textAppearanceSubtitle1" />
+                                android:textAppearance="?attr/textAppearanceSubtitle1"
+                                android:layout_marginBottom="8dp"/>
 
                             <RatingBar
                                 android:id="@+id/ratingBarPartnerRating"
@@ -316,7 +316,6 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="16dp"
-                android:visibility="gone"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -342,6 +341,7 @@
                         android:layout_height="wrap_content"
                         android:text="How would you rate the session?" />
 
+
                     <RatingBar
                         android:id="@+id/rabDetails"
                         android:layout_width="wrap_content"
@@ -361,8 +361,9 @@
                         android:id="@+id/redDetailsReview"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:height="100sp"
+                        android:height="80sp"
                         android:ems="10"
+                        android:hint="Write your review here..."
                         android:gravity="start|top"
                         android:inputType="textMultiLine" />
 

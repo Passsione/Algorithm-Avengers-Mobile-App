@@ -6,7 +6,6 @@ import static android.view.View.VISIBLE;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.service.controls.actions.FloatAction;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
@@ -25,6 +24,7 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
+import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.fragments.DashboardFragment;
 import com.pbdvmobile.app.fragments.ExplorerFragment;
 import com.pbdvmobile.app.fragments.ResourcesFragment;
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     NavigationView nav;
     TextView nav_header, nav_header_email, flash;
     Button exit;
+    LogInUser current_user;
     private BottomNavigationView bottomNavigationView;
 
     @SuppressLint("SetTextI18n")
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         DataManager dataManager = DataManager.getInstance(this);
-        LogInUser current_user = LogInUser.getInstance(dataManager);
+        current_user = LogInUser.getInstance(dataManager);
 
         // ---- Go to log-in page if not logged in
         if(!current_user.isLoggedIn()){
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             finish(); // can't come back to main activity
             return;
         }
-        dataManager.getSessionDao().updatePastSessionsToCompleted();
+        dataManager.getSessionDao().updatePastSessions(Session.Status.DECLINED);
         // ---- Start - Bottom Navigation Section
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -100,7 +101,11 @@ public class MainActivity extends AppCompatActivity {
                     fab.setVisibility(GONE);
                 } else if (itemId == R.id.navigation_resources) {
                     selectedFragment = new ResourcesFragment();
-                    fab.setVisibility(GONE);
+                    fab.setVisibility(current_user.getUser().isTutor() ? VISIBLE : GONE);
+                    fab.setOnClickListener( l ->{
+                        Intent toResourceUpload = new Intent(MainActivity.this, ResourceUploadActivity.class);
+                        startActivity(toResourceUpload);
+                    });
                 } else if (itemId == R.id.navigation_tutor_center) {
                     selectedFragment = new TutorDashboardFragment();
                     fab.setVisibility(VISIBLE);

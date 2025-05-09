@@ -58,31 +58,33 @@
                 tools:visibility="visible">
 
                 <!-- Rating Filter -->
+
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Minimum Rating" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text=""
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Minimum Rating"
-                    android:visibility="gone" />
-
+                    android:orientation="horizontal">
                 <RatingBar
                     android:id="@+id/rating_filter"
-                    style="?android:attr/ratingBarStyleSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
                     android:numStars="5"
-                    android:stepSize="0.5"
-                    android:visibility="gone" />
-
+                    android:stepSize="0.5" />
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Clear Rating"
+                        android:id="@+id/clear_rating"/>
+                </LinearLayout>
                 <!-- Subject Filter -->
                 <TextView
                     android:layout_width="wrap_content"

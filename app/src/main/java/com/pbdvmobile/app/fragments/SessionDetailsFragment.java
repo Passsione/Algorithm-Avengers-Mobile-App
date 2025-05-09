@@ -363,7 +363,8 @@ public class SessionDetailsFragment extends Fragment {
                 buttonCancelSession.setText("Cancel Session");
                 buttonCancelSession.setOnClickListener(v -> updateSessionStatus(Session.Status.CANCELLED, "Session Cancelled."));
                 // Reschedule might also be an option here
-                // buttonRescheduleSession.setVisibility(View.VISIBLE);
+                 buttonRescheduleSession.setVisibility(View.VISIBLE);
+                 buttonRescheduleSession.setText("Begin Session");
                 break;
             case COMPLETED:
             case CANCELLED:

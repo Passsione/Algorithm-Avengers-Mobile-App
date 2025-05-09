@@ -1,65 +1,85 @@
 package com.pbdvmobile.app.fragments;
 
-import static android.view.View.GONE;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.DisplayMetrics;
+import android.os.ParcelFileDescriptor;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.ResourceUploadActivity;
+import com.pbdvmobile.app.adapter.ResourceAdapter;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.model.Resource;
 import com.pbdvmobile.app.data.model.Session;
+import com.pbdvmobile.app.data.model.Subject;
+import com.pbdvmobile.app.data.model.User;
 
-import java.text.SimpleDateFormat;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ResourcesFragment extends Fragment {
+public class ResourcesFragment extends Fragment implements ResourceAdapter.OnResourceActionsListener {
 
-    private static final String ALL_TUTORS = "All Tutors"; // Constant for filter option
-    private static final String MY_RESOURCES = "My resources"; // Constant for filter option
+    private static final String TAG = "ResourcesFragment";
+    private static final String ALL_TUTORS_FILTER = "All Tutors";
+    private static final String ALL_SUBJECTS_FILTER = "All Subjects";
 
-    DataManager dataManager;
-    LogInUser current_user;
-    private Spinner tutorSpinner, subjectSpinner;
-    private LinearLayout mathResourcesContainer;
-    String tutorName;
-    private ImageButton toggleMathButton;
-    // Add containers/buttons for other subjects if needed
+    private RecyclerView recyclerViewResources;
+    private ResourceAdapter resourceAdapter;
+    private List<Resource> allFetchedResources; // Raw list from DB
+    private List<Resource> currentlyDisplayedResources; // List for the adapter after filtering
+    private TextView textViewNoResources;
 
-    private List<Resource> allResources = new ArrayList<>(); // Store all fetched resources
-    private List<Resource>  myResources = new ArrayList<>(); // Store tutors fetched resources
-    private List<String> tutorList = new ArrayList<>(); // Store tutor names for spinner
+
+    private AutoCompleteTextView spinnerFilterTutor, spinnerFilterSubject;
+    private Button buttonClearResourceFilters;
+
+    private DataManager dataManager;
+    private LogInUser currentUser;
+
+    private ActivityResultLauncher<Intent> resourceUploadEditLauncher;
+
+    private ActivityResultLauncher<Intent> saveFileLauncher; // For ACTION_CREATE_DOCUMENT
+    private Resource pendingDownloadResource; // To hold resource info during SAF flow
+
+
+    public ResourcesFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_resources, container, false);
     }
 
@@ -67,251 +87,405 @@ public class ResourcesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Null check for context
-        if (getContext() == null) {
-            return;
-        }
-
+        if (getContext() == null) return;
         dataManager = DataManager.getInstance(getContext());
-        current_user = LogInUser.getInstance(dataManager);
+        currentUser = LogInUser.getInstance(dataManager);
 
+        initializeViews(view);
+        setupRecyclerView();
+        setupFilters();
 
-        // Find Views
-        tutorSpinner = view.findViewById(R.id.tutor_spinner);
-        subjectSpinner = view.findViewById(R.id.resource_subject_spinner);
-        mathResourcesContainer = view.findViewById(R.id.subject_container);
-        toggleMathButton = view.findViewById(R.id.toggle_math_button);
-
-
-        // --- Load Data (Replace with your actual DataManager calls) ---
-        loadResourceData(); // Load resources into allResources
-        extractTutors();    // Populate tutorList from allResources
-
-        // --- Setup UI Components ---
-        setupTutorSpinner();
-        setupToggleButtons();
-
-        // --- Initial Display ---
-        filterAndDisplayResources(); // Display initially (likely all resources)
-    }
-
-    // --- Data Loading (Replace with actual DataManager calls) ---
-    private void loadResourceData() {
-        allResources.clear();
-        myResources.clear();
-        for(Resource resource : dataManager.getResourceDao().getAllResources()){
-            // the resources uploaded by the current user are separate
-            if(current_user.getUser().isTutor() && resource.getTutorId() == current_user.getUser().getStudentNum()){
-                myResources.add(resource);
-            }else{
-                for(Session session : dataManager.getSessionDao().getSessionsByTuteeId(resource.getTutorId())){
-                    if(session.getTuteeId() == current_user.getUser().getStudentNum()){
-                        allResources.add(resource);
+        resourceUploadEditLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Toast.makeText(getContext(), "Resource list updated.", Toast.LENGTH_SHORT).show();
+                        loadAndDisplayResources();
                     }
-                }
-            }
+                });
 
-        }
-        // Sort resources if needed (e.g., by date descending)
-//      allResources.sort((r1, r2) -> r2.getDate().compareTo(r1.getDate()));
+        // Initialize the launcher for saving a file
+        saveFileLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri destinationUri = result.getData().getData();
+                        if (destinationUri != null && pendingDownloadResource != null) {
+                            copyResourceToUri(Uri.parse(pendingDownloadResource.getResource()), destinationUri, pendingDownloadResource.getName());
+                        } else {
+                            Toast.makeText(getContext(), "Save location not selected or resource error.", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Save cancelled.", Toast.LENGTH_SHORT).show();
+                    }
+                    pendingDownloadResource = null; // Clear pending resource
+                });
+
+        loadAndDisplayResources();
     }
 
-    private void extractTutors() {
-        // Use a Set to avoid duplicate tutor names
-        Set<String> tutors = new HashSet<>();
-        for (Resource resource : allResources) {
-
-            tutors.add(dataManager.getUserDao().getUserByStudentNum(resource.getTutorId()).getFirstName()
-                    + " "+ dataManager.getUserDao().getUserByStudentNum(resource.getTutorId()).getLastName());
-
-        }
-        tutorList.clear();
-        if(current_user.getUser().isTutor())
-            tutorList.add(MY_RESOURCES); // Add the current user resource option
-
-        if(!tutors.isEmpty()) {
-            tutorList.add(ALL_TUTORS); // Add the "All" option
-            tutorList.addAll(tutors);
-        }
-        // Optionally sort the tutor names alphabetically (after "All Tutors")
-        // Collections.sort(tutorList.subList(1, tutorList.size()));
+    private void initializeViews(View view) {
+        recyclerViewResources = view.findViewById(R.id.recyclerViewResources);
+        textViewNoResources = view.findViewById(R.id.textViewNoResources);
+        spinnerFilterTutor = view.findViewById(R.id.spinner_filter_tutor);
+        spinnerFilterSubject = view.findViewById(R.id.spinner_filter_subject);
+        buttonClearResourceFilters = view.findViewById(R.id.buttonClearResourceFilters);
     }
 
-    // --- UI Setup ---
-    private void setupTutorSpinner() {
-        Context context = getContext();
-        if (context == null) return;
+    private void setupRecyclerView() {
+        currentlyDisplayedResources = new ArrayList<>();
+        resourceAdapter = new ResourceAdapter(getContext(), currentlyDisplayedResources, dataManager,
+                currentUser.getUser().getStudentNum(), currentUser.getUser().isTutor(), this);
+        recyclerViewResources.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerViewResources.setAdapter(resourceAdapter);
+    }
 
-        ArrayAdapter<String> tutorAdapter = new ArrayAdapter<>(context,
-                android.R.layout.simple_spinner_item, tutorList);
-        tutorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        tutorSpinner.setAdapter(tutorAdapter);
 
-        tutorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                filterAndDisplayResources(); // Re-filter and display when selection changes
+    private void loadAndDisplayResources() {
+        // This is where we decide which resources the user can see.
+        // For a tutee: only resources from tutors they've had a COMPLETED session with.
+        // For a tutor: their own resources by default.
+        allFetchedResources = new ArrayList<>();
+        if (currentUser.getUser().isTutor()) {
+            // Tutors see all their resources
+            allFetchedResources.addAll(dataManager.getResourceDao().getResourcesByTutorId(currentUser.getUser().getStudentNum()));
+        }
+        // Get IDs of tutors the current tutee has had COMPLETED sessions with
+        List<Session> completedSessions = dataManager.getSessionDao().getSessionsByTuteeId(currentUser.getUser().getStudentNum())
+                .stream()
+                .filter(s -> s.getStatus() == Session.Status.COMPLETED) // Only completed sessions
+                .collect(Collectors.toList());
+
+        Set<Integer> tutorIdsFromSessions = new HashSet<>();
+        for (Session session : completedSessions) {
+            tutorIdsFromSessions.add(session.getTutorId());
+        }
+
+        if (!tutorIdsFromSessions.isEmpty()) {
+            for (Integer tutorId : tutorIdsFromSessions) {
+                allFetchedResources.addAll(dataManager.getResourceDao().getResourcesByTutorId(tutorId));
             }
+        }
+        // To avoid duplicates if a resource is somehow linked to multiple relevant tutors (unlikely by design)
+        // Could use a Set<Resource> here or filter duplicates by resourceId
+        allFetchedResources = new ArrayList<>(new HashSet<>(allFetchedResources)); // Simple way to get unique
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Optional: Handle case where nothing is selected
+
+
+
+        //  sort by resource name for consistency
+        if (allFetchedResources != null) {
+            Collections.sort(allFetchedResources, (r1, r2) -> {
+                if (r1.getName() == null && r2.getName() == null) return 0;
+                if (r1.getName() == null) return 1;
+                if (r2.getName() == null) return -1;
+                return r1.getName().compareToIgnoreCase(r2.getName());
+            });
+        }
+
+        populateFilterSpinners(); // Populate spinners based on the loaded resources
+        applyFilters(); // Apply default filters and display
+    }
+
+
+    private void populateFilterSpinners() {
+        if (getContext() == null || allFetchedResources == null) return;
+
+        // Tutor Spinner
+        Set<String> tutorNames = new HashSet<>();
+        for (Resource resource : allFetchedResources) {
+            User tutor = dataManager.getUserDao().getUserByStudentNum(resource.getTutorId());
+            if (tutor != null) {
+                tutorNames.add(currentUser.getUser().getStudentNum() == resource.getTutorId() ? "My Resources" : tutor.getFirstName() + " " + tutor.getLastName());
             }
+        }
+        tutorNames.add(ALL_TUTORS_FILTER);
+
+        ArrayAdapter<String> tutorAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, new ArrayList<>(tutorNames));
+        spinnerFilterTutor.setAdapter(tutorAdapter);
+        spinnerFilterTutor.setText(ALL_TUTORS_FILTER, false); // Set default without triggering listener
+
+        // Subject Spinner
+        Set<String> subjectNames = new HashSet<>();
+        for (Resource resource : allFetchedResources) {
+            Subject subject = dataManager.getSubjectDao().getSubjectById(resource.getSubjectId());
+            if (subject != null) {
+                subjectNames.add(subject.getSubjectName());
+            }
+        }
+        subjectNames.add(ALL_SUBJECTS_FILTER);
+
+        ArrayAdapter<String> subjectAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, new ArrayList<>(subjectNames));
+        spinnerFilterSubject.setAdapter(subjectAdapter);
+        spinnerFilterSubject.setText(ALL_SUBJECTS_FILTER, false); // Set default
+    }
+
+
+    private void setupFilters() {
+        AdapterView.OnItemClickListener filterListener = (parent, view, position, id) -> applyFilters();
+        spinnerFilterTutor.setOnItemClickListener(filterListener);
+        spinnerFilterSubject.setOnItemClickListener(filterListener);
+
+        buttonClearResourceFilters.setOnClickListener(v -> {
+            spinnerFilterTutor.setText(ALL_TUTORS_FILTER, false);
+            spinnerFilterSubject.setText(ALL_SUBJECTS_FILTER, false);
+            applyFilters();
         });
     }
 
-    private void setupToggleButtons() {
-        toggleMathButton.setOnClickListener(v -> {
-            toggleVisibility(mathResourcesContainer, toggleMathButton);
-            // Add similar listeners for other subject toggle buttons
-        });
-    }
+    private void applyFilters() {
+        if (allFetchedResources == null) return;
 
-    private void toggleVisibility(View container, ImageButton button) {
-        if (container.getVisibility() == View.VISIBLE) {
-            container.setVisibility(GONE);
-            button.setImageResource(android.R.drawable.arrow_down_float); // Point down when hidden
-//            button.setContentDescription(getString(R.string.show_section)); // Update description
-        } else {
-            container.setVisibility(View.VISIBLE);
-            button.setImageResource(android.R.drawable.arrow_up_float); // Point up when visible
-//            button.setContentDescription(getString(R.string.hide_section)); // Update description
-        }
-        // Add these strings to your strings.xml:
-        // <string name="show_section">Show section</string>
-        // <string name="hide_section">Hide section</string>
-    }
+        String selectedTutorName = spinnerFilterTutor.getText().toString();
+        String selectedSubjectName = spinnerFilterSubject.getText().toString();
 
-
-    // --- Filtering and Displaying ---
-    private void filterAndDisplayResources() {
-        String selectedTutor = tutorSpinner.getSelectedItem() != null ? tutorSpinner.getSelectedItem().toString() : ALL_TUTORS;
-
-        List<Resource> filteredResources;
-
-        // Filter by tutor
-        // Show my resource
-        if (selectedTutor.equals(MY_RESOURCES)) {
-            filteredResources = new ArrayList<>(myResources);
-
-        }else if (selectedTutor.equals(ALL_TUTORS)) {
-            filteredResources = new ArrayList<>(allResources); // Show all
-        } else {
-            filteredResources = new ArrayList<>();
-            for (Resource resource : allResources) {
-                if ((dataManager.getUserDao().getUserByStudentNum(resource.getTutorId()).getFirstName()
-                        + " "+ dataManager.getUserDao().getUserByStudentNum(resource.getTutorId()).getLastName()).equals(selectedTutor)) {
-                    filteredResources.add(resource);
+        List<Resource> filteredList = new ArrayList<>();
+        for (Resource resource : allFetchedResources) {
+            boolean passesTutorFilter = true;
+            if (!ALL_TUTORS_FILTER.equals(selectedTutorName) && !TextUtils.isEmpty(selectedTutorName)) {
+                User tutor = dataManager.getUserDao().getUserByStudentNum(resource.getTutorId());
+                if (tutor == null || !(tutor.getFirstName() + " " + tutor.getLastName()).equals(selectedTutorName)) {
+                    passesTutorFilter = false;
                 }
+            }
+
+            boolean passesSubjectFilter = true;
+            if (!ALL_SUBJECTS_FILTER.equals(selectedSubjectName) && !TextUtils.isEmpty(selectedSubjectName)) {
+                Subject subject = dataManager.getSubjectDao().getSubjectById(resource.getSubjectId());
+                if (subject == null || !subject.getSubjectName().equals(selectedSubjectName)) {
+                    passesSubjectFilter = false;
+                }
+            }
+
+            if (passesTutorFilter && passesSubjectFilter) {
+                filteredList.add(resource);
             }
         }
 
-        displayResources(filteredResources, selectedTutor);
+        currentlyDisplayedResources.clear();
+        currentlyDisplayedResources.addAll(filteredList);
+        resourceAdapter.notifyDataSetChanged(); // Notify adapter with the final filtered list
+        updateNoResourcesView();
     }
 
+    private void updateNoResourcesView() {
+        if (resourceAdapter.getItemCount() == 0) {
+            recyclerViewResources.setVisibility(View.GONE);
+            textViewNoResources.setVisibility(View.VISIBLE);
+        } else {
+            recyclerViewResources.setVisibility(View.VISIBLE);
+            textViewNoResources.setVisibility(View.GONE);
+        }
+    }
 
-    @SuppressLint({"SetTextI18n", "ResourceAsColor"})
-    private void displayResources(List<Resource> resourcesToShow, String selectedTutor ) {
-        Context context = getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        if (context == null || inflater == null) return;
+    // --- OnResourceActionsListener Implementation ---
 
-        // Clear previous items
-        mathResourcesContainer.removeAllViews();
-        // Clear other subject containers if they exist
 
-        if (resourcesToShow.isEmpty()) {
-            // Optional: Show a "No resources found" message
-            TextView noResults = new TextView(context);
-            noResults.setText(selectedTutor != MY_RESOURCES ? "No resource found" : "You haven't uploaded any resource yet"); // Add to strings.xml
-            noResults.setPadding(16,16,16,16); // Add some padding
+    @Override
+    public void onDownloadResource(Resource resource) {
+        if (getContext() == null || resource == null || resource.getResource() == null) {
+            Toast.makeText(getContext(), "Resource data or URI is missing.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            mathResourcesContainer.addView(noResults); // Add to a default container or handle appropriately
-            tutorSpinner.setVisibility(GONE);
-            subjectSpinner.setVisibility(GONE);
+        pendingDownloadResource = resource; // Store for SAF callback
+        Uri internalFileUri = Uri.parse(resource.getResource()); // This is now file:///...
+
+        // Check if the internal file actually exists before attempting to offer it for download
+        // This is an important sanity check
+        File checkFile = null;
+        if ("file".equals(internalFileUri.getScheme()) && internalFileUri.getPath() != null) {
+            checkFile = new File(internalFileUri.getPath());
+        }
+
+        if (checkFile == null || !checkFile.exists() || !checkFile.canRead()) {
+            Log.e(TAG, "Internal resource file does not exist or cannot be read: " + internalFileUri.toString());
+            Toast.makeText(getContext(), "Resource file is missing or corrupted. Please try re-uploading.", Toast.LENGTH_LONG).show();
+            pendingDownloadResource = null;
+            // Optional: You might want to delete this invalid resource entry from the DB
+            // dataManager.getResourceDao().deleteResource(resource.getResourcesId());
+            // loadAndDisplayResources(); // Refresh list
             return;
         }
 
 
-        for (Resource resource : resourcesToShow) {
-            // Inflate the item layout
-            View itemView = inflater.inflate(R.layout.item_resource, null, false); // Pass null, false initially
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
 
-            // Find views within the item layout
-            ImageView icon = itemView.findViewById(R.id.resource_type_icon);
-            TextView title = itemView.findViewById(R.id.resource_title);
-//            TextView description = itemView.findViewById(R.id.resource_description);
-            TextView tutor = itemView.findViewById(R.id.resource_tutor);
-//            TextView date = itemView.findViewById(R.id.resource_date);
+        String fileName = resource.getName(); // Use the display name for the downloaded file
+        String mimeType = determineMimeTypeFromFileName(resource.getResource()); // Helper to get MIME from name/extension
 
-            ImageButton downloadButton = itemView.findViewById(R.id.download_button);
-            if(selectedTutor == MY_RESOURCES) {
-                downloadButton.setImageResource(R.drawable.ic_settings_black_24dp);
+        intent.setType(mimeType);
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+
+        try {
+            Log.d(TAG, "Launching ACTION_CREATE_DOCUMENT for: " + fileName + " with MIME: " + mimeType + " from internal URI: " + internalFileUri);
+            saveFileLauncher.launch(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(getContext(), "No app found to handle file saving.", Toast.LENGTH_LONG).show();
+            pendingDownloadResource = null;
+        }
+    }
+
+    private String determineMimeTypeFromFileName(String fileName) {
+        if (fileName == null) return "application/octet-stream";
+        String lowerFileName = fileName.toLowerCase();
+        if (lowerFileName.endsWith(".pdf")) return "application/pdf";
+        if (lowerFileName.endsWith(".doc")) return "application/msword";
+        if (lowerFileName.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (lowerFileName.endsWith(".txt")) return "text/plain";
+        if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) return "image/jpeg";
+        if (lowerFileName.endsWith(".png")) return "image/png";
+        // Add more common types as needed
+        return "application/octet-stream"; // Default fallback
+    }
+
+
+    private void copyResourceToUri(Uri internalSourceFileUri, Uri userSelectedDestinationUri, String displayName) {
+        if (getContext() == null || internalSourceFileUri == null || userSelectedDestinationUri == null) {
+            Log.e(TAG, "Copy failed: null context or URI during copy operation.");
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(()-> Toast.makeText(getContext(), "Failed to save file: Invalid parameters.", Toast.LENGTH_LONG).show());
+            }
+            return;
+        }
+        Log.d(TAG, "Copying from internal: " + internalSourceFileUri.toString() + " to user selected: " + userSelectedDestinationUri.toString());
+
+        new Thread(() -> {
+            boolean success = false;
+            long bytesCopied = 0; // To track if anything was written
+
+            try (InputStream inputStream = getContext().getContentResolver().openInputStream(internalSourceFileUri);
+                 OutputStream outputStream = getContext().getContentResolver().openOutputStream(userSelectedDestinationUri)) {
+
+                // Check if streams were successfully opened
+                if (inputStream == null) {
+                    throw new IOException("Failed to open input stream from internal source: " + internalSourceFileUri);
+                }
+                if (outputStream == null) {
+                    throw new IOException("Failed to open output stream to user selected destination: " + userSelectedDestinationUri);
+                }
+
+                byte[] buffer = new byte[1024 * 4]; // 4KB buffer
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                    bytesCopied += bytesRead;
+                }
+                outputStream.flush(); // Ensure all buffered data is written
+                success = true;
+                Log.d(TAG, "Copy successful. Bytes copied: " + bytesCopied);
+
+            } catch (FileNotFoundException fnfe) {
+                Log.e(TAG, "FileNotFoundException during file copy. Source: " + internalSourceFileUri + " Dest: " + userSelectedDestinationUri, fnfe);
+            } catch (IOException e) {
+                Log.e(TAG, "IOException during file copy", e);
+            } catch (SecurityException se) {
+                Log.e(TAG, "SecurityException during file copy (should not happen with internal files if path is correct)", se);
+            } catch (Exception ex) { // Catch any other unexpected exceptions
+                Log.e(TAG, "Unexpected exception during file copy", ex);
             }
 
-            // Populate the views
-            title.setText(resource.getName());
-//            description.setText(resource.getDescription());
-            tutor.setText("By: " + dataManager.getUserDao().getUserByStudentNum(resource.getTutorId()).getFirstName()
-                    + " "+ dataManager.getUserDao().getUserByStudentNum(resource.getTutorId()).getLastName()); // Use string resource
-//            date.setText(dateFormat.format(resource.getDate()));
-            icon.setImageResource(android.R.drawable.ic_menu_agenda); // Example icon
-
-            // Set download button action
-            downloadButton.setOnClickListener(v -> {
-                if(selectedTutor != MY_RESOURCES) {
-                    // ** TODO: Implement actual download logic here **
-                    // For now, show a Toast message
-                    Toast.makeText(context, "Downloading: " + resource.getName(), Toast.LENGTH_SHORT).show();
-                    // Example: startDownload(resource.getDownloadUrl());
-                }else{
-                    Intent toEdit = new Intent(context, ResourceUploadActivity.class);
-//                    toEdit.putExtra("mode", "edit");
-//                    toEdit.putExtra("resource", resource);
-                    startActivity(toEdit);
-                    Toast.makeText(context, "To edit resource" + resource.getName(), Toast.LENGTH_SHORT).show();
-
+            // --- Verification Step (Optional but Recommended) ---
+            if (success && bytesCopied > 0) {
+                try {
+                    ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(userSelectedDestinationUri, "r");
+                    if (pfd != null) {
+                        long fileSize = pfd.getStatSize();
+                        Log.d(TAG, "Verification: Saved file URI: " + userSelectedDestinationUri + ", Size: " + fileSize + " bytes");
+                        pfd.close();
+                        if (fileSize == 0 && bytesCopied > 0) {
+                            Log.w(TAG, "Verification Warning: File saved but size is 0. Copied bytes: " + bytesCopied);
+                            // This might indicate an issue with how the outputStream was handled or closed by the system
+                            // or an issue with the ContentProvider serving userSelectedDestinationUri
+                            success = false; // Consider it a failure if file size is 0 but we copied data
+                        } else if (fileSize == 0 && bytesCopied == 0) {
+                            Log.w(TAG, "Verification Warning: Source file might be empty. Copied 0 bytes, saved file size is 0.");
+                            // This is okay if the source was empty, but might be an issue otherwise.
+                        }
+                    } else {
+                        Log.w(TAG, "Verification Warning: Could not open ParcelFileDescriptor for destination URI to check size.");
+                    }
+                } catch (FileNotFoundException e) {
+                    Log.e(TAG, "Verification Error: File not found at destination URI after saving.", e);
+                    success = false; // File seems to have disappeared or not been properly committed.
+                } catch (Exception e) {
+                    Log.w(TAG, "Verification Warning: Exception during file size check.", e);
                 }
-            });
+            } else if (success && bytesCopied == 0) {
+                Log.w(TAG, "Copy reported success, but 0 bytes were copied. Source file might be empty.");
+            }
+            // --- End Verification Step ---
 
-            // Add the populated item view
-                LinearLayout resourceCard = new LinearLayout(context);
-                resourceCard.setOrientation(LinearLayout.VERTICAL);
-                resourceCard.setBackgroundColor(R.color.primary_light);
-            // Set LayoutParams for the parent (e.g., fill width, wrap height)
-            LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            // ***** ADD MARGIN HERE *****
-            // Add a bottom margin to create a gap between cards.
-            // You can adjust the dp value (e.g., 8dp) to your preference.
-            int bottomMarginInPx = dpToPx(8); // Or whatever gap you want
-            parentParams.setMargins(0, 0, 0, bottomMarginInPx);
 
-                resourceCard.addView(itemView);
-                resourceCard.setLayoutParams(parentParams);
-
-                mathResourcesContainer.addView(resourceCard);
-        }
-        // Ensure the Math section is visible if it contains items after filtering
-        // (or hide if empty, depending on desired behavior)
-        mathResourcesContainer.setVisibility(mathResourcesContainer.getChildCount() > 0 ? View.VISIBLE : GONE);
-        // Update toggle button state accordingly if hiding when empty
-        toggleMathButton.setImageResource((mathResourcesContainer.getVisibility() == GONE) ? android.R.drawable.arrow_down_float : android.R.drawable.arrow_up_float);
+            boolean finalSuccess = success;
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (finalSuccess) {
+                        Toast.makeText(getContext(), displayName + " saved successfully!", Toast.LENGTH_LONG).show();
+                        // Optional: Offer to open the file immediately
+                        // offerToOpenFile(userSelectedDestinationUri, determineMimeTypeFromFileName(displayName));
+                    } else {
+                        Toast.makeText(getContext(), "Failed to save " + displayName + ". Check logs.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        }).start();
     }
 
-    // --- TODO: Helper Methods (Example) ---
-    /*
-    private void startDownload(String urlOrPath) {
-        // Implement download logic using DownloadManager or other libraries
-        Log.d("ResourcesFragment", "Attempting download for: " + urlOrPath);
+    @Override
+    public void onEditResource(Resource resource) {
+        Intent intent = new Intent(getContext(), ResourceUploadActivity.class);
+        intent.putExtra(ResourceUploadActivity.EXTRA_MODE, ResourceUploadActivity.MODE_EDIT);
+        intent.putExtra(ResourceUploadActivity.EXTRA_RESOURCE_ID, resource.getResourcesId());
+        resourceUploadEditLauncher.launch(intent);
     }
-    */
-    private int dpToPx(int dp) {
-        DisplayMetrics displayMetrics = requireContext().getResources().getDisplayMetrics();
-        // A simpler way to convert dp to pixels
-        return Math.round(dp * displayMetrics.density);
+
+    @Override
+    public void onDeleteResource(final Resource resource, final int position) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Delete Resource")
+                .setMessage("Are you sure you want to delete '" + resource.getName() + "'?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    // Perform delete in background
+                    new Thread(() -> {
+                        int rowsAffected = dataManager.getResourceDao().deleteResource(resource.getResourcesId());
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                if (rowsAffected > 0) {
+                                    Toast.makeText(getContext(), "Resource deleted.", Toast.LENGTH_SHORT).show();
+                                    // Remove from the local list and notify adapter
+                                    if (position >= 0 && position < currentlyDisplayedResources.size()) {
+                                        if(currentlyDisplayedResources.get(position).getResourcesId() == resource.getResourcesId()){
+                                            currentlyDisplayedResources.remove(position);
+                                            resourceAdapter.notifyItemRemoved(position);
+                                            // resourceAdapter.notifyItemRangeChanged(position, currentlyDisplayedResources.size());
+                                        } else { // Fallback if position became invalid
+                                            loadAndDisplayResources();
+                                        }
+                                    } else { // Fallback
+                                        loadAndDisplayResources();
+                                    }
+                                    updateNoResourcesView();
+                                    // also remove from allFetchedResources to keep spinners consistent or repopulate them
+                                    allFetchedResources.removeIf(r -> r.getResourcesId() == resource.getResourcesId());
+                                    populateFilterSpinners(); // Repopulate spinners as data changed
+                                } else {
+                                    Toast.makeText(getContext(), "Failed to delete resource.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    }).start();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh the list if coming back from upload/edit activity
+        loadAndDisplayResources();
     }
 }
-

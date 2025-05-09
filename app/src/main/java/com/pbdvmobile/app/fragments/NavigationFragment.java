@@ -102,7 +102,6 @@ public class NavigationFragment extends Fragment {
             return false;
         });
 
-
         // To profile page
         menu.findItem(R.id.nav_profile).setVisible(!getActivity().getClass().getSimpleName().equals("ProfileActivity"));
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
@@ -162,6 +161,7 @@ public class NavigationFragment extends Fragment {
             Toast.makeText(getContext(), "Successfully logged out", Toast.LENGTH_LONG).show();
             Intent toLogin = new Intent(getActivity(), LogInActivity.class);
             startActivity(toLogin);
+            getActivity().finish();
             return false;
         });
 

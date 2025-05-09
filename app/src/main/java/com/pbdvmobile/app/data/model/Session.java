@@ -1,5 +1,7 @@
 package com.pbdvmobile.app.data.model;
 
+import com.pbdvmobile.app.data.DataManager;
+
 import java.io.Serializable;
 import java.util.Date;
 

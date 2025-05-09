@@ -324,7 +324,7 @@ public class SessionBookingsFragment extends Fragment {
 
         List<TimeSlot> takenSlotsForTutor = dataManager.getSessionDao().getTakenTimeSlot(currentTutor.getStudentNum());
 
-        long slotCheckingIntervalMillis = currentSelectedDurationMillis;
+        long slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);// currentSelectedDurationMillis;
         if (slotCheckingIntervalMillis < dataManager.getSessionDao().minutesToMseconds(30)) {
             slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);
         }
@@ -334,7 +334,7 @@ public class SessionBookingsFragment extends Fragment {
         Date now = new Date();
 
         Log.d(TAG, "Populating time spinner for date: " + selectedDate + ", duration: " + currentSelectedDurationMillis + "ms, interval: " + slotCheckingIntervalMillis + "ms");
-
+        long tempInterval = slotCheckingIntervalMillis;
         for (long currentOffsetMillis = serviceOpenTimeOffset; currentOffsetMillis < serviceCloseTimeOffset; currentOffsetMillis += slotCheckingIntervalMillis) {
             Calendar candidateStartCalendar = Calendar.getInstance();
             candidateStartCalendar.setTime(selectedDate); // selectedDate is already normalized to 00:00:00
@@ -359,6 +359,7 @@ public class SessionBookingsFragment extends Fragment {
                 if (takenSlotActualStartCal.get(Calendar.YEAR) == candidateStartCalendar.get(Calendar.YEAR) &&
                         takenSlotActualStartCal.get(Calendar.DAY_OF_YEAR) == candidateStartCalendar.get(Calendar.DAY_OF_YEAR)) {
                     if (candidateSlotForCheck.overlaps(takenSlot)) {
+                        slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);
                         isOverlapping = true;
                         break;
                     }
@@ -367,6 +368,7 @@ public class SessionBookingsFragment extends Fragment {
 
             if (!isOverlapping) {
                 String displayTime = dataManager.formatDateTime(actualCandidateStartTime.toString())[1];
+                slotCheckingIntervalMillis = tempInterval;
                 availableTimeSlots.add(new TimeSpinnerItem(displayTime, (int) currentOffsetMillis));
             }
 

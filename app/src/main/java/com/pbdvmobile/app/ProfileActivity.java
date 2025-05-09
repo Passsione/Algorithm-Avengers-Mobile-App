@@ -5,7 +5,6 @@ import static android.view.View.VISIBLE;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Layout;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -22,6 +21,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
+import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.UserSubject;
 
@@ -51,7 +51,7 @@ public class ProfileActivity extends AppCompatActivity {
             finish();
             return;
         }
-        dataManager.getSessionDao().updatePastSessionsToCompleted();
+        dataManager.getSessionDao().updatePastSessions(Session.Status.DECLINED);
 
         boolean isTutor = current_user.getUser().isTutor();
 
@@ -141,7 +141,6 @@ public class ProfileActivity extends AppCompatActivity {
 
 
 
-
         // ---- Start - Controller Buttons ----
         save = findViewById(R.id.bthSaveProfile);
         logout = findViewById(R.id.btnProfileLogOut);
@@ -154,7 +153,6 @@ public class ProfileActivity extends AppCompatActivity {
             Intent toLogin = new Intent(ProfileActivity.this, LogInActivity.class);
             startActivity(toLogin);
             finish();
-
         });
 
         /* ---- Save changes to the database */
@@ -175,7 +173,6 @@ public class ProfileActivity extends AppCompatActivity {
             Intent toLanding = new Intent(ProfileActivity.this, MainActivity.class);
             startActivity(toLanding);
             finish();
-
         });
     }
 

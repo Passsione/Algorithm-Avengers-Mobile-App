@@ -49,7 +49,7 @@ public class ExplorerFragment extends Fragment {
     DataManager dataManager;
     LogInUser current_user;
     LinearLayout results;
-    Button apply_filter;
+    Button apply_filter, clearRating;
     EditText searchView;
 
     RatingBar ratingBar;
@@ -124,11 +124,16 @@ public class ExplorerFragment extends Fragment {
         });
 
         // --- Rating controls ---
-//        ratingBar = view.findViewById(R.id.rating_filter);
+        ratingBar = view.findViewById(R.id.rating_filter);
 //        ratingBar.getRating();
-//        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
-//            itemsPositions.set(2, (int)rating);
-//        });
+        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            itemsPositions.set(2, (int)rating);
+        });
+        clearRating = view.findViewById(R.id.clear_rating);
+        clearRating.setOnClickListener(l-> {
+            itemsPositions.set(2, -1);
+            ratingBar.setRating(0);
+        });
 
 
         // --- Subjects drop down ---
@@ -209,12 +214,8 @@ public class ExplorerFragment extends Fragment {
             currentSearchQuery = searchView.getText().toString();
             display_tutors(tutors, itemsPositions, currentSearchQuery);
         });
-        if(!filtered.get())display_tutors(tutors, itemsPositions, currentSearchQuery);
-        if(results.getChildCount() == 0){
-            TextView text = new TextView(getContext());
-            text.setText("Either none of the available tutors teach your subjects or meeting your search criteria");
-            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
-            results.addView(text);
+        if(!filtered.get()) {
+            display_tutors(tutors, itemsPositions, currentSearchQuery);
         }
     }
 
@@ -244,7 +245,6 @@ public class ExplorerFragment extends Fragment {
                     }
                 }
                 if(!found)continue;
-
             }
 
             // Apply Search Filter (by education)
@@ -254,7 +254,7 @@ public class ExplorerFragment extends Fragment {
 
             // Apply Search Filter (by rating)
             if(rating >= 0) {
-                if(tutor.getAverageRating() < rating) continue;
+                if(tutor.getAverageRating(dataManager)[1] < rating) continue;
             }
 
             // Apply Search View Filter (by name)
@@ -389,6 +389,13 @@ public class ExplorerFragment extends Fragment {
             tutorCard.addView(requestSessionButton);
 
             results.addView(tutorCard);
+        }
+
+        if(results.getChildCount() == 0){
+            TextView text = new TextView(getContext());
+            text.setText("No matches found");
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            results.addView(text);
         }
     }
 

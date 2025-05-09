@@ -1,4 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/resource_type_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_agenda"
+            app:tint="?attr/colorPrimary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:contentDescription="Resource type icon"/>
+
+        <TextView
+            android:id="@+id/resource_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceListItem"
+            android:textStyle="bold"
+            tools:text="Chapter 1: Introduction to Algorithms"
+            app:layout_constraintStart_toEndOf="@id/resource_type_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/button_resource_options_menu"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/resource_tutor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody2"
+            tools:text="By: Prof. Einstein"
+            app:layout_constraintStart_toStartOf="@id/resource_title"
+            app:layout_constraintTop_toBottomOf="@id/resource_title"
+            app:layout_constraintEnd_toEndOf="@id/resource_title"
+            android:layout_marginTop="2dp"/>
+
+        <TextView
+            android:id="@+id/resource_subject_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceCaption"
+            tools:text="Subject: Computer Science"
+            app:layout_constraintStart_toStartOf="@id/resource_tutor"
+            app:layout_constraintTop_toBottomOf="@id/resource_tutor"
+            app:layout_constraintEnd_toEndOf="@id/resource_tutor"
+            android:layout_marginTop="2dp"/>
+
+        <ImageButton
+            android:id="@+id/button_resource_options_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_more_vert"
+            app:tint="?attr/colorControlNormal"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Resource options"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
+<!--
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -34,7 +114,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!--<TextView
+            &lt;!&ndash;<TextView
                 android:id="@+id/resource_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -42,7 +122,7 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:text="Short description of the resource" />
--->
+&ndash;&gt;
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -70,4 +150,4 @@
             android:contentDescription="Download resource"
             android:src="@android:drawable/ic_menu_save" />
     </LinearLayout>
-</LinearLayout>
+</LinearLayout>-->
