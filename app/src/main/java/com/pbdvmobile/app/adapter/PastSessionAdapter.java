@@ -1,5 +1,6 @@
 package com.pbdvmobile.app.adapter;
 
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -125,10 +126,10 @@ public class PastSessionAdapter extends RecyclerView.Adapter<PastSessionAdapter.
                     statusColorRes = R.color.status_generic_gray;
                     break;
             }
-      /*      // Create a drawable with this color or use a pre-defined background
+            // Create a drawable with this color or use a pre-defined background
             // For simplicity, just setting text color based on status for now
-            this.textViewPastSessionStatus.setBackgroundResource(getStatusBackground(session.getStatus())); // Using a helper
-            this.textViewPastSessionStatus.setTextColor(ContextCompat.getColor(context, android.R.color.white));
+            this.textViewPastSessionStatus.setBackgroundResource(getStatusBackground(session.getStatus()));
+            this.textViewPastSessionStatus.setTextColor(ContextCompat.getColor(textViewPastSessionStatus.getContext(), statusColorRes));
 
 
         }
@@ -138,7 +139,7 @@ public class PastSessionAdapter extends RecyclerView.Adapter<PastSessionAdapter.
                 case CANCELLED: return R.drawable.status_background_cancelled; // Reddish
                 case DECLINED: return R.drawable.status_background_declined;   // Orange/Yellowish
                 default: return R.drawable.status_background_generic; // Grayish
-            }*/
+            }
         }
     }
 }

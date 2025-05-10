@@ -91,6 +91,11 @@ public class MainActivity extends AppCompatActivity {
                 Fragment selectedFragment = null;
                 int itemId = item.getItemId(); // Get item ID once
                 FloatingActionButton fab = findViewById(R.id.dashboard_add_resources);
+                fab.setOnClickListener( l ->{
+                    Intent toResourceUpload = new Intent(MainActivity.this, ResourceUploadActivity.class);
+                    startActivity(toResourceUpload);
+                });
+
 
                 // Determine which fragment to load based on the selected item ID
                 if (itemId == R.id.navigation_dashboard) {
@@ -102,17 +107,10 @@ public class MainActivity extends AppCompatActivity {
                 } else if (itemId == R.id.navigation_resources) {
                     selectedFragment = new ResourcesFragment();
                     fab.setVisibility(current_user.getUser().isTutor() ? VISIBLE : GONE);
-                    fab.setOnClickListener( l ->{
-                        Intent toResourceUpload = new Intent(MainActivity.this, ResourceUploadActivity.class);
-                        startActivity(toResourceUpload);
-                    });
                 } else if (itemId == R.id.navigation_tutor_center) {
                     selectedFragment = new TutorDashboardFragment();
                     fab.setVisibility(VISIBLE);
-                    fab.setOnClickListener( l ->{
-                        Intent toResourceUpload = new Intent(MainActivity.this, ResourceUploadActivity.class);
-                        startActivity(toResourceUpload);
-                    });
+
                 }
                 // Replace the current fragment with the selected one
                 if (selectedFragment != null) {

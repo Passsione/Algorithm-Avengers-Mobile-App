@@ -7,16 +7,12 @@
     android:layout_height="match_parent"
     tools:context=".AIBaseActivity">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragmentContainerView"
-        android:name="com.pbdvmobile.app.fragments.NavigationFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <ScrollView
         android:id="@+id/scrollView2"
+        app:layout_constraintTop_toBottomOf="@id/fragmentContainerView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="45dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white"
@@ -45,6 +41,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="12dp"
+                android:id="@+id/uploadCard"
                 app:cardElevation="4dp">
 
                 <LinearLayout
@@ -153,7 +150,7 @@
                             android:layout_width="40dp"
                             android:layout_height="40dp"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@android:drawable/ic_lock_power_off"
+                            android:src="@android:drawable/ic_delete"
                             app:tint="@color/gray" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -250,6 +247,7 @@
                 android:layout_marginTop="16dp"
                 android:backgroundTint="@color/primary"
                 android:enabled="false"
+                android:visibility="gone"
                 android:text="Generate Summary"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
@@ -267,4 +265,12 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainerView"
+        android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

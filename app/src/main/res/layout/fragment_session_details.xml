@@ -293,15 +293,16 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
                             android:text="View Full Profile" />
+
                         <Button
                             android:id="@+id/buttonTogglePartnerReview"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+
                             android:text="Show Partner's Review"
-                            app:layout_constraintTop_toBottomOf="@id/cardPartnerReviewSection"
+                            android:visibility="gone"
                             app:layout_constraintStart_toStartOf="parent"
-                            android:layout_marginTop="8dp"
-                            android:visibility="gone"/>
+                            app:layout_constraintTop_toBottomOf="@id/cardPartnerReviewSection" />
                     </LinearLayout>
 
                 </LinearLayout>

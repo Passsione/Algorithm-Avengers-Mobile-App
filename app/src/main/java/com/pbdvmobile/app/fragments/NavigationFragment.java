@@ -98,6 +98,7 @@ public class NavigationFragment extends Fragment {
         menu.findItem(R.id.nav_home).setVisible(!getActivity().getClass().getSimpleName().equals("MainActivity"));
         menu.findItem(R.id.nav_home).setOnMenuItemClickListener(v ->{
             Intent toHome = new Intent(getActivity(), MainActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toHome);
             return false;
         });
@@ -106,6 +107,7 @@ public class NavigationFragment extends Fragment {
         menu.findItem(R.id.nav_profile).setVisible(!getActivity().getClass().getSimpleName().equals("ProfileActivity"));
         menu.findItem(R.id.nav_profile).setOnMenuItemClickListener(v ->{
             Intent toProfile = new Intent(getActivity(), ProfileActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toProfile);
             return false;
         });
@@ -114,6 +116,7 @@ public class NavigationFragment extends Fragment {
         menu.findItem(R.id.nav_schedule).setOnMenuItemClickListener(v ->{
             Intent toHistory = new Intent(getActivity(), ScheduleActivity.class);
             toHistory.putExtra("job_type", "session_history");
+            host.setVisibility(View.GONE);
             startActivity(toHistory);
             return false;
         });
@@ -121,36 +124,42 @@ public class NavigationFragment extends Fragment {
         // To Notifications page
         menu.findItem(R.id.nav_notifications).setOnMenuItemClickListener(v ->{
             Intent toNotifications = new Intent(getActivity(), NotificationsActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toNotifications);
             return false;
         });
         // To AI Quiz page
         menu.findItem(R.id.nav_quiz_generator).setOnMenuItemClickListener(v ->{
             Intent toAIQuiz = new Intent(getActivity(), AIQuizActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toAIQuiz);
             return false;
         });
         // To AI Summarizer page
         menu.findItem(R.id.nav_ai_summary).setOnMenuItemClickListener(v ->{
             Intent toAISummarizer = new Intent(getActivity(), AIBaseActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toAISummarizer);
             return false;
         });
         // To Redeem Credits
         menu.findItem(R.id.nav_redeem_credits).setOnMenuItemClickListener(v ->{
             Intent toRedeem = new Intent(getActivity(), RedeemCreditActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toRedeem);
             return false;
         });
         // To payments gateway
         menu.findItem(R.id.nav_payments_details).setOnMenuItemClickListener(v ->{
             Intent toPayment = new Intent(getActivity(), PaymentGatewayActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toPayment);
             return false;
         });
         // To payments history
         menu.findItem(R.id.nav_payments_history).setOnMenuItemClickListener(v ->{
             Intent toPayHistory = new Intent(getActivity(), PaymentHistoryActivity.class);
+            host.setVisibility(View.GONE);
             startActivity(toPayHistory);
             return false;
         });
@@ -160,8 +169,9 @@ public class NavigationFragment extends Fragment {
             current_user.logOut();
             Toast.makeText(getContext(), "Successfully logged out", Toast.LENGTH_LONG).show();
             Intent toLogin = new Intent(getActivity(), LogInActivity.class);
-            startActivity(toLogin);
+            host.setVisibility(View.GONE);
             getActivity().finish();
+            startActivity(toLogin);
             return false;
         });
 

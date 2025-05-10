@@ -84,12 +84,13 @@ public class DataManager implements Serializable {
             }
             // dumby Tutor
             if (instance.getUserDao().getUserByStudentNum(11111111) == null) {
-                User dumbyTutee = new User(11111111, "Dumby", "Tutor");
-                dumbyTutee.setEmail("11111111@dut4life.ac.za");
-                dumbyTutee.setPassword("password1");
-                dumbyTutee.setTutor(true);
-                dumbyTutee.setEducationLevel(User.EduLevel.values()[instance.randomIndex(User.EduLevel.values().length)]);
-                instance.getUserDao().insertUser(dumbyTutee);
+                User dumbyTutor = new User(11111111, "Dumby", "Tutor");
+                dumbyTutor.setEmail("11111111@dut4life.ac.za");
+                dumbyTutor.setPassword("password1");
+                dumbyTutor.setTutor(true);
+                dumbyTutor.setCredits(15);
+                dumbyTutor.setEducationLevel(User.EduLevel.values()[instance.randomIndex(User.EduLevel.values().length)]);
+                instance.getUserDao().insertUser(dumbyTutor);
             }
             // main account
             if (instance.getUserDao().getUserByStudentNum(22323809) == null) {

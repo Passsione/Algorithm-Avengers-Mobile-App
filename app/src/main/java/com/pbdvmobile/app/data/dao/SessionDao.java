@@ -192,7 +192,7 @@ public class SessionDao {
         values.put(SqlOpenHelper.KEY_SESSION_STATUS, status.name());
 
         String whereClause = SqlOpenHelper.KEY_SESSION_END_TIME + " < ? AND " +
-                SqlOpenHelper.KEY_SESSION_STATUS + " = ? OR"+
+                SqlOpenHelper.KEY_SESSION_STATUS + " = ? OR "+
                 SqlOpenHelper.KEY_SESSION_STATUS + " = ?";
         String[] whereArgs = new String[]{String.valueOf(
                 new Date().getTime()),

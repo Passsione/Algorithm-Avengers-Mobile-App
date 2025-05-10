@@ -4,6 +4,7 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="primary">#7727EF</color>
+    <color name="secondary">#A87DE6</color>
     <color name="submit">#6EB170</color>
 
     <color name="primary_dark">#344052</color>
@@ -18,7 +19,11 @@
     <color name="status_pending">#FFC107</color>
     <color name="status_cancelled">#F44336</color>
     <color name="background_light">#F5F5F5</color>
-    <color name="status_completed">#00FFE5</color>
+    <color name="status_completed">#0F676F</color>
     <color name="status_declined">#7E403D</color>
     <color name="status_generic_gray">#483E3E</color>
+    <color name="status_completed_bg">#C8E6C9</color>
+    <color name="status_cancelled_bg">#FFCDD2</color>
+    <color name="status_declined_bg">#FFECB3</color>
+    <color name="status_generic_bg">#CFD8DC</color>
 </resources>

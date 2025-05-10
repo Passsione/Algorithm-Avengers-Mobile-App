@@ -442,13 +442,7 @@ public class SessionBookingsFragment extends Fragment {
     }
 
     private void handleSubmitBooking() {
-        /*// Normalize selectedDate to the start of the day for consistent comparison
-        Calendar normalizedSelectedDateCal = Calendar.getInstance();
-        normalizedSelectedDateCal.setTime(selectedDate);
-        normalizedSelectedDateCal.set(Calendar.HOUR_OF_DAY, 0);
-        normalizedSelectedDateCal.set(Calendar.MINUTE, 0);
-        normalizedSelectedDateCal.set(Calendar.SECOND, 0);
-        normalizedSelectedDateCal.set(Calendar.MILLISECOND, 0);*/
+
         // Ensure selectedDate is purely the date part (normalized to midnight)
         Calendar normalizedSelectedDateCal = Calendar.getInstance();
         normalizedSelectedDateCal.setTime(selectedDate); // selectedDate should already be normalized
