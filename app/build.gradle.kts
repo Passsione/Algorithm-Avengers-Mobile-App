@@ -37,6 +37,7 @@ android {
 dependencies {
     implementation(libs.recyclerview)
     implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.play.services.wallet)
     // Room components
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -46,6 +47,9 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // Optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
+
+        implementation("com.google.android.gms:play-services-wallet:19.4.0")
+        implementation("com.google.android.material:material:1.12.0")
 
     // Optional - Test helpers
     testImplementation("androidx.room:room-testing:$roomVersion")

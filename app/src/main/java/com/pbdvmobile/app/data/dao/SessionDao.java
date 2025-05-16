@@ -186,14 +186,14 @@ public class SessionDao {
         return ratings;
     }
 
-    public void updatePastSessions(Session.Status status) {
+    public void updatePastSessions() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_STATUS, status.name());
+        values.put(SqlOpenHelper.KEY_SESSION_STATUS, Session.Status.DECLINED.name());
 
-        String whereClause = SqlOpenHelper.KEY_SESSION_END_TIME + " < ? AND " +
+        String whereClause = SqlOpenHelper.KEY_SESSION_END_TIME + " < ? AND ( " +
                 SqlOpenHelper.KEY_SESSION_STATUS + " = ? OR "+
-                SqlOpenHelper.KEY_SESSION_STATUS + " = ?";
+                SqlOpenHelper.KEY_SESSION_STATUS + " = ? )";
         String[] whereArgs = new String[]{String.valueOf(
                 new Date().getTime()),
                 Session.Status.PENDING.name(),
@@ -207,7 +207,6 @@ public class SessionDao {
                                   TimeSlot requestedActualSlot, // This is now UNPADDED
                                   int subjectId, String location,
                                   Date actualDbStartTime, Date actualDbEndTime) {
-
 
     // 0. Check if requested ACTUAL slot is within OPEN_TIME and CLOSE_TIME
     Calendar reqStartCal = Calendar.getInstance();

@@ -127,7 +127,7 @@ public class ResourceUploadActivity extends AppCompatActivity {
         } else {
             setTitle("Upload Resource");
             uploadPdfButton.setText("Upload Resource");
-            uploadPdfButton.setEnabled(false); // Enabled only after file selection in create mode
+//            uploadPdfButton.setEnabled(false); // Enabled only after file selection in create mode
         }
 
 
@@ -283,7 +283,6 @@ public class ResourceUploadActivity extends AppCompatActivity {
                     Toast.makeText(ResourceUploadActivity.this, "Failed to upload resource to database.", Toast.LENGTH_LONG).show();
                 }
                 selectedPdfUri = null;
-                uploadPdfButton.setEnabled(false);
             });
         });
     }

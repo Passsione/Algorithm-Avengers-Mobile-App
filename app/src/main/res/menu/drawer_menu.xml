@@ -28,7 +28,7 @@
                 android:title="AI Summarizer" />
             <item
                 android:id="@+id/nav_quiz_generator"
-                android:icon="@android:drawable/ic_menu_info_details"
+                android:icon="@drawable/ic_edit_pen"
                 android:title="Quiz Generator" />
 
             <!--<item
@@ -46,7 +46,7 @@
         <menu>
             <item
                 android:id="@+id/nav_redeem_credits"
-                android:icon="@android:drawable/ic_menu_search"
+                android:icon="@drawable/ic_prize_trophy"
                 android:title="Redeem Credits" />
             <item
                 android:id="@+id/nav_payments_details"

@@ -20,8 +20,8 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
+import com.pbdvmobile.app.PartnerProfileActivity;
 import com.pbdvmobile.app.R;
-import com.pbdvmobile.app.TutorProfile; // Keep if viewProfile uses it
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.model.Session;
@@ -172,10 +172,8 @@ public class SessionDetailsFragment extends Fragment {
                     .into(imageViewPartnerProfile);
 
             buttonViewPartnerProfile.setOnClickListener(v -> {
-                Intent toProfile = new Intent(getContext(), TutorProfile.class);
-                // Pass the 'sessionPartner' which could be a tutor or tutee
-                // TutorProfile activity might need to handle displaying a generic user profile
-                toProfile.putExtra("tutor", sessionPartner); // Assuming TutorProfile can handle any User object
+                Intent toProfile = new Intent(getContext(), PartnerProfileActivity.class);
+                toProfile.putExtra("tutor", sessionPartner); // Assuming PartnerProfileActivity can handle any User object
                 startActivity(toProfile);
             });
 

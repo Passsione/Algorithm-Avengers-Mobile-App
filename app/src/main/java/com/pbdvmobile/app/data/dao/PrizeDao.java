@@ -25,6 +25,7 @@ public class PrizeDao {
 
         ContentValues values = new ContentValues();
         values.put(SqlOpenHelper.KEY_PRIZE_NAME, prize.getPrizeName());
+        values.put(SqlOpenHelper.KEY_PRIZE_COST, prize.getCostInCredits());
 
         long id = db.insert(SqlOpenHelper.TABLE_PRIZES, null, values);
         db.close();
@@ -45,6 +46,7 @@ public class PrizeDao {
             prize = new Prize();
             prize.setPrizeId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_PRIZE_ID)));
             prize.setPrizeName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_PRIZE_NAME)));
+            prize.setCostInCredits(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_PRIZE_COST)));
             cursor.close();
         }
         db.close();
@@ -63,6 +65,7 @@ public class PrizeDao {
                 Prize prize = new Prize();
                 prize.setPrizeId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_PRIZE_ID)));
                 prize.setPrizeName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_PRIZE_NAME)));
+                prize.setCostInCredits(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_PRIZE_COST)));
                 prizes.add(prize);
             } while (cursor.moveToNext());
         }
@@ -76,6 +79,7 @@ public class PrizeDao {
 
         ContentValues values = new ContentValues();
         values.put(SqlOpenHelper.KEY_PRIZE_NAME, prize.getPrizeName());
+        values.put(SqlOpenHelper.KEY_PRIZE_COST, prize.getCostInCredits());
 
         int rowsAffected = db.update(SqlOpenHelper.TABLE_PRIZES, values,
                 SqlOpenHelper.KEY_PRIZE_ID + "=?",

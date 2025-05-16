@@ -31,6 +31,7 @@ import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class DashboardFragment extends Fragment {
@@ -72,7 +73,7 @@ public class DashboardFragment extends Fragment {
 
         upcoming.removeAllViews();
         pending.removeAllViews();
-        sessions.sort((n1, n2) -> n1.getStartTime().compareTo(n2.getStartTime()));
+        sessions.sort(Comparator.comparing(Session::getStartTime));
 
         for(Session session : sessions){
 

@@ -20,6 +20,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.adapter.PastSessionAdapter;
@@ -50,7 +51,8 @@ public class ScheduleHistoryFragment extends Fragment implements PastSessionAdap
 
     private AutoCompleteTextView actPartner, actStatus, actSubject;
     private EditText editTextLocationFilter;
-    private Button buttonSelectDateFilter, buttonClearFilters;
+    private Button buttonSelectDateFilter, buttonClearFilters, buttonCloseFilters;
+    private LinearLayout filterLayout;
 
     private DataManager dataManager;
     private LogInUser currentUser;
@@ -83,6 +85,8 @@ public class ScheduleHistoryFragment extends Fragment implements PastSessionAdap
         actSubject = view.findViewById(R.id.autoCompleteTextViewSubject);
         editTextLocationFilter = view.findViewById(R.id.editTextLocationFilter);
         buttonSelectDateFilter = view.findViewById(R.id.buttonSelectDateFilter);
+        filterLayout = view.findViewById(R.id.filtersView);
+        buttonCloseFilters = view.findViewById(R.id.buttonFilter);
         buttonClearFilters = view.findViewById(R.id.buttonClearFilters);
 
         allPastSessions = new ArrayList<>();
@@ -104,14 +108,16 @@ public class ScheduleHistoryFragment extends Fragment implements PastSessionAdap
         Set<Integer> addedSessionIds = new HashSet<>(); // To avoid duplicates if a user tutored themselves (unlikely)
 
         Date now = new Date();
+
         for (Session s : sessionsAsTutor) {
-            if (!addedSessionIds.contains(s.getId()) && s.getEndTime().before(now)) { // Consider only sessions that have ended
+
+            if (!addedSessionIds.contains(s.getId()) && qualifies(s, now)) { // Consider only sessions that have ended
                 allPastSessions.add(s);
                 addedSessionIds.add(s.getId());
             }
         }
         for (Session s : sessionsAsTutee) {
-            if (!addedSessionIds.contains(s.getId()) && s.getEndTime().before(now)) {
+            if (!addedSessionIds.contains(s.getId()) && qualifies(s, now)) {
                 allPastSessions.add(s);
                 addedSessionIds.add(s.getId());
             }
@@ -165,6 +171,12 @@ public class ScheduleHistoryFragment extends Fragment implements PastSessionAdap
         actSubject.setAdapter(subjectAdapter);
         actSubject.setOnItemClickListener((parent, view, position, id) -> applyFilters());
 
+        // Open Close Filters
+        buttonCloseFilters.setOnClickListener(v ->{
+           filterLayout.setVisibility(filterLayout.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+           buttonCloseFilters.setText(filterLayout.getVisibility() == View.VISIBLE ? "Close Filters" : "Open Filters");
+        });
+
         // Location Filter
         editTextLocationFilter.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -186,12 +198,19 @@ public class ScheduleHistoryFragment extends Fragment implements PastSessionAdap
             applyFilters();
         });
 
+
         // Set initial filter values (optional, if you want them pre-filled)
         actPartner.setText("Any Partner", false);
         actStatus.setText("Any Status", false);
         actSubject.setText("Any Subject", false);
     }
 
+    private boolean qualifies(Session s, Date now){
+        return s.getEndTime().before(now) ||
+                s.getStatus() == Session.Status.COMPLETED ||
+                s.getStatus() == Session.Status.CANCELLED ||
+                s.getStatus() == Session.Status.DECLINED;
+    }
 
     private void showDatePickerDialog() {
         Calendar cal = selectedDateCalendar != null ? selectedDateCalendar : Calendar.getInstance();

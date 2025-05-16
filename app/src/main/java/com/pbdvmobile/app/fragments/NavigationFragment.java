@@ -13,9 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.pbdvmobile.app.AIBaseActivity;
 import com.pbdvmobile.app.AIQuizActivity;
@@ -36,6 +38,7 @@ public class NavigationFragment extends Fragment {
     ImageButton menuswitch;
     NavigationView nav;
     TextView nav_header, nav_header_email, flash;
+    ImageView nav_header_img;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -79,6 +82,7 @@ public class NavigationFragment extends Fragment {
         var headerView = nav.getHeaderView(0);
         nav_header = headerView.findViewById(R.id.nav_header_name);
         nav_header_email = headerView.findViewById(R.id.nav_header_email);
+        nav_header_img = headerView.findViewById(R.id.nav_header_image);
 
         // Handle potential null values for first and last name
         String firstName = current_user.getUser().getFirstName();
@@ -91,6 +95,12 @@ public class NavigationFragment extends Fragment {
 
         nav_header.setText(fullName.trim());
         nav_header_email.setText(email.trim());
+        Glide.with(getContext())
+                .load(current_user.getUser().getProfileImageUrl())
+                .placeholder(R.mipmap.ic_launcher_round)
+                .error(R.mipmap.ic_launcher_round)
+                .circleCrop()
+                .into(nav_header_img);
 
         //navigation menu
         Menu menu = nav.getMenu();

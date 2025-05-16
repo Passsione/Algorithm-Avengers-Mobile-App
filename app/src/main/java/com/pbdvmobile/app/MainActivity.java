@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             finish(); // can't come back to main activity
             return;
         }
-        dataManager.getSessionDao().updatePastSessions(Session.Status.DECLINED);
+        dataManager.getSessionDao().updatePastSessions();
         // ---- Start - Bottom Navigation Section
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);

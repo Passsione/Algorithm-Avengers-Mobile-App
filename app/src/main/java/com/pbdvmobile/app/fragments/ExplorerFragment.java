@@ -30,6 +30,7 @@ import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.pbdvmobile.app.LogInActivity;
 import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.ScheduleActivity;
@@ -133,6 +134,9 @@ public class ExplorerFragment extends Fragment {
         clearRating.setOnClickListener(l-> {
             itemsPositions.set(2, -1);
             ratingBar.setRating(0);
+            currentSearchQuery = searchView.getText().toString();
+            display_tutors(tutors, itemsPositions, currentSearchQuery);
+
         });
 
 
@@ -272,8 +276,8 @@ public class ExplorerFragment extends Fragment {
             // ***** ADD MARGIN HERE *****
             // Add a bottom margin to create a gap between cards.
             // You can adjust the dp value (e.g., 8dp) to your preference.
-            int bottomMarginInPx = dpToPx(8); // Or whatever gap you want
-            parentParams.setMargins(0, 0, 0, bottomMarginInPx);
+            int MarginInPx = dpToPx(8); // Or whatever gap you want
+            parentParams.setMargins(MarginInPx, 0, MarginInPx, MarginInPx);
 
             tutorCard.setLayoutParams(parentParams);
             tutorCard.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
@@ -285,7 +289,12 @@ public class ExplorerFragment extends Fragment {
                     dpToPx(80),
                     dpToPx(80));
             tutorImage.setLayoutParams(imageParams);
-            tutorImage.setImageResource(R.mipmap.ic_launcher); // Replace with your actual drawable resource
+            Glide.with(getContext())
+                    .load(tutor.getProfileImageUrl())
+                    .placeholder(R.mipmap.ic_launcher_round)
+                    .error(R.mipmap.ic_launcher_round)
+                    .circleCrop()
+                    .into(tutorImage);
             tutorImage.setContentDescription("Tutor profile picture");
             tutorCard.addView(tutorImage);
 

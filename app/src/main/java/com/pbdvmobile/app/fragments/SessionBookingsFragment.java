@@ -1,8 +1,6 @@
 
 package com.pbdvmobile.app.fragments;
 
-import static com.pbdvmobile.app.data.Schedule.TimeSlot.DEFAULT_TIME_PADDING;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,8 +25,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.pbdvmobile.app.R;
-import com.pbdvmobile.app.TutorProfile;
+import com.pbdvmobile.app.PartnerProfileActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.Schedule.TimeSlot;
@@ -190,7 +189,7 @@ public class SessionBookingsFragment extends Fragment {
     private void initializeViews(View view) {
         tutorSubjectsDisplay = view.findViewById(R.id.session_booking_tutor_subjects);
         tutorNameDisplay = view.findViewById(R.id.session_booking_tutor_name);
-        tutorProfileImage = view.findViewById(R.id.session_booking_tutor_image); // Make sure this ID exists
+        tutorProfileImage = view.findViewById(R.id.session_booking_tutor_image);
         tutorRatingBar = view.findViewById(R.id.session_booking_tutor_rating);
         viewProfileButton = view.findViewById(R.id.booking_tutor_profile);
         subjectsRadioGroup = view.findViewById(R.id.subjects_radio_group);
@@ -205,7 +204,12 @@ public class SessionBookingsFragment extends Fragment {
     private void populateTutorInfo(User tutor, String subjectsDisplayString, View fragmentView) {
         tutorNameDisplay.setText(String.format("%s %s", tutor.getFirstName(), tutor.getLastName()));
         tutorSubjectsDisplay.setText(subjectsDisplayString);
-
+        Glide.with(getContext())
+                .load(tutor.getProfileImageUrl())
+                .placeholder(R.mipmap.ic_launcher_round)
+                .error(R.mipmap.ic_launcher_round)
+                .circleCrop()
+                .into(tutorProfileImage);
         double ratingValue = dataManager.getSessionDao().getAverageRatingByStudentNum(tutor.getStudentNum())[1]; // Assuming [1] is tutor's rating as tutee
         if (ratingValue > 0) { // Usually ratings are > 0 if set. -1 or 0 might mean not rated.
             tutorRatingBar.setRating((float) ratingValue);
@@ -229,7 +233,7 @@ public class SessionBookingsFragment extends Fragment {
             }
         }
         viewProfileButton.setOnClickListener(l -> {
-            Intent toProfile = new Intent(getContext(), TutorProfile.class);
+            Intent toProfile = new Intent(getActivity(), PartnerProfileActivity.class);
             toProfile.putExtra("tutor", tutor);
             startActivity(toProfile);
         });
