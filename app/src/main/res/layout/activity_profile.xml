@@ -57,60 +57,69 @@
             android:background="@drawable/circle_border"
             android:clipToOutline="true"/>
 
-        <Button
-            android:id="@+id/btnChangeProfileImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Change Photo"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/imgProfileImage"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
         <LinearLayout
             android:id="@+id/ProfileInfoCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/rounded_card"
             android:orientation="vertical"
             android:padding="16dp"
-            android:background="@drawable/rounded_card"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnChangeProfileImage">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imgProfileImage">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
                 android:text="Personal Information"
-                android:textSize="18sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp"/>
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
+            <RatingBar
+                android:id="@+id/ProfileTuteeRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:isIndicator="true"
+                style="?android:attr/ratingBarStyleSmall"
+                android:clickable="false"/>
+            <RatingBar
+                android:id="@+id/ProfileTutorRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:isIndicator="true"
+                style="?android:attr/ratingBarStyleSmall"
+                android:clickable="false"/>
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="First Name">
+
                 <EditText
                     android:id="@+id/edtProfileFirstName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName"/>
+                    android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Last Name">
+
                 <EditText
                     android:id="@+id/edtProfileLastName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName"/>
+                    android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
-          <!--  <com.google.android.material.textfield.TextInputLayout
+            <!--  <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Email">
@@ -126,14 +135,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Bio (Optional)">
+
                 <EditText
                     android:id="@+id/edtProfileBio"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textMultiLine"
                     android:gravity="top|start"
+                    android:inputType="textMultiLine"
                     android:lines="3"
-                    android:maxLines="5"/>
+                    android:maxLines="5" />
             </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
@@ -197,6 +207,17 @@
             app:layout_constraintStart_toEndOf="@+id/bthSaveProfile"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/bthSaveProfile" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/updateProfileImage"
+            android:layout_width="73dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="84dp"
+            android:layout_marginTop="96dp"
+            android:clickable="true"
+            app:layout_constraintStart_toStartOf="@+id/imgProfileImage"
+            app:layout_constraintTop_toBottomOf="@+id/profileHeaderCardView"
+            app:srcCompat="@android:drawable/ic_input_add" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

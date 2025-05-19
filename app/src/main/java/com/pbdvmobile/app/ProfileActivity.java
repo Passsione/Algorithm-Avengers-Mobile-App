@@ -1,5 +1,7 @@
 package com.pbdvmobile.app;
 
+import static android.view.View.GONE;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
@@ -13,6 +15,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +45,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.model.Subject;
@@ -58,9 +62,12 @@ public class ProfileActivity extends AppCompatActivity {
     DataManager dataManager;
     LogInUser current_user;
     ImageView imgProfileImage;
+    FloatingActionButton updateProfileImage;
     Button btnSaveProfile, btnProfileLogOut;
+    LinearLayout subjectLayout;
     Switch tutor;
     EditText edtFirstName, edtLastName, edtEmail, edtBio;
+    RatingBar tutorRating, tuteeRating;
     boolean suitorable = false;
 
     // pickImageLauncher - MODIFIED to copy the image
@@ -155,6 +162,16 @@ public class ProfileActivity extends AppCompatActivity {
 //            edtEmail.setText(current_user.getUser().getEmail());
             edtBio.setText(current_user.getUser().getBio());
             tutor.setChecked(current_user.getUser().isTutor());
+            double[] ratingUser = dataManager.getSessionDao().getAverageRatingByStudentNum(current_user.getUser().getStudentNum());
+            if( ratingUser[0] >= 0)
+                tuteeRating.setRating((float) ratingUser[0]);
+            else
+                tuteeRating.setVisibility(GONE);
+            if( ratingUser[1] >= 0)
+                tutorRating.setRating((float) ratingUser[1]);
+            else
+                tutorRating.setVisibility(GONE);
+
         } else {
             Log.e(TAG, "loadUserData: current_user or getUser() is null");
             // Handle this case, maybe navigate to login or show an error
@@ -191,7 +208,7 @@ public class ProfileActivity extends AppCompatActivity {
             return insets;
         });
 
-       /* dataManager = DataManager.getInstance(this);
+        dataManager = DataManager.getInstance(this);
         current_user = LogInUser.getInstance(dataManager);
 
         if(!current_user.isLoggedIn()){
@@ -200,10 +217,10 @@ public class ProfileActivity extends AppCompatActivity {
             finish();
             return;
         }
+        /*
         dataManager.getSessionDao().updatePastSessions(Session.Status.DECLINED);
 
         boolean isTutor = current_user.getUser().isTutor();
-
         // ---- Start - User Info ----
         LinearLayout profileInfoCard = findViewById(R.id.ProfileInfoCard);
         LinearLayout subjectLayout = findViewById(R.id.profile_subjects);
@@ -288,73 +305,7 @@ public class ProfileActivity extends AppCompatActivity {
             }
         });
 
-
-
-        // ---- Start - Controller Buttons ----
-        save = findViewById(R.id.bthSaveProfile);
-        logout = findViewById(R.id.btnProfileLogOut);
-
-        // ---- Logout ----
-        logout.setOnClickListener(v ->{
-            current_user.logOut();
-            Toast.makeText(this, "Logged Out", Toast.LENGTH_LONG).show();
-
-            Intent toLogin = new Intent(ProfileActivity.this, LogInActivity.class);
-            startActivity(toLogin);
-            finish();
-        });
-
-        */
-        /* ---- Save changes to the database */
-        /*
-        save.setOnClickListener(v -> {
-            if(!name.getText().toString().isEmpty())current_user.getUser().setFirstName(name.getText().toString());
-            if(!surname.getText().toString().isEmpty())current_user.getUser().setLastName(surname.getText().toString());
-            if(!password.getText().toString().isEmpty())current_user.getUser().setPassword(password.getText().toString());
-            if(suitorable){
-                current_user.getUser().setTutor(tutor.isChecked());
-            }else
-                if(tutor.isChecked()){
-                    dataManager.displayError("You don't qualify for tutoring");
-                    current_user.getUser().setTutor(false);
-                }
-            if(bio != null && !bio.getText().toString().isEmpty())current_user.getUser().setBio(bio.getText().toString());
-            dataManager.getUserDao().updateUser(current_user.getUser());
-            Toast.makeText(this, "Changes saved", Toast.LENGTH_LONG).show();
-            Intent toLanding = new Intent(ProfileActivity.this, MainActivity.class);
-            startActivity(toLanding);
-            finish();
-        });
-    }
-
-    private void displaySubjects(LinearLayout subjectLayout) {
-        subjectLayout.removeAllViews();
-        TextView textView = new TextView(this);
-        textView.setText("Check subjects you would like to tutor (Disabled subjects mean you don't quailfy)");
-        textView.setTextSize(16);
-        subjectLayout.addView(textView);
-        for(UserSubject subject : dataManager.getSubjectDao().getUserSubjects(current_user.getUser().getStudentNum())){
-            CheckBox subjectName = new CheckBox(this);
-            Subject dUserSubject = dataManager.getSubjectDao().getSubjectById(subject.getSubjectId());
-            subjectName.setText(dUserSubject.getSubjectName() + ", Grade: "+subject.getMark());
-            subjectName.setChecked(subject.getTutoring());
-            subjectName.setOnClickListener(l ->{
-                subject.setTutoring(!subject.getTutoring());
-                dataManager.getSubjectDao().updateUserSubject(subject);
-            });
-            boolean test = dataManager.qualifies(subject, current_user.getUser());
-            if(test)suitorable = true;
-//            else tutor.setChecked(false);
-            subjectName.setEnabled(test);
-            subjectLayout.addView(subjectName);
-        }
-    }
-
-}*/
-
-
-        dataManager = DataManager.getInstance(this);
-        current_user = LogInUser.getInstance(dataManager);
+*/
 
         // Initialize Views
         imgProfileImage = findViewById(R.id.imgProfileImage);
@@ -365,24 +316,29 @@ public class ProfileActivity extends AppCompatActivity {
         edtLastName = findViewById(R.id.edtProfileLastName);
 //        edtEmail = findViewById(R.id.edtProfileEmail);
         edtBio = findViewById(R.id.edtProfileBio);
+        updateProfileImage = findViewById(R.id.updateProfileImage);
+        tuteeRating = findViewById(R.id.ProfileTuteeRating);
+        tutorRating = findViewById(R.id.ProfileTutorRating);
 
         // Load user data
         loadUserData();
 
         // Set up listeners
+        updateProfileImage.setOnClickListener(v -> showImagePickerDialog());
         imgProfileImage.setOnClickListener(v -> showImagePickerDialog());
         btnSaveProfile.setOnClickListener(v -> saveProfileChanges());
         btnProfileLogOut.setOnClickListener(v -> logout());
-
         // Display Subjects
-        LinearLayout subjectLayout = findViewById(R.id.ProfileSubjectCard);
-        displaySubjects(subjectLayout);
+        subjectLayout = findViewById(R.id.ProfileSubjectCard);
+        tutor.setOnClickListener(v -> {
+
+            if(tutor.isChecked())displaySubjects(subjectLayout);
+            else subjectLayout.setVisibility(GONE);
+        });
     }
 
 
-    // NEW HELPER: Creates an image file in the app's internal files directory (e.g., /data/data/com.yourapp/files/Pictures)
-    // Or could use getCacheDir() if temporary storage is preferred.
-    // Using getFilesDir() makes it more persistent until app is uninstalled or data cleared.
+
     private File createImageFileInAppDir(String prefix) throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = prefix + timeStamp + "_";
@@ -418,7 +374,6 @@ public class ProfileActivity extends AppCompatActivity {
             Log.d(TAG, "Successfully copied from " + sourceUri + " to " + destinationFile.getAbsolutePath());
         }
     }
-
 
     private void showImagePickerDialog() {
         final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
@@ -504,5 +459,6 @@ public class ProfileActivity extends AppCompatActivity {
             subjectName.setEnabled(test);
             subjectLayout.addView(subjectName);
         }
+        tutor.setClickable(suitorable);
     }
 }

@@ -8,34 +8,36 @@
     android:id="@+id/main"
     tools:context=".PartnerProfileActivity">
 
-    <!-- Toolbar -->
-
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="wrap_content"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainerView4"
+        android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fragmentContainerView4"
-        tools:layout_conversion_absoluteHeight="731dp"
-        tools:layout_editor_absoluteY="0dp"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_conversion_absoluteWidth="411dp">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/fragment_navigation" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/fragmentContainerView4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Header Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/primary_light"
                 android:orientation="vertical"
-                android:padding="16dp"
-                tools:layout_conversion_absoluteHeight="217dp"
-                tools:layout_editor_absoluteY="0dp"
-                tools:layout_editor_absoluteX="0dp"
-                tools:layout_conversion_absoluteWidth="411dp">
+                android:padding="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -43,32 +45,34 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                            android:id="@+id/img_tutor_profile"
-                            android:layout_width="96dp"
-                            android:layout_height="96dp"
-                            android:src="@mipmap/ic_launcher_round" />
+                        android:id="@+id/img_tutor_profile"
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:src="@mipmap/ic_launcher_round"
+                        android:contentDescription="Partner's profile image"/>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginStart="16dp"
+                        android:layout_weight="1"
                         android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/tv_tutor_name"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Dr. John Smith"
+                            tools:text="Dr. John Smith"
                             android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <LinearLayout
+                            android:id="@+id/layout_tutor_rating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
                             android:layout_marginTop="4dp"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
                             <RatingBar
                                 android:id="@+id/rating_tutor"
@@ -77,14 +81,39 @@
                                 android:layout_height="wrap_content"
                                 android:isIndicator="true"
                                 android:numStars="5"
-                                android:rating="4.5" />
+                                tools:rating="4.5" />
 
                             <TextView
                                 android:id="@+id/tv_rating_value"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="8dp"
-                                android:text="4.5 (87 reviews)" />
+                                tools:text="4.5 (87 reviews as tutor)" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/layout_tutee_rating"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <RatingBar
+                                android:id="@+id/rating_tutee"
+                                style="?android:attr/ratingBarStyleSmall"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:isIndicator="true"
+                                android:numStars="5"
+                                tools:rating="4.0" />
+
+                            <TextView
+                                android:id="@+id/tv_tutee_rating_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                tools:text="4.0 (50 reviews as tutee)" />
                         </LinearLayout>
 
                         <TextView
@@ -92,292 +121,436 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Ph.D. in Applied Mathematics"
+                            tools:text="Ph.D. in Applied Mathematics"
                             android:textStyle="italic" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Availability (AI)"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:layout_marginBottom="8dp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Available weekdays from 4PM to 9PM and weekends from 10AM to 6PM"
-                                android:layout_marginBottom="8dp" />
-                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="Availability"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_tutor_availability"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="Available weekdays from 4PM to 9PM and weekends from 10AM to 6PM" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bio"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tv_tutor_bio"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="No bio provided. Passionate educator with 10+ years of experience..." />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Subjects"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_subjects"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reviews"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerViewPartnerReviews"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_partner_review"
+                        tools:itemCount="3"/>
+                    <TextView
+                        android:id="@+id/tv_no_reviews"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No reviews yet for this partner."
+                        android:padding="16dp"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!--
+    <?xml version="1.0" encoding="utf-8"?>
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:id="@+id/main"
+        tools:context=".PartnerProfileActivity">
+
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
+            android:layout_width="401dp"
+            android:layout_height="733dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="731dp"
+            tools:layout_conversion_absoluteWidth="411dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                &lt;!&ndash; Header Section &ndash;&gt;
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/primary_light"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    tools:layout_conversion_absoluteHeight="217dp"
+                    tools:layout_conversion_absoluteWidth="411dp"
+                    tools:layout_editor_absoluteX="0dp"
+                    tools:layout_editor_absoluteY="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/img_tutor_profile"
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:src="@mipmap/ic_launcher_round" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_tutor_name"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Dr. John Smith"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <RatingBar
+                                    android:id="@+id/rating_tutor"
+                                    style="?android:attr/ratingBarStyleSmall"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:isIndicator="true"
+                                    android:numStars="5"
+                                    android:rating="4.5" />
+
+                                <TextView
+                                    android:id="@+id/tv_rating_value"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="4.5 (87 reviews)" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <RatingBar
+                                    android:id="@+id/rating_tutee"
+                                    style="?android:attr/ratingBarStyleSmall"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:isIndicator="true"
+                                    android:numStars="5"
+                                    android:rating="4.5" />
+
+                                <TextView
+                                    android:id="@+id/tv_tutee_rating_value"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="4.5 (87 reviews)" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tv_tutor_title"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Ph.D. in Applied Mathematics"
+                                android:textStyle="italic" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="8dp"
+                                    android:text="Availability (AI)"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tv_tutor_availability"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="8dp"
+                                    android:text="Available weekdays from 4PM to 9PM and weekends from 10AM to 6PM" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                &lt;!&ndash; Content Section &ndash;&gt;
+
+
+                &lt;!&ndash; About Section &ndash;&gt;
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="2dp"
+                    tools:layout_conversion_absoluteHeight="231dp"
+                    tools:layout_conversion_absoluteWidth="379dp"
+                    tools:layout_editor_absoluteX="16dp"
+                    tools:layout_editor_absoluteY="233dp">
+
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:id="@+id/textView2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginTop="4dp"
+                            android:text="Bio"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:layout_conversion_absoluteHeight="24dp"
+                            tools:layout_conversion_absoluteWidth="347dp" />
+
+                        <TextView
+                            android:id="@+id/tv_tutor_bio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="No bio provided"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView2"
+                            tools:layout_conversion_absoluteHeight="167dp"
+                            tools:layout_conversion_absoluteWidth="347dp" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                &lt;!&ndash; Subjects Section &ndash;&gt;
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="4dp"
+                    tools:layout_conversion_absoluteHeight="256dp"
+                    tools:layout_conversion_absoluteWidth="379dp"
+                    tools:layout_editor_absoluteX="16dp"
+                    tools:layout_editor_absoluteY="480dp">
+
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:id="@+id/textView3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Subjects"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:layout_conversion_absoluteHeight="24dp"
+                            tools:layout_conversion_absoluteWidth="315dp" />
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/chip_group_subjects"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginTop="44dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:layout_conversion_absoluteHeight="160dp"
+                            tools:layout_conversion_absoluteWidth="315dp">
+
+
+                        </com.google.android.material.chip.ChipGroup>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                </androidx.cardview.widget.CardView>
+
+
+                &lt;!&ndash; Reviews Section &ndash;&gt;
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="4dp"
+                    tools:layout_conversion_absoluteHeight="236dp"
+                    tools:layout_conversion_absoluteWidth="379dp"
+                    tools:layout_editor_absoluteX="16dp"
+                    tools:layout_editor_absoluteY="752dp">
+
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textView4"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Reviews"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:layout_conversion_absoluteHeight="24dp"
+                            tools:layout_conversion_absoluteWidth="304dp"
+                            tools:layout_editor_absoluteY="221dp" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/recyclerViewPartnerReviews"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView4"
+                            tools:layout_editor_absoluteX="16dp"
+                            tools:layout_editor_absoluteY="24dp" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                </androidx.cardview.widget.CardView>
 
             </LinearLayout>
 
-            <!-- Content Section -->
 
+        </androidx.core.widget.NestedScrollView>
 
-            <!-- About Section -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                tools:layout_conversion_absoluteHeight="231dp"
-                tools:layout_editor_absoluteY="233dp"
-                tools:layout_editor_absoluteX="16dp"
-                tools:layout_conversion_absoluteWidth="379dp">
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragmentContainerView4"
+            android:name="com.pbdvmobile.app.fragments.NavigationFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="0dp"
+            tools:layout_conversion_absoluteWidth="411dp" />
 
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Bio"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    tools:layout_conversion_absoluteHeight="24dp"
-                    tools:layout_editor_absoluteY="249dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="347dp" />
-
-                <TextView
-                    android:id="@+id/tv_tutor_bio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dr. John Smith has over 10 years of experience teaching mathematics at university level. Specializing in calculus and differential equations, he has helped hundreds of students master complex mathematical concepts.\n\nWith a Ph.D. in Applied Mathematics from MIT and research experience in numerical methods, Dr. Smith brings both theoretical knowledge and practical applications to his tutoring sessions."
-                    tools:layout_conversion_absoluteHeight="167dp"
-                    tools:layout_editor_absoluteY="281dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="347dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Subjects Section -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                tools:layout_conversion_absoluteHeight="256dp"
-                tools:layout_editor_absoluteY="480dp"
-                tools:layout_editor_absoluteX="16dp"
-                tools:layout_conversion_absoluteWidth="379dp">
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Subjects"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    tools:layout_conversion_absoluteHeight="24dp"
-                    tools:layout_editor_absoluteY="512dp"
-                    tools:layout_editor_absoluteX="48dp"
-                    tools:layout_conversion_absoluteWidth="315dp" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chip_group_subjects"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    tools:layout_conversion_absoluteHeight="160dp"
-                    tools:layout_editor_absoluteY="544dp"
-                    tools:layout_editor_absoluteX="48dp"
-                    tools:layout_conversion_absoluteWidth="315dp">
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Calculus"
-                        tools:layout_conversion_absoluteHeight="48dp"
-                        tools:layout_editor_absoluteY="544dp"
-                        tools:layout_editor_absoluteX="48dp"
-                        tools:layout_conversion_absoluteWidth="86dp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Differential Equations"
-                        tools:layout_conversion_absoluteHeight="48dp"
-                        tools:layout_editor_absoluteY="544dp"
-                        tools:layout_editor_absoluteX="142dp"
-                        tools:layout_conversion_absoluteWidth="166dp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Linear Algebra"
-                        tools:layout_conversion_absoluteHeight="48dp"
-                        tools:layout_editor_absoluteY="600dp"
-                        tools:layout_editor_absoluteX="48dp"
-                        tools:layout_conversion_absoluteWidth="122dp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Statistics"
-                        tools:layout_conversion_absoluteHeight="48dp"
-                        tools:layout_editor_absoluteY="600dp"
-                        tools:layout_editor_absoluteX="178dp"
-                        tools:layout_conversion_absoluteWidth="91dp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Numerical Methods"
-                        tools:layout_conversion_absoluteHeight="48dp"
-                        tools:layout_editor_absoluteY="656dp"
-                        tools:layout_editor_absoluteX="48dp"
-                        tools:layout_conversion_absoluteWidth="154dp" />
-                </com.google.android.material.chip.ChipGroup>
-
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Education Section -->
-
-            <!-- Reviews Section -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                tools:layout_conversion_absoluteHeight="236dp"
-                tools:layout_editor_absoluteY="752dp"
-                tools:layout_editor_absoluteX="16dp"
-                tools:layout_conversion_absoluteWidth="379dp">
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Reviews"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    tools:layout_conversion_absoluteHeight="24dp"
-                    tools:layout_editor_absoluteY="768dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="304dp" />
-
-                <TextView
-                    android:id="@+id/tv_see_all_reviews"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="See All"
-                    android:textColor="@color/primary"
-                    tools:layout_conversion_absoluteHeight="19dp"
-                    tools:layout_editor_absoluteY="770dp"
-                    tools:layout_editor_absoluteX="336dp"
-                    tools:layout_conversion_absoluteWidth="43dp" />
-
-
-                <!-- Review Item 1 -->
-
-
-                <!--
-                                                                    <de.hdodenhof.circleimageview.CircleImageView
-                                                                        android:layout_width="32dp"
-                                                                        android:layout_height="32dp"
-                                                                        android:src="@drawable/avatar_default"
-                                                                        android:layout_marginEnd="8dp" />-->
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sarah Johnson"
-                    android:textStyle="bold"
-                    tools:layout_conversion_absoluteHeight="19dp"
-                    tools:layout_editor_absoluteY="808dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="267dp" />
-
-                <RatingBar
-                    style="?android:attr/ratingBarStyleSmall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:isIndicator="true"
-                    android:numStars="5"
-                    android:rating="5"
-                    tools:layout_conversion_absoluteHeight="16dp"
-                    tools:layout_editor_absoluteY="809dp"
-                    tools:layout_editor_absoluteX="299dp"
-                    tools:layout_conversion_absoluteWidth="80dp" />
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dr. Smith is an exceptional tutor who made calculus understandable for me. His step-by-step approach and patience helped me improve my grade significantly."
-                    tools:layout_conversion_absoluteHeight="52dp"
-                    tools:layout_editor_absoluteY="831dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="347dp" />
-
-
-                <!-- Review Item 2 -->
-
-
-                <!--
-                                                                    <de.hdodenhof.circleimageview.CircleImageView
-                                                                        android:layout_width="32dp"
-                                                                        android:layout_height="32dp"
-                                                                        android:src="@drawable/avatar_default"
-                                                                        android:layout_marginEnd="8dp" />
-                                    -->
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Michael Chen"
-                    android:textStyle="bold"
-                    tools:layout_conversion_absoluteHeight="19dp"
-                    tools:layout_editor_absoluteY="896dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="267dp" />
-
-                <RatingBar
-                    style="?android:attr/ratingBarStyleSmall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:isIndicator="true"
-                    android:numStars="5"
-                    android:rating="4"
-                    tools:layout_conversion_absoluteHeight="16dp"
-                    tools:layout_editor_absoluteY="897dp"
-                    tools:layout_editor_absoluteX="299dp"
-                    tools:layout_conversion_absoluteWidth="80dp" />
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="I was struggling with differential equations until I started sessions with Dr. Smith. He has a knack for explaining complex concepts in simple terms."
-                    tools:layout_conversion_absoluteHeight="52dp"
-                    tools:layout_editor_absoluteY="919dp"
-                    tools:layout_editor_absoluteX="32dp"
-                    tools:layout_conversion_absoluteWidth="347dp" />
-
-
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
-
-
-    </androidx.core.widget.NestedScrollView>
-
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragmentContainerView4"
-        android:name="com.pbdvmobile.app.fragments.NavigationFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_conversion_absoluteHeight="0dp"
-        tools:layout_conversion_absoluteWidth="411dp" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>-->
