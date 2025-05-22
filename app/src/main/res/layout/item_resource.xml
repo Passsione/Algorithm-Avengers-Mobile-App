@@ -63,6 +63,26 @@
             app:layout_constraintEnd_toEndOf="@id/resource_tutor"
             android:layout_marginTop="2dp"/>
 
+        <TextView
+            android:id="@+id/resource_upload_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Resource upload date"
+            app:layout_constraintStart_toStartOf="@+id/resource_tutor"
+            app:layout_constraintTop_toBottomOf="@+id/resource_subject_name"/>
+
+        <TextView
+        android:id="@+id/resource_file_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="File size"
+            app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/resource_upload_date"
+        app:layout_constraintTop_toBottomOf="@+id/resource_subject_name"/>
+
         <ImageButton
             android:id="@+id/button_resource_options_menu"
             android:layout_width="wrap_content"

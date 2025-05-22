@@ -1,187 +1,109 @@
 package com.pbdvmobile.app.data.dao;
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+
 import androidx.annotation.NonNull;
-import com.pbdvmobile.app.data.SqlOpenHelper;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.pbdvmobile.app.data.model.Subject;
-import com.pbdvmobile.app.data.model.UserSubject;
-import java.util.ArrayList;
-import java.util.List;
+// UserSubject related operations are more complex and depend on your data model.
+// If UserSubject is a separate collection:
+// import com.pbdvmobile.app.data.model.UserSubject;
+// import java.util.Map;
 
 public class SubjectDao {
-    private final SqlOpenHelper dbHelper;
+    private static final String TAG = "SubjectDaoFirebase";
+    public static final String SUBJECTS_COLLECTION = "subjects";
+    // If you have a separate collection for User-Subject mapping:
+    // private static final String USER_SUBJECTS_COLLECTION = "user_subject_relations";
+    private final FirebaseFirestore db;
 
-    public SubjectDao(SqlOpenHelper dbHelper) {
-        this.dbHelper = dbHelper;
+    public SubjectDao() {
+        this.db = FirebaseFirestore.getInstance();
     }
 
-    // Subject section
-    public long insertSubject(@NonNull Subject subject) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SUBJECT_NAME, subject.getSubjectName());
-
-        long id = db.insert(SqlOpenHelper.TABLE_SUBJECTS, null, values);
-        db.close();
-        return id;
+    /**
+     * Inserts a new subject into the 'subjects' collection.
+     * Firestore will auto-generate the document ID.
+     * @param subject The Subject object to insert. The 'id' field in the POJO will not be used for insertion.
+     * @return A Task containing the DocumentReference of the newly created subject.
+     */
+    public Task<DocumentReference> insertSubject(@NonNull Subject subject) {
+        // The Subject POJO's 'id' field is typically set after fetching or not used for insertion.
+        return db.collection(SUBJECTS_COLLECTION).add(subject);
     }
 
-    public Subject getSubjectById(int subjectId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SUBJECTS,
-                null,
-                SqlOpenHelper.KEY_SUBJECT_ID + "=?",
-                new String[]{String.valueOf(subjectId)},
-                null, null, null);
-
-        Subject subject = null;
-        if (cursor.moveToFirst()) {
-            subject = new Subject();
-            subject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SUBJECT_ID)));
-            subject.setSubjectName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SUBJECT_NAME)));
-            cursor.close();
+    /**
+     * Fetches a subject by its Firestore document ID.
+     * @param subjectDocumentId The document ID of the subject.
+     * @return A Task containing the DocumentSnapshot.
+     */
+    public Task<DocumentSnapshot> getSubjectById(String subjectDocumentId) {
+        if (subjectDocumentId == null || subjectDocumentId.isEmpty()) {
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("Subject document ID cannot be null or empty."));
         }
-        db.close();
-        return subject;
+        return db.collection(SUBJECTS_COLLECTION).document(subjectDocumentId).get();
     }
 
-    public List<Subject> getAllSubjects() {
-        List<Subject> subjects = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    /**
+     * Fetches all subjects from the 'subjects' collection, ordered by subjectName.
+     * @return A Task containing the QuerySnapshot.
+     */
+    public Task<QuerySnapshot> getAllSubjects() {
+        return db.collection(SUBJECTS_COLLECTION).orderBy("subjectName", Query.Direction.ASCENDING).get();
+    }
 
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SUBJECTS,
-                null, null, null, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Subject subject = new Subject();
-                subject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SUBJECT_ID)));
-                subject.setSubjectName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SUBJECT_NAME)));
-                subjects.add(subject);
-            } while (cursor.moveToNext());
+    /**
+     * Fetches a subject by its name.
+     * Note: Requires an exact match on 'subjectName' and that this field is indexed for efficiency if used often.
+     * @param subjectName The name of the subject to find.
+     * @return A Task containing the QuerySnapshot. Usually 0 or 1 result.
+     */
+    public Task<QuerySnapshot> getSubjectByName(String subjectName) {
+        if (subjectName == null || subjectName.isEmpty()) {
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("Subject name cannot be null or empty."));
         }
-        cursor.close();
-        db.close();
-        return subjects;
+        return db.collection(SUBJECTS_COLLECTION).whereEqualTo("subjectName", subjectName).limit(1).get();
     }
 
 
-    // User Subject section
-    public long addUserSubject(@NonNull UserSubject userSubject) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    // --- UserSubject section ---
+    // Operations related to UserSubject (linking users to subjects they tutor or take)
+    // or via a more complex "user_subject_relations" collection if detailed properties like marks are needed.
 
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID, userSubject.getUserId());
-        values.put(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID, userSubject.getSubjectId());
-        values.put(SqlOpenHelper.KEY_USER_SUBJECT_MARK, userSubject.getMark());
-        values.put(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING, userSubject.getTutoring() ? 1 : 0);
-
-        long id = db.insert(SqlOpenHelper.TABLE_USER_SUBJECTS, null, values);
-        db.close();
-        return id;
-    }
-    public List<UserSubject> getUserSubjects(int userId) {
-        List<UserSubject> userSubjects = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USER_SUBJECTS,
-                null,
-                SqlOpenHelper.KEY_USER_SUBJECT_USER_ID + "=?",
-                new String[]{String.valueOf(userId)},
-                null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                UserSubject userSubject = new UserSubject();
-                userSubject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
-                userSubject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
-                userSubject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
-                userSubject.setTutoring(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING)) == 1);
-                userSubjects.add(userSubject);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return userSubjects;
-    }
-    public List<UserSubject> getTutoredUserSubjects(int userId) {
-        List<UserSubject> userSubjects = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USER_SUBJECTS,
-                null,
-                SqlOpenHelper.KEY_USER_SUBJECT_USER_ID + "=?"+
-                        " AND " + SqlOpenHelper.KEY_USER_SUBJECT_TUTORING + "=1",
-                new String[]{String.valueOf(userId)},
-                null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                UserSubject userSubject = new UserSubject();
-                userSubject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
-                userSubject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
-                userSubject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
-                userSubject.setTutoring(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING)) == 1);
-                userSubjects.add(userSubject);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return userSubjects;
-    }
-    public List<UserSubject> getAllUserSubjects() {
-        List<UserSubject> subjects = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USER_SUBJECTS,
-                null, null, null, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                UserSubject subject = new UserSubject();
-                subject.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID)));
-                subject.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_USER_ID)));
-                subject.setMark(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_MARK)));
-                subject.setTutoring(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING)) == 1);
-                subjects.add(subject);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return subjects;
+    // If UserSubject is a separate collection (example, not fully integrated here as User model uses List<String> tutoredSubjectIds):
+    /*
+    public Task<DocumentReference> addUserSubjectRelation(@NonNull UserSubject userSubjectRelation) {
+        return db.collection(USER_SUBJECTS_COLLECTION).add(userSubjectRelation);
     }
 
-    public int updateUserSubject(UserSubject userSubject){
-        int userId = userSubject.getUserId();
-        int subjectId = userSubject.getSubjectId();
-        double mark = userSubject.getMark();
-        boolean tutoring = userSubject.getTutoring();
-
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_USER_SUBJECT_MARK, mark);
-        values.put(SqlOpenHelper.KEY_USER_SUBJECT_TUTORING, tutoring ? 1 : 0);
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_USER_SUBJECTS, values,
-                SqlOpenHelper.KEY_USER_SUBJECT_USER_ID + "=? AND " +
-                        SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID + "=?",
-                new String[]{String.valueOf(userId), String.valueOf(subjectId)});
-        db.close();
-        return rowsAffected;
-    }
-    public int deleteUserSubject(int userId, int subjectId) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int rowsAffected = db.delete(SqlOpenHelper.TABLE_USER_SUBJECTS,
-                SqlOpenHelper.KEY_USER_SUBJECT_USER_ID + "=? AND " +
-                        SqlOpenHelper.KEY_USER_SUBJECT_SUBJECT_ID + "=?",
-                new String[]{String.valueOf(userId), String.valueOf(subjectId)});
-        db.close();
-        return rowsAffected;
+    public Task<QuerySnapshot> getUserSubjectRelations(String userId) {
+        return db.collection(USER_SUBJECTS_COLLECTION)
+                .whereEqualTo("userId", userId) // Assuming UserSubject POJO has a 'userId' field (Firebase UID)
+                .get();
     }
 
+    public Task<QuerySnapshot> getTutoredUserSubjectRelations(String userId) {
+        return db.collection(USER_SUBJECTS_COLLECTION)
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("tutoring", true) // Assuming UserSubject POJO has a 'tutoring' boolean field
+                .get();
+    }
 
-    
+    public Task<Void> updateUserSubjectRelation(String userSubjectRelationDocId, Map<String, Object> updates) {
+        return db.collection(USER_SUBJECTS_COLLECTION).document(userSubjectRelationDocId).update(updates);
+    }
+
+    public Task<Void> deleteUserSubjectRelation(String userSubjectRelationDocId) {
+        return db.collection(USER_SUBJECTS_COLLECTION).document(userSubjectRelationDocId).delete();
+    }
+    */
+    // The stubs like `addUserSubject(UserSubject userSubject)` from your original Firebase SubjectDao
+    // would need to be implemented if you are using a separate UserSubject collection.
+    // Given the User model has `tutoredSubjectIds: List<String>`, managing this list
+    // within `UserDao.updateUser` or `UserDao.updateUserSpecificFields` is more direct.
+    // For example, to add a subject to a user's tutored list:
+    // FieldValue.arrayUnion("subjectIdToAd") in updateUserSpecificFields.
 }

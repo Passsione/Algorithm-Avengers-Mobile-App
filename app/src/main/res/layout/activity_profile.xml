@@ -70,6 +70,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imgProfileImage">
 
+            <ProgressBar
+                android:id="@+id/profileProgressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -79,22 +85,64 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <RatingBar
-                android:id="@+id/ProfileTuteeRating"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/txtEmail"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:isIndicator="true"
-                style="?android:attr/ratingBarStyleSmall"
-                android:clickable="false"/>
-            <RatingBar
-                android:id="@+id/ProfileTutorRating"
-                android:layout_width="wrap_content"
+                android:text="Your Email: " />
+
+            <TextView
+                android:id="@+id/txtProfileCredits"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:isIndicator="true"
-                style="?android:attr/ratingBarStyleSmall"
-                android:clickable="false"/>
+                android:text="Your credits:" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:id="@+id/layout_profile_tutee_rating">
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Rating as a Tutee" />
+
+                <RatingBar
+                    android:id="@+id/ProfileTuteeRating"
+                    style="?android:attr/ratingBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:clickable="false"
+                    android:isIndicator="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:id="@+id/layout_profile_tutor_rating">
+
+                <TextView
+                    android:id="@+id/textView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Rating as a Tutor" />
+
+                <RatingBar
+                    android:id="@+id/ProfileTutorRating"
+                    style="?android:attr/ratingBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:clickable="false"
+                    android:isIndicator="true" />
+            </LinearLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -158,6 +206,7 @@
             android:background="@drawable/rounded_card"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@+id/ProfileInfoCard">
 
             <TextView

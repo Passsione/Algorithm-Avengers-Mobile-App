@@ -7,35 +7,40 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
 import com.pbdvmobile.app.R;
-import com.pbdvmobile.app.data.DataManager;
-import com.pbdvmobile.app.data.model.Session;
-import com.pbdvmobile.app.data.model.Subject;
-import com.pbdvmobile.app.data.model.User;
-
+import com.pbdvmobile.app.data.dao.SubjectDao; // Firebase DAO
+import com.pbdvmobile.app.data.dao.UserDao;   // Firebase DAO
+import com.pbdvmobile.app.data.model.Session; // Firebase model
+import com.pbdvmobile.app.data.model.Subject; // Firebase model
+import com.pbdvmobile.app.data.model.User;    // Firebase model
+import com.google.firebase.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
+import android.util.Log;
 
 public class PartnerReviewAdapter extends RecyclerView.Adapter<PartnerReviewAdapter.ReviewViewHolder> {
 
+    private static final String ADAPTER_TAG = "PartnerReviewAdapter";
     private Context context;
-    private List<Session> reviewedSessions;
-    private User partner; // The user whose profile is being viewed
-    private DataManager dataManager;
+    private List<Session> reviewedSessions; // Sessions where 'partner' received a review
+    private User partnerWhoseProfileIsViewed; // The user whose profile is being viewed (renamed for clarity)
     private SimpleDateFormat dateFormat;
 
-    public PartnerReviewAdapter(Context context, List<Session> reviewedSessions, User partner, DataManager dataManager) {
+    // DAOs for fetching related data
+    private final UserDao userDao;
+    private final SubjectDao subjectDao;
+
+    public PartnerReviewAdapter(Context context, List<Session> reviewedSessions, User partnerWhoseProfileIsViewed, SubjectDao subjectDao, UserDao userDao) {
         this.context = context;
         this.reviewedSessions = reviewedSessions;
-        this.partner = partner;
-        this.dataManager = dataManager;
+        this.partnerWhoseProfileIsViewed = partnerWhoseProfileIsViewed;
         this.dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+        this.userDao = userDao; // Use passed DAOs
+        this.subjectDao = subjectDao;
     }
 
     @NonNull
@@ -48,73 +53,139 @@ public class PartnerReviewAdapter extends RecyclerView.Adapter<PartnerReviewAdap
     @Override
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
         Session session = reviewedSessions.get(position);
-        if (session == null || partner == null) return;
+        if (session == null || partnerWhoseProfileIsViewed == null || partnerWhoseProfileIsViewed.getUid() == null) {
+            Log.e(ADAPTER_TAG, "Session or Partner data is null/invalid in onBindViewHolder.");
+            // Optionally hide the item or show an error state
+            holder.itemView.setVisibility(View.GONE);
+            return;
+        }
+        holder.itemView.setVisibility(View.VISIBLE);
 
         String reviewText = null;
         Double rating = null;
-        User reviewer = null;
-        int reviewerId = -1;
+        String reviewerUid;
 
-        // Determine if the partner was the tutor or tutee in this session,
-        // and thus which review/rating to display.
-        if (session.getTutorId() == partner.getStudentNum()) {
-            // Partner was the tutor, so we show the tutee's review of the partner.
+        // Determine if the partner (whose profile is being viewed) was the tutor or tutee in this session.
+        // We want to display the review GIVEN TO this partner.
+        if (partnerWhoseProfileIsViewed.getUid().equals(session.getTutorUid())) {
+            // Partner was the TUTOR for this session. Show review from Tutee.
             reviewText = session.getTuteeReview();
             rating = session.getTuteeRating();
-            reviewerId = session.getTuteeId();
-        } else if (session.getTuteeId() == partner.getStudentNum()) {
-            // Partner was the tutee, so we show the tutor's review of the partner.
+            reviewerUid = session.getTuteeUid();
+        } else if (partnerWhoseProfileIsViewed.getUid().equals(session.getTuteeUid())) {
+            // Partner was the TUTEE for this session. Show review from Tutor.
             reviewText = session.getTutorReview();
             rating = session.getTutorRating();
-            reviewerId = session.getTutorId();
+            reviewerUid = session.getTutorUid();
+        } else {
+            reviewerUid = null;
+            // This session doesn't seem to directly involve the partner in a reviewable role.
+            // This shouldn't happen if reviewedSessions list is filtered correctly.
+            Log.w(ADAPTER_TAG, "Session " + session.getId() + " does not directly involve partner " + partnerWhoseProfileIsViewed.getUid() + " in a reviewable role.");
+            holder.itemView.setVisibility(View.GONE); // Hide this item
+            return;
         }
 
-        if (reviewerId != -1) {
-            reviewer = dataManager.getUserDao().getUserByStudentNum(reviewerId);
-        }
 
         if (reviewText != null && !reviewText.isEmpty()) {
             holder.tvReviewText.setText(reviewText);
             holder.tvReviewText.setVisibility(View.VISIBLE);
         } else {
             holder.tvReviewText.setText("No review comment provided.");
-            // holder.tvReviewText.setVisibility(View.GONE); // Or show a placeholder
+            // holder.tvReviewText.setVisibility(View.GONE); // Or show placeholder
         }
 
-        if (rating != null) {
+        if (rating != null && rating > 0) {
             holder.rbReviewRating.setRating(rating.floatValue());
             holder.rbReviewRating.setVisibility(View.VISIBLE);
         } else {
             holder.rbReviewRating.setVisibility(View.GONE);
+            // If no rating, but there's text, we might still show the text.
+            // If both are null/empty, the whole item might be less useful.
+            if (reviewText == null || reviewText.isEmpty()){
+                holder.tvReviewText.setText("No feedback provided for this session.");
+            }
         }
 
-        if (reviewer != null) {
-            holder.tvReviewerName.setText(String.format("Reviewed by: %s %s", reviewer.getFirstName(), reviewer.getLastName()));
-            Glide.with(context)
-                    .load(reviewer.getProfileImageUrl())
-                    .placeholder(R.mipmap.ic_launcher_round) // Default placeholder
-                    .error(R.mipmap.ic_launcher_round)       // Error placeholder
-                    .circleCrop()
-                    .into(holder.ivReviewerImage);
+        // Fetch and display reviewer's details
+        if (reviewerUid != null && !reviewerUid.isEmpty()) {
+            holder.tvReviewerName.setText("Loading reviewer..."); // Placeholder
+            holder.ivReviewerImage.setImageResource(R.mipmap.ic_launcher_round); // Default
+            userDao.getUserByUid(reviewerUid).addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    User reviewer = documentSnapshot.toObject(User.class);
+                    if (reviewer != null) {
+                        holder.tvReviewerName.setText(String.format(Locale.getDefault(),"Reviewed by: %s %s", reviewer.getFirstName(), reviewer.getLastName()));
+                        if (context != null) {
+                            Glide.with(context)
+                                    .load(reviewer.getProfileImageUrl())
+                                    .placeholder(R.mipmap.ic_launcher_round)
+                                    .error(R.mipmap.ic_launcher_round)
+                                    .circleCrop()
+                                    .into(holder.ivReviewerImage);
+                        }
+                    } else {
+                        holder.tvReviewerName.setText("Reviewer: Anonymous");
+                    }
+                } else {
+                    holder.tvReviewerName.setText("Reviewer: User not found");
+                }
+            }).addOnFailureListener(e -> {
+                Log.e(ADAPTER_TAG, "Error fetching reviewer " + reviewerUid, e);
+                holder.tvReviewerName.setText("Reviewer: Error");
+            });
         } else {
             holder.tvReviewerName.setText("Reviewer: Anonymous");
-            holder.ivReviewerImage.setImageResource(R.mipmap.ic_launcher_round); // Default image
+            if (context != null) holder.ivReviewerImage.setImageResource(R.mipmap.ic_launcher_round);
         }
 
-        Subject subject = dataManager.getSubjectDao().getSubjectById(session.getSubjectId());
-        if (subject != null) {
-            holder.tvReviewedSessionSubject.setText("Session for: " + subject.getSubjectName());
+        // Set Subject Name
+        if (session.getSubjectName() != null && !session.getSubjectName().isEmpty()) {
+            holder.tvReviewedSessionSubject.setText("Session for: " + session.getSubjectName().split(":")[0]);
+        } else if (session.getSubjectId() != null) {
+            holder.tvReviewedSessionSubject.setText("Loading Subject...");
+            subjectDao.getSubjectById(session.getSubjectId()).addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    Subject subject = doc.toObject(Subject.class);
+                    if (subject != null && subject.getSubjectName() != null) {
+                        holder.tvReviewedSessionSubject.setText("Session for: " + subject.getSubjectName().split(":")[0]);
+                    } else {
+                        holder.tvReviewedSessionSubject.setText("Session for: Unknown Subject");
+                    }
+                } else {
+                    holder.tvReviewedSessionSubject.setText("Session for: Unknown Subject");
+                }
+            }).addOnFailureListener(e -> {
+                Log.e(ADAPTER_TAG, "Error fetching subject " + session.getSubjectId(), e);
+                holder.tvReviewedSessionSubject.setText("Session for: Error Subject");
+            });
         } else {
             holder.tvReviewedSessionSubject.setText("Session for: Unknown Subject");
         }
 
-        holder.tvReviewDate.setText("On: " + dateFormat.format(session.getStartTime()));
+
+        // Set Review Date (from session's start/end time, or a dedicated review timestamp if available)
+        Timestamp sessionTime = session.getStartTime(); // Or endTime, or a specific review timestamp if you add one
+        if (sessionTime != null) {
+            holder.tvReviewDate.setText("On: " + dateFormat.format(sessionTime.toDate()));
+        } else {
+            holder.tvReviewDate.setText("Date: N/A");
+        }
     }
 
     @Override
     public int getItemCount() {
-        return reviewedSessions.size();
+        return reviewedSessions != null ? reviewedSessions.size() : 0;
     }
+
+    public void updateList(List<Session> newList) {
+        this.reviewedSessions.clear();
+        if (newList != null) {
+            this.reviewedSessions.addAll(newList);
+        }
+        notifyDataSetChanged();
+    }
+
 
     static class ReviewViewHolder extends RecyclerView.ViewHolder {
         ImageView ivReviewerImage;

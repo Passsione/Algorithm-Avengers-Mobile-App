@@ -4,12 +4,15 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,39 +23,45 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.pbdvmobile.app.adapter.PartnerReviewAdapter; // Import the new adapter
-import com.pbdvmobile.app.data.DataManager;
-import com.pbdvmobile.app.data.LogInUser; // Assuming you might need this for context, though not directly used for partner's data
+import com.google.firebase.Timestamp;
+import com.pbdvmobile.app.adapter.PartnerReviewAdapter;
+import com.pbdvmobile.app.data.dao.SessionDao;
+import com.pbdvmobile.app.data.dao.SubjectDao;
+import com.pbdvmobile.app.data.dao.UserDao;
 import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.data.model.UserSubject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class PartnerProfileActivity extends AppCompatActivity {
 
-    private DataManager dataManager;
-    // private LogInUser current_user; // Keep if needed for other logic
+    private static final String TAG = "PartnerProfileActivity";
+
     private ImageView partnerProfileImage;
-    private User partner;
-    private TextView partnerName, partnerTutorRatingCount, partnerTuteeRatingCount, partnerTitle, partnerAvailability, partnerBio, tvNoReviews;
+    private User partnerUserPojo; // Renamed from partner
+    private TextView partnerName, partnerTutorRatingCount, partnerTuteeRatingCount,
+            partnerEducationLevel, /*partnerAvailability,*/ partnerBio, tvNoReviews; // Removed partnerTitle, partnerAvailability
     private RatingBar partnerTutorRating, partnerTuteeRating;
-    private ChipGroup partnerSubjects;
+    private ChipGroup partnerSubjectsChipGroup; // Renamed from partnerSubjects
     private RecyclerView partnerReviewsRecyclerView;
     private PartnerReviewAdapter reviewAdapter;
-    private List<Session> allSessionsForPartner; // All sessions involving the partner
+    private ProgressBar profileLoadingProgressBar; // Added ProgressBar
 
     private LinearLayout layoutTutorRating, layoutTuteeRating;
 
+    private UserDao userDao;
+    private SessionDao sessionDao;
+    private SubjectDao subjectDao;
+    private List<Subject> allSubjectsList = new ArrayList<>(); // To map subject IDs to names
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+        // EdgeToEdge.enable(this); // Consider if needed
         setContentView(R.layout.activity_partner_profile);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -60,28 +69,58 @@ public class PartnerProfileActivity extends AppCompatActivity {
             return insets;
         });
 
-        dataManager = DataManager.getInstance(this);
-        // current_user = LogInUser.getInstance(dataManager); // Keep if needed
+        userDao = new UserDao();
+        sessionDao = new SessionDao();
+        subjectDao = new SubjectDao();
 
-        partner = (User) getIntent().getSerializableExtra("tutor"); // Assuming "tutor" key holds the partner User object
+        // Get User object passed from the previous activity/fragment
+        // Assuming the key is "tutor" but it's actually the "partner" being viewed
+        if (getIntent().hasExtra("tutor")) {
+            partnerUserPojo = (User) getIntent().getSerializableExtra("tutor");
+        }
 
-        initial_element();
+        initializeViews();
 
-        if (partner != null) {
-            set_data(partner);
-            setupRecyclerView();
-            loadPartnerReviews();
+        if (partnerUserPojo != null && partnerUserPojo.getUid() != null) {
+            showLoading(true);
+            // Load all subjects first to help display tutored subjects by name
+            subjectDao.getAllSubjects().addOnSuccessListener(subjectSnapshots -> {
+                allSubjectsList.clear();
+                if (subjectSnapshots != null) {
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : subjectSnapshots.getDocuments()) {
+                        Subject s = doc.toObject(Subject.class);
+                        if (s != null) {
+                            s.setId(doc.getId());
+                            allSubjectsList.add(s);
+                        }
+                    }
+                }
+                // Now that subjects are loaded (or not), proceed to display partner data
+                displayPartnerData();
+                setupRecyclerView();
+                loadPartnerReviews(); // This will also call showLoading(false) when done
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to load all subjects", e);
+                Toast.makeText(this, "Could not load subject list.", Toast.LENGTH_SHORT).show();
+                // Proceed without full subject name resolution for chips if this fails
+                displayPartnerData();
+                setupRecyclerView();
+                loadPartnerReviews();
+            });
         } else {
-            // Handle partner not found - e.g., show error and finish
+            Toast.makeText(this, "Partner data not found.", Toast.LENGTH_LONG).show();
             partnerName.setText("Partner data not available.");
             tvNoReviews.setVisibility(VISIBLE);
             partnerReviewsRecyclerView.setVisibility(GONE);
+            // Consider finishing the activity if partnerUserPojo is essential and null
+            // finish();
         }
     }
 
-    private void initial_element() {
-        partnerProfileImage = findViewById(R.id.img_tutor_profile);
-        partnerName = findViewById(R.id.tv_tutor_name);
+    private void initializeViews() {
+        profileLoadingProgressBar = findViewById(R.id.partner_profile_progress_bar); // Add to XML
+        partnerProfileImage = findViewById(R.id.img_tutor_profile); // Assuming this is img_partner_profile
+        partnerName = findViewById(R.id.tv_tutor_name); // Assuming this is tv_partner_name
 
         layoutTutorRating = findViewById(R.id.layout_tutor_rating);
         partnerTutorRating = findViewById(R.id.rating_tutor);
@@ -91,281 +130,223 @@ public class PartnerProfileActivity extends AppCompatActivity {
         partnerTuteeRating = findViewById(R.id.rating_tutee);
         partnerTuteeRatingCount = findViewById(R.id.tv_tutee_rating_value);
 
-        partnerTitle = findViewById(R.id.tv_tutor_title);
-        partnerAvailability = findViewById(R.id.tv_tutor_availability);
-        partnerBio = findViewById(R.id.tv_tutor_bio);
-        partnerSubjects = findViewById(R.id.chip_group_subjects);
+        partnerEducationLevel = findViewById(R.id.tv_tutor_title); // Assuming this is tv_partner_education
+        // partnerAvailability = findViewById(R.id.tv_tutor_availability); // This view seems to have been removed or not used
+        partnerBio = findViewById(R.id.tv_tutor_bio); // Assuming this is tv_partner_bio
+        partnerSubjectsChipGroup = findViewById(R.id.chip_group_subjects);
         partnerReviewsRecyclerView = findViewById(R.id.recyclerViewPartnerReviews);
         tvNoReviews = findViewById(R.id.tv_no_reviews);
     }
 
-    private void set_data(User partner) {
+    private void showLoading(boolean isLoading) {
+        if (profileLoadingProgressBar != null) {
+            profileLoadingProgressBar.setVisibility(isLoading ? VISIBLE : GONE);
+        }
+        // You might want to hide/show the main content layout as well
+        View contentLayout = findViewById(R.id.partner_profile_content_layout); // Add an ID to your main content group
+        if (contentLayout != null) {
+            contentLayout.setVisibility(isLoading ? GONE : VISIBLE);
+        }
+    }
+
+
+    private void displayPartnerData() {
+        if (partnerUserPojo == null) return;
+
         Glide.with(this)
-                .load(partner.getProfileImageUrl())
-                .placeholder(R.mipmap.ic_launcher_round)
-                .error(R.mipmap.ic_launcher_round)
+                .load(partnerUserPojo.getProfileImageUrl())
+                .placeholder(R.mipmap.ic_launcher_round) // Use a generic placeholder
+                .error(R.mipmap.ic_launcher_round)       // And an error image
                 .circleCrop()
                 .into(partnerProfileImage);
 
-        partnerName.setText(String.format("%s %s", partner.getFirstName(), partner.getLastName()));
+        partnerName.setText(String.format("%s %s", partnerUserPojo.getFirstName(), partnerUserPojo.getLastName()));
 
-        // Get average ratings and counts
-        // You might need a more sophisticated way to get review counts if SessionDao.getAverageRatingByStudentNum
-        // doesn't directly provide counts or if you want counts of actual reviews submitted.
-        // For now, we'll use the size of session lists where the partner was tutor/tutee.
+        // Fetch and display partner's average ratings (as tutor and as tutee)
+        // These should ideally be fields on the User object itself, updated periodically.
+        // If not, SessionDao.getAverageRatingByFirebaseUid is used.
+        sessionDao.getAverageRatingByFirebaseUid(partnerUserPojo.getUid(), new SessionDao.RatingsCallback() {
+            @Override
+            public void onRatingsFetched(double averageRatingAsTutee, double averageRatingAsTutor) {
+                // Update the local POJO if these are the most up-to-date values
+                partnerUserPojo.setAverageRatingAsTutee(averageRatingAsTutee);
+                partnerUserPojo.setAverageRatingAsTutor(averageRatingAsTutor);
 
-        double[] avgRatings = dataManager.getSessionDao().getAverageRatingByStudentNum(partner.getStudentNum());
-        List<Session> sessionsAsTutor = dataManager.getSessionDao().getSessionsByTutorId(partner.getStudentNum());
-        List<Session> sessionsAsTutee = dataManager.getSessionDao().getSessionsByTuteeId(partner.getStudentNum());
-
-        long actualTutorReviewsCount = sessionsAsTutor.stream().filter(s -> s.getTuteeReview() != null && !s.getTuteeReview().isEmpty()).count();
-        long actualTuteeReviewsCount = sessionsAsTutee.stream().filter(s -> s.getTutorReview() != null && !s.getTutorReview().isEmpty()).count();
-
-
-        if (partner.isTutor()) { // Check if the partner *can* be a tutor
-            if (avgRatings[1] > 0 && actualTutorReviewsCount > 0) {
-                layoutTutorRating.setVisibility(VISIBLE);
-                partnerTutorRating.setRating((float) avgRatings[1]);
-                partnerTutorRatingCount.setText(String.format(Locale.getDefault(), "%.1f (%d reviews as tutor)", avgRatings[1], actualTutorReviewsCount));
-            } else {
-                layoutTutorRating.setVisibility(GONE); // Hide if no rating or no reviews
+                updateRatingDisplay(); // Update UI with fetched/updated ratings
             }
-        } else {
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Error fetching average ratings for partner " + partnerUserPojo.getUid(), e);
+                Toast.makeText(PartnerProfileActivity.this, "Could not load partner ratings.", Toast.LENGTH_SHORT).show();
+                updateRatingDisplay(); // Update with 0 or current POJO values
+            }
+        });
+
+
+        partnerEducationLevel.setText(partnerUserPojo.getEducationLevel() != null ?
+                partnerUserPojo.getEducationLevel().name().replace("_", " ") : "N/A");
+        // partnerAvailability.setText("Availability: Not specified"); // If you re-add this field
+        partnerBio.setText(partnerUserPojo.getBio() != null && !partnerUserPojo.getBio().isEmpty() ?
+                partnerUserPojo.getBio() : "No bio provided.");
+
+        populatePartnerSubjectsChips();
+    }
+
+    private void updateRatingDisplay() {
+        // Display Tutor Rating (rating partner received as a tutor)
+        if (partnerUserPojo.isTutor() && partnerUserPojo.getAverageRatingAsTutor() > 0) {
+            layoutTutorRating.setVisibility(VISIBLE);
+            partnerTutorRating.setRating((float) partnerUserPojo.getAverageRatingAsTutor());
+            // For review count, you'd need another query or denormalized count on User object
+            partnerTutorRatingCount.setText(String.format(Locale.getDefault(), "%.1f (as Tutor)", partnerUserPojo.getAverageRatingAsTutor()));
+        } else if (partnerUserPojo.isTutor()) {
+            layoutTutorRating.setVisibility(VISIBLE);
+            partnerTutorRating.setRating(0);
+            partnerTutorRatingCount.setText("Not yet rated as Tutor");
+        }
+        else {
             layoutTutorRating.setVisibility(GONE);
         }
 
-
-        if (avgRatings[0] > 0 && actualTuteeReviewsCount > 0) {
+        // Display Tutee Rating (rating partner received as a tutee)
+        if (partnerUserPojo.getAverageRatingAsTutee() > 0) {
             layoutTuteeRating.setVisibility(VISIBLE);
-            partnerTuteeRating.setRating((float) avgRatings[0]);
-            partnerTuteeRatingCount.setText(String.format(Locale.getDefault(), "%.1f (%d reviews as tutee)", avgRatings[0], actualTuteeReviewsCount));
+            partnerTuteeRating.setRating((float) partnerUserPojo.getAverageRatingAsTutee());
+            partnerTuteeRatingCount.setText(String.format(Locale.getDefault(), "%.1f (as Tutee)", partnerUserPojo.getAverageRatingAsTutee()));
         } else {
-            layoutTuteeRating.setVisibility(GONE); // Hide if no rating or no reviews
+            layoutTuteeRating.setVisibility(VISIBLE);
+            partnerTuteeRating.setRating(0);
+            partnerTuteeRatingCount.setText("Not yet rated as Tutee");
         }
-
-
-        partnerTitle.setText(partner.getEducationLevel() != null ? partner.getEducationLevel().name() : "N/A");
-        partnerAvailability.setText("Availability not specified.");
-        partnerBio.setText(partner.getBio() != null && !partner.getBio().isEmpty() ? partner.getBio() : "No bio provided.");
-
-        populateSubjects();
     }
 
-    private void populateSubjects() {
-        partnerSubjects.removeAllViews(); // Clear existing chips before adding new ones
-        List<UserSubject> userSubjects = dataManager.getSubjectDao().getUserSubjects(partner.getStudentNum());
 
-        if (userSubjects.isEmpty()) {
-            // Optionally, show a message if no subjects are listed
-            Chip noSubjectsChip = new Chip(this);
-            noSubjectsChip.setText("No subjects listed");
-            noSubjectsChip.setEnabled(false);
-            partnerSubjects.addView(noSubjectsChip);
+    private void populatePartnerSubjectsChips() {
+        partnerSubjectsChipGroup.removeAllViews();
+        List<String> tutoredSubjectIds = partnerUserPojo.getTutoredSubjectIds();
+
+        if (tutoredSubjectIds == null || tutoredSubjectIds.isEmpty()) {
+            if (partnerUserPojo.isTutor()) { // Only show "no subjects" if they are marked as a tutor
+                Chip noSubjectsChip = new Chip(this);
+                noSubjectsChip.setText("No subjects listed for tutoring");
+                noSubjectsChip.setEnabled(false);
+                partnerSubjectsChipGroup.addView(noSubjectsChip);
+            }
             return;
         }
 
-        for (UserSubject userSub : userSubjects) {
-            Subject subject = dataManager.getSubjectDao().getSubjectById(userSub.getSubjectId());
-            if (subject != null) {
+        for (String subjectId : tutoredSubjectIds) {
+            Subject subjectDetails = findSubjectById(subjectId); // Find from preloaded allSubjectsList
+            if (subjectDetails != null) {
                 Chip subjectChip = new Chip(this);
-                // Extract only the subject name part if it contains a colon
-                String subjectName = subject.getSubjectName();
-                if (subjectName.contains(": ")) {
-                    subjectChip.setText(subjectName.substring(subjectName.indexOf(": ") + 2));
-                } else {
-                    subjectChip.setText(subjectName);
+                String displayName = subjectDetails.getSubjectName();
+                if (displayName.contains(": ")) { // Show only part after colon for brevity
+                    displayName = displayName.substring(displayName.indexOf(": ") + 2);
                 }
-                // Add styling or click listeners to chips if needed
-                partnerSubjects.addView(subjectChip);
+                subjectChip.setText(displayName);
+                partnerSubjectsChipGroup.addView(subjectChip);
+            } else {
+                Log.w(TAG, "Could not find subject details for ID: " + subjectId);
+                Chip unknownSubjectChip = new Chip(this);
+                unknownSubjectChip.setText("Unknown Subject (ID: " + subjectId.substring(0, Math.min(5,subjectId.length())) +"..)");
+                partnerSubjectsChipGroup.addView(unknownSubjectChip);
             }
         }
     }
 
+    private Subject findSubjectById(String subjectId) {
+        for (Subject s : allSubjectsList) {
+            if (s.getId() != null && s.getId().equals(subjectId)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+
     private void setupRecyclerView() {
-        allSessionsForPartner = new ArrayList<>();
-        reviewAdapter = new PartnerReviewAdapter(this, allSessionsForPartner, partner, dataManager);
+        reviewAdapter = new PartnerReviewAdapter(this, new ArrayList<>(), partnerUserPojo, subjectDao, userDao);
         partnerReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         partnerReviewsRecyclerView.setAdapter(reviewAdapter);
-        // Important for NestedScrollView:
-        partnerReviewsRecyclerView.setNestedScrollingEnabled(false);
+        partnerReviewsRecyclerView.setNestedScrollingEnabled(false); // Important for use inside ScrollView
     }
 
     private void loadPartnerReviews() {
-        if (partner == null) return;
-
-        List<Session> sessionsAsTutor = dataManager.getSessionDao().getSessionsByTutorId(partner.getStudentNum());
-        List<Session> sessionsAsTutee = dataManager.getSessionDao().getSessionsByTuteeId(partner.getStudentNum());
-
-        List<Session> relevantSessionsWithReviews = new ArrayList<>();
-
-        // Collect sessions where partner was tutor and tutee left a review
-        for (Session session : sessionsAsTutor) {
-            if (session.getTuteeReview() != null && !session.getTuteeReview().isEmpty()) {
-                relevantSessionsWithReviews.add(session);
-            }
-        }
-
-        // Collect sessions where partner was tutee and tutor left a review
-        for (Session session : sessionsAsTutee) {
-            // Avoid adding duplicates if a session somehow appears in both lists (shouldn't happen with current logic)
-            // And ensure this session wasn't already added (e.g. if partner tutored themselves)
-            boolean alreadyAdded = false;
-            for(Session s : relevantSessionsWithReviews){
-                if(s.getId() == session.getId()){
-                    alreadyAdded = true;
-                    break;
-                }
-            }
-            if(!alreadyAdded && session.getTutorReview() != null && !session.getTutorReview().isEmpty()){
-                relevantSessionsWithReviews.add(session);
-            }
-        }
-
-        // Sort by date, newest first
-        relevantSessionsWithReviews.sort((s1, s2) -> s2.getStartTime().compareTo(s1.getStartTime()));
-
-
-        allSessionsForPartner.clear();
-        allSessionsForPartner.addAll(relevantSessionsWithReviews);
-        reviewAdapter.notifyDataSetChanged();
-
-        if (allSessionsForPartner.isEmpty()) {
+        if (partnerUserPojo == null || partnerUserPojo.getUid() == null) {
+            showLoading(false);
             tvNoReviews.setVisibility(VISIBLE);
             partnerReviewsRecyclerView.setVisibility(GONE);
-        } else {
-            tvNoReviews.setVisibility(GONE);
-            partnerReviewsRecyclerView.setVisibility(VISIBLE);
+            return;
         }
+
+        showLoading(true); // Show loading before fetching reviews
+
+        // Fetch sessions where partner was a tutor (to get reviews from tutees)
+        sessionDao.getSessionsByTutorUid(partnerUserPojo.getUid(), new SessionDao.SessionsCallback() {
+            @Override
+            public void onSessionsFetched(List<Session> sessionsAsTutor) {
+                List<Session> reviewsForPartner = new ArrayList<>();
+                for (Session session : sessionsAsTutor) {
+                    // We want reviews GIVEN TO this partner when they were a TUTOR
+                    if (session.getStatus() == Session.Status.COMPLETED &&
+                            (session.getTuteeReview() != null || (session.getTuteeRating() != null && session.getTuteeRating() > 0))) {
+                        reviewsForPartner.add(session);
+                    }
+                }
+
+                // Fetch sessions where partner was a tutee (to get reviews from tutors)
+                sessionDao.getSessionsByTuteeUid(partnerUserPojo.getUid(), new SessionDao.SessionsCallback() {
+                    @Override
+                    public void onSessionsFetched(List<Session> sessionsAsTutee) {
+                        for (Session session : sessionsAsTutee) {
+                            // We want reviews GIVEN TO this partner when they were a TUTEE
+                            if (session.getStatus() == Session.Status.COMPLETED &&
+                                    (session.getTutorReview() != null || (session.getTutorRating() != null && session.getTutorRating() > 0))) {
+                                // Avoid duplicates if a session somehow appears in both roles for the same user (unlikely)
+                                boolean alreadyAdded = false;
+                                for(Session s : reviewsForPartner) if(s.getId().equals(session.getId())) alreadyAdded = true;
+                                if(!alreadyAdded) reviewsForPartner.add(session);
+                            }
+                        }
+
+                        if (!reviewsForPartner.isEmpty()) {
+                            Collections.sort(reviewsForPartner, (s1, s2) -> {
+                                Timestamp t1 = s1.getStartTime() != null ? s1.getStartTime() : new Timestamp(0,0);
+                                Timestamp t2 = s2.getStartTime() != null ? s2.getStartTime() : new Timestamp(0,0);
+                                return t2.compareTo(t1); // Newest first
+                            });
+                            reviewAdapter.updateList(reviewsForPartner);
+                            tvNoReviews.setVisibility(GONE);
+                            partnerReviewsRecyclerView.setVisibility(VISIBLE);
+                        } else {
+                            reviewAdapter.updateList(new ArrayList<>()); // Clear adapter
+                            tvNoReviews.setVisibility(VISIBLE);
+                            partnerReviewsRecyclerView.setVisibility(GONE);
+                        }
+                        showLoading(false);
+                    }
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e(TAG, "Error fetching sessions as tutee for partner reviews", e);
+                        // Process with whatever was fetched from sessionsAsTutor
+                        if (!reviewsForPartner.isEmpty()) {
+                            Collections.sort(reviewsForPartner, (s1, s2) -> s2.getStartTime().compareTo(s1.getStartTime())); // Newest first
+                            reviewAdapter.updateList(reviewsForPartner);
+                        } else {
+                            tvNoReviews.setVisibility(VISIBLE);
+                            partnerReviewsRecyclerView.setVisibility(GONE);
+                        }
+                        showLoading(false);
+                    }
+                });
+            }
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Error fetching sessions as tutor for partner reviews", e);
+                tvNoReviews.setVisibility(VISIBLE);
+                partnerReviewsRecyclerView.setVisibility(GONE);
+                showLoading(false);
+            }
+        });
     }
 }
-
-/*
-package com.pbdvmobile.app;
-
-import static android.view.View.GONE;
-
-import android.os.Bundle;
-import android.widget.ImageView;
-import android.widget.RatingBar;
-import android.widget.TextView;
-
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.bumptech.glide.Glide;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
-import com.pbdvmobile.app.data.DataManager;
-import com.pbdvmobile.app.data.LogInUser;
-import com.pbdvmobile.app.data.model.Session;
-import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.data.model.UserSubject;
-
-import java.util.List;
-
-public class PartnerProfileActivity extends AppCompatActivity {
-
-
-    DataManager dataManager = DataManager.getInstance(this);
-    LogInUser current_user = LogInUser.getInstance(dataManager);
-    ImageView partnerProfileImage;
-    User partner;
-    TextView partnerName, partnerTutorRatingCount, partnerTuteeRatingCount, partnerTitle, partnerAvailability, partnerBio;
-    RatingBar partnerTutorRating, partnerTuteeRating;
-    ChipGroup partnerSubjects;
-    RecyclerView partnerReviews;
-    List<Session> ratingsAsTutor, ratingsAsTutee;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_partner_profile);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        partner = (User) getIntent().getSerializableExtra("tutor");
-
-        initial_element();
-
-        if(partner != null)set_data(partner);
-
-    }
-
-    private void set_data(User partner) {
-
-        Glide.with(this)
-                .load(partner.getProfileImageUrl())
-                .placeholder(R.mipmap.ic_launcher_round)
-                .error(R.mipmap.ic_launcher_round)
-                .circleCrop()
-                .into(partnerProfileImage);
-
-        partnerName.setText(partner.getFirstName() + " " + partner.getLastName());
-        double[] avgRatings = dataManager.getSessionDao().getAverageRatingByStudentNum(partner.getStudentNum());
-
-
-        if(partner.isTutor()){
-            ratingsAsTutor = dataManager.getSessionDao().getSessionsByTutorId(partner.getStudentNum());
-            if(!ratingsAsTutor.isEmpty() && avgRatings[1] != 0) {
-                partnerTutorRating.setRating((float) avgRatings[1]);
-                partnerTutorRatingCount.setText(partnerTutorRating.getRating() + " (" + ratingsAsTutor.size() + " reviews as a tutor)");
-            }else{
-                partnerTutorRating.setVisibility(GONE);
-                partnerTutorRatingCount.setText("No tutor rated yet");
-            }
-        }else{
-            partnerTutorRating.setVisibility(GONE);
-            partnerTutorRatingCount.setVisibility(GONE);
-        }
-        ratingsAsTutee = dataManager.getSessionDao().getSessionsByTuteeId(partner.getStudentNum());
-
-        if(!ratingsAsTutee.isEmpty() && avgRatings[0] != 0) {
-            partnerTuteeRating.setRating((float) avgRatings[0]);
-            partnerTuteeRatingCount.setText(partnerTuteeRating.getRating() + " (" + ratingsAsTutee.size() + " reviews as a tutee)");
-        }else{
-            partnerTuteeRating.setVisibility(GONE);
-            partnerTuteeRatingCount.setText("No tutee rated yet");
-        }
-
-        partnerTitle.setText(partner.getEducationLevel().name());
-        partnerAvailability.setText("partner.getAvailability()");
-        partnerBio.setText(partner.getBio().isEmpty() ? "No Bio provided": partner.getBio());
-
-        populateSubjects();
-
-    }
-    private void populateSubjects(){
-        List<UserSubject> userSubjects = dataManager.getSubjectDao().getUserSubjects(partner.getStudentNum());
-
-        for(UserSubject subject : userSubjects){
-            Chip subjectChip = new Chip(this);
-            subjectChip.setText(dataManager.getSubjectDao()
-                    .getSubjectById(subject.getSubjectId())
-                    .getSubjectName().split(": ")[1]);
-
-            partnerSubjects.addView(subjectChip);
-        }
-    }
-    private void initial_element(){
-
-        partnerProfileImage = findViewById(R.id.img_tutor_profile);
-        partnerName = findViewById(R.id.tv_tutor_name);
-        partnerTutorRating = findViewById(R.id.rating_tutor);
-        partnerTutorRatingCount = findViewById(R.id.tv_rating_value);
-        partnerTuteeRating = findViewById(R.id.rating_tutee);
-        partnerTuteeRatingCount = findViewById(R.id.tv_tutee_rating_value);
-        partnerTitle = findViewById(R.id.tv_tutor_title);
-        partnerAvailability = findViewById(R.id.tv_tutor_availability);
-        partnerBio = findViewById(R.id.tv_tutor_bio);
-        partnerSubjects = findViewById(R.id.chip_group_subjects);
-        partnerReviews = findViewById(R.id.recyclerViewPartnerReviews);
-
-    }
-}*/

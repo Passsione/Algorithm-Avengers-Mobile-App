@@ -163,4 +163,5 @@
     <string name="session_request_success">Session requested successfully </string>
     <string name="select_duration_first_for_time">Select Time\n</string>
     <string name="notification_icon">Notification Icon</string>
+    <string name="select_subject_first_for_time">Select a subject\n</string>
 </resources>

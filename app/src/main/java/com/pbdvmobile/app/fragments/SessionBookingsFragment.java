@@ -1,4 +1,3 @@
-
 package com.pbdvmobile.app.fragments;
 
 import android.annotation.SuppressLint;
@@ -7,7 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import android.util.Log; // Import Log for debugging
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,82 +23,79 @@ import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.bumptech.glide.Glide;
+import com.google.firebase.firestore.DocumentReference;
 import com.pbdvmobile.app.R;
 import com.pbdvmobile.app.PartnerProfileActivity;
 import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser;
-import com.pbdvmobile.app.data.Schedule.TimeSlot;
+import com.pbdvmobile.app.data.Schedule.TimeSlot; // Ensure this class is compatible
+import com.pbdvmobile.app.data.dao.SessionDao;
+import com.pbdvmobile.app.data.dao.SubjectDao;
+import com.pbdvmobile.app.data.dao.UserDao;
+import com.pbdvmobile.app.data.model.Session;
+import com.pbdvmobile.app.data.model.Subject;
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.data.model.UserSubject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-// Consider changing AtomicInteger back to AtomicLong if you encounter precision issues or larger millisecond values
-// though current usage seems to fit within int.
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicReference; // For holding subject ID
 
 public class SessionBookingsFragment extends Fragment {
 
-    private static final String TAG = "SessionBookingsFrag"; // For logging
+    private static final String TAG = "SessionBookingsFrag";
 
-    DataManager dataManager;
-    LogInUser currentUserSession;
-    TextView tutorNameDisplay, tutorSubjectsDisplay;
-    Spinner locationSpinner; 
-    RatingBar tutorRatingBar;
-    ImageView tutorProfileImage;
-    Button viewProfileButton, cancelButton, submitButton;
-    RadioGroup subjectsRadioGroup, durationRadioGroup;
-    Spinner timeSpinner;
-    CalendarView calendarView;
-    // Use startOfTomorrowMillis for minDate logic, selectedDate for the actual chosen date (normalized)
-    long startOfTomorrowMillis; // Used for CalendarView minDate
-    // private long startOfTodayMillis; // Kept for reference if needed for other logic
+    private DataManager dataManager;
+    private LogInUser loggedInUser;
+    private UserDao userDao;
+    private SubjectDao subjectDao;
+    private SessionDao sessionDao;
+
+    private TextView tutorNameDisplay, tutorSubjectsDisplayHint; // Renamed for clarity
+    private Spinner locationSpinner;
+    private RatingBar tutorRatingBar;
+    private ImageView tutorProfileImage;
+    private Button viewProfileButton, cancelButton, submitButton;
+    private RadioGroup subjectsRadioGroup, durationRadioGroup;
+    private Spinner timeSpinner;
+    private CalendarView calendarView;
+
+    private long startOfTomorrowMillis;
+    private Date selectedCalendarDate = new Date(); // Normalized to midnight of the selected day
+
+    private final String[] locations = {"Steve Biko Library", "ML Sultan Library"};
+    private String selectedLocationId;
+
+    private AtomicReference<String> selectedSubjectId = new AtomicReference<>(); // Firestore Subject Document ID
+    private String selectedSubjectName; // For denormalizing in Session
+    private int selectedDurationMillis = 0;
+    private int selectedTimeOffsetMillis = 0; // Offset from midnight for the selected time slot
+
+    private User currentTutorPojo;
+    private User currentTuteePojo;
+
+    private List<TimeSlot> tutorTakenSlots = new ArrayList<>();
+    private List<Subject> commonSubjectsForRadioGroup = new ArrayList<>();
 
 
-    private final String[] locations = {
-            "Steve Biko Library",
-            "ML Sultan Library",
-    };
-    private String selectedLocationId; 
-
-    // Declare AtomicInteger fields here to be accessible by helper methods and listeners
-    private AtomicInteger selectedSubjectId = new AtomicInteger(0);
-    private AtomicInteger selectedDurationMillis = new AtomicInteger(0);
-    private AtomicInteger selectedTimeOffsetMillis = new AtomicInteger(0);
-    private Date selectedDate = new Date(); // Initialize to prevent null issues
-    private User currentTutor;
-
-    // Helper class to store displayable time and its value for the Spinner
     private static class TimeSpinnerItem {
         private final String displayTime;
-        private final int timeOffsetMillis;
+        private final int timeOffsetMillis; // Offset from midnight
 
         public TimeSpinnerItem(String displayTime, int timeOffsetMillis) {
             this.displayTime = displayTime;
             this.timeOffsetMillis = timeOffsetMillis;
         }
-
-        public int getTimeOffsetMillis() {
-            return timeOffsetMillis;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return displayTime; // This is what ArrayAdapter will display in the Spinner
-        }
+        public int getTimeOffsetMillis() { return timeOffsetMillis; }
+        @NonNull @Override public String toString() { return displayTime; }
     }
-
-    private List<TimeSpinnerItem> availableTimeSlots = new ArrayList<>();
+    private List<TimeSpinnerItem> availableTimeSpinnerItems = new ArrayList<>();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_session_bookings, container, false);
     }
 
@@ -108,86 +104,48 @@ public class SessionBookingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        if (getContext() == null) return;
+
         dataManager = DataManager.getInstance(getContext());
-        currentUserSession = LogInUser.getInstance(dataManager);
+        loggedInUser = LogInUser.getInstance();
+        userDao = new UserDao();
+        subjectDao = new SubjectDao();
+        sessionDao = new SessionDao();
+
+        currentTuteePojo = loggedInUser.getUser();
+        if (currentTuteePojo == null) {
+            Toast.makeText(getContext(), "Error: Current user data not found.", Toast.LENGTH_LONG).show();
+            if (getActivity() != null) getActivity().finish();
+            return;
+        }
 
         assert getArguments() != null;
-        currentTutor = (User) getArguments().getSerializable("tutor");
-        String subjectsArg = getArguments().getString("subjects");
+        currentTutorPojo = (User) getArguments().getSerializable("tutor");
+        // String tutorSubjectsDisplayArg = getArguments().getString("subjects"); // This might be less reliable now
 
-        // Initialize Views
+        if (currentTutorPojo == null) {
+            Toast.makeText(getContext(), "Error: Tutor data not found.", Toast.LENGTH_LONG).show();
+            if (getActivity() != null) getActivity().finish();
+            return;
+        }
 
         initializeViews(view);
+        setupCalendarView();
+        populateTutorInfo(view);
+        fetchTutorAvailabilityAndCommonSubjects(); // This will then populate radio groups and time spinner
 
-        // Calculate Start of Tomorrow for minDate
-        Calendar tomorrowCal = Calendar.getInstance();
-        tomorrowCal.add(Calendar.DAY_OF_YEAR, 1);
-        normalizeCalendarToStartOfDay(tomorrowCal); // Helper method
-        startOfTomorrowMillis = tomorrowCal.getTimeInMillis();
-
-        calendarView.setMinDate(startOfTomorrowMillis);
-
-        // Initialize selectedDate to the start of the initially displayed/selected date in CalendarView
-        Calendar initialCalendarDate = Calendar.getInstance();
-        initialCalendarDate.setTimeInMillis(calendarView.getDate()); // Get current date from CalendarView
-        normalizeCalendarToStartOfDay(initialCalendarDate);
-        if (initialCalendarDate.getTimeInMillis() < startOfTomorrowMillis) {
-            // If CalendarView's date is somehow before minDate, set to minDate
-            selectedDate.setTime(startOfTomorrowMillis);
-            calendarView.setDate(startOfTomorrowMillis); // Update the calendar view itself
-        } else {
-            selectedDate.setTime(initialCalendarDate.getTimeInMillis());
-        }
-        Log.d(TAG, "Initial selectedDate (normalized): " + selectedDate.toString());
-
-
-        // For reference, startOfTodayMillis (midnight today)
-        Calendar todayCal = Calendar.getInstance();
-        normalizeCalendarToStartOfDay(todayCal);
-        // startOfTodayMillis = todayCal.getTimeInMillis(); // If needed for other logic
-
-
-        populateTutorInfo(currentTutor, subjectsArg, view);
-        populateSubjectsRadioGroup(currentTutor);
-        populateDurationRadioGroup();
-        createLocationDropDown();
-        setupTimeSpinnerListener(); // Added this call
-
-
-        calendarView.setOnDateChangeListener((cv, year, month, dayOfMonth) -> {
-            Calendar newlySelectedCalendar = Calendar.getInstance();
-            newlySelectedCalendar.set(year, month, dayOfMonth);
-            normalizeCalendarToStartOfDay(newlySelectedCalendar); // Normalize to 00:00:00
-
-            if (newlySelectedCalendar.getTimeInMillis() < startOfTomorrowMillis) {
-                // This case should ideally be prevented by CalendarView's setMinDate
-                selectedDate.setTime(startOfTomorrowMillis);
-                cv.setDate(startOfTomorrowMillis); // Force calendar back to min date
-            } else {
-                selectedDate.setTime(newlySelectedCalendar.getTimeInMillis());
-                // cv.setDate is not strictly needed here if user interaction caused change
-            }
-            Log.d(TAG, "Date selected via listener (normalized): " + selectedDate.toString());
-            populateTimeSpinner();
-        });
+        populateDurationRadioGroup(); // Durations are static
+        createLocationDropDown();     // Locations are static
+        setupTimeSpinnerListener();
 
         cancelButton.setOnClickListener(l -> {
             if (getActivity() != null) getActivity().finish();
         });
         submitButton.setOnClickListener(l -> handleSubmitBooking());
-
-        populateTimeSpinner();
-    }
-
-    private void normalizeCalendarToStartOfDay(Calendar calendar) {
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
     }
 
     private void initializeViews(View view) {
-        tutorSubjectsDisplay = view.findViewById(R.id.session_booking_tutor_subjects);
+        tutorSubjectsDisplayHint = view.findViewById(R.id.session_booking_tutor_subjects); // Or a new TextView for actual subjects
         tutorNameDisplay = view.findViewById(R.id.session_booking_tutor_name);
         tutorProfileImage = view.findViewById(R.id.session_booking_tutor_image);
         tutorRatingBar = view.findViewById(R.id.session_booking_tutor_rating);
@@ -201,84 +159,213 @@ public class SessionBookingsFragment extends Fragment {
         calendarView = view.findViewById(R.id.calendar);
     }
 
-    private void populateTutorInfo(User tutor, String subjectsDisplayString, View fragmentView) {
-        tutorNameDisplay.setText(String.format("%s %s", tutor.getFirstName(), tutor.getLastName()));
-        tutorSubjectsDisplay.setText(subjectsDisplayString);
-        Glide.with(getContext())
-                .load(tutor.getProfileImageUrl())
+    private void setupCalendarView() {
+        Calendar tomorrowCal = Calendar.getInstance();
+        tomorrowCal.add(Calendar.DAY_OF_YEAR, 1);
+        normalizeCalendarToStartOfDay(tomorrowCal);
+        startOfTomorrowMillis = tomorrowCal.getTimeInMillis();
+        calendarView.setMinDate(startOfTomorrowMillis);
+
+        Calendar initialCalendarDate = Calendar.getInstance();
+        initialCalendarDate.setTimeInMillis(calendarView.getDate());
+        normalizeCalendarToStartOfDay(initialCalendarDate);
+
+        if (initialCalendarDate.getTimeInMillis() < startOfTomorrowMillis) {
+            selectedCalendarDate.setTime(startOfTomorrowMillis);
+            calendarView.setDate(startOfTomorrowMillis);
+        } else {
+            selectedCalendarDate.setTime(initialCalendarDate.getTimeInMillis());
+        }
+        Log.d(TAG, "Initial selectedCalendarDate (normalized): " + selectedCalendarDate.toString());
+
+        calendarView.setOnDateChangeListener((cv, year, month, dayOfMonth) -> {
+            Calendar newlySelectedCalendar = Calendar.getInstance();
+            newlySelectedCalendar.set(year, month, dayOfMonth);
+            normalizeCalendarToStartOfDay(newlySelectedCalendar);
+
+            if (newlySelectedCalendar.getTimeInMillis() < startOfTomorrowMillis) {
+                selectedCalendarDate.setTime(startOfTomorrowMillis);
+                cv.setDate(startOfTomorrowMillis);
+            } else {
+                selectedCalendarDate.setTime(newlySelectedCalendar.getTimeInMillis());
+            }
+            Log.d(TAG, "Date selected via listener (normalized): " + selectedCalendarDate.toString());
+            populateTimeSpinner(); // Repopulate time spinner for the new date
+        });
+    }
+
+    private void normalizeCalendarToStartOfDay(Calendar calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+    }
+
+    private void populateTutorInfo(View fragmentView) {
+        tutorNameDisplay.setText(String.format("%s %s", currentTutorPojo.getFirstName(), currentTutorPojo.getLastName()));
+        Glide.with(requireContext())
+                .load(currentTutorPojo.getProfileImageUrl())
                 .placeholder(R.mipmap.ic_launcher_round)
                 .error(R.mipmap.ic_launcher_round)
                 .circleCrop()
                 .into(tutorProfileImage);
-        double ratingValue = dataManager.getSessionDao().getAverageRatingByStudentNum(tutor.getStudentNum())[1]; // Assuming [1] is tutor's rating as tutee
-        if (ratingValue > 0) { // Usually ratings are > 0 if set. -1 or 0 might mean not rated.
-            tutorRatingBar.setRating((float) ratingValue);
-            tutorRatingBar.setVisibility(View.VISIBLE);
-        } else {
-            tutorRatingBar.setVisibility(View.GONE);
-            TextView notRatedTextView = new TextView(getContext());
-            notRatedTextView.setText(R.string.not_rated_yet); // Use string resource
-            notRatedTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-            LinearLayout detailsLayout = fragmentView.findViewById(R.id.session_booking_tutor_details);
-            if (detailsLayout != null) {
-                // Remove previous "Not rated yet" if any, before adding a new one.
-                for (int i = 0; i < detailsLayout.getChildCount(); i++) {
-                    View child = detailsLayout.getChildAt(i);
-                    if (child instanceof TextView && ((TextView) child).getText().toString().equals(getString(R.string.not_rated_yet))) {
-                        detailsLayout.removeViewAt(i);
-                        break;
-                    }
+
+        // Fetch and display tutor's average rating as a tutor
+        sessionDao.getAverageRatingByFirebaseUid(currentTutorPojo.getUid(), new SessionDao.RatingsCallback() {
+            @Override
+            public void onRatingsFetched(double averageRatingAsTutee, double averageRatingAsTutor) {
+                if (averageRatingAsTutor > 0) {
+                    tutorRatingBar.setRating((float) averageRatingAsTutor);
+                    tutorRatingBar.setVisibility(View.VISIBLE);
+                } else {
+                    tutorRatingBar.setVisibility(View.GONE);
+                    // Optionally show "Not rated yet"
+                    TextView notRatedTextView = new TextView(getContext());
+                    notRatedTextView.setText(R.string.not_rated_yet);
+                    notRatedTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                    // Add this text view to the layout if needed
                 }
-                detailsLayout.addView(notRatedTextView);
             }
-        }
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Error fetching tutor ratings", e);
+                tutorRatingBar.setVisibility(View.GONE);
+            }
+        });
+
+
         viewProfileButton.setOnClickListener(l -> {
             Intent toProfile = new Intent(getActivity(), PartnerProfileActivity.class);
-            toProfile.putExtra("tutor", tutor);
+            toProfile.putExtra("tutor", currentTutorPojo); // User POJO should be Serializable
             startActivity(toProfile);
         });
     }
 
-    private void populateSubjectsRadioGroup(User tutor) {
-        subjectsRadioGroup.removeAllViews();
-        selectedSubjectId.set(0); // Reset
-        List<UserSubject> tutorUserSubjects = dataManager.getSubjectDao().getUserSubjects(tutor.getStudentNum());
-        List<UserSubject> tuteeUserSubjects = dataManager.getSubjectDao().getUserSubjects(currentUserSession.getUser().getStudentNum());
-        boolean isFirstSubject = true;
-
-        for (UserSubject tutorSubj : tutorUserSubjects) {
-            if (!tutorSubj.getTutoring()) continue;
-            for (UserSubject tuteeSubj : tuteeUserSubjects) {
-                if (tutorSubj.getSubjectId() == tuteeSubj.getSubjectId()) {
-                    RadioButton radioButton = new RadioButton(getContext());
-                    String subjectName = dataManager.getSubjectDao().getSubjectById(tutorSubj.getSubjectId()).getSubjectName();
-                    radioButton.setText(subjectName);
-                    radioButton.setId(View.generateViewId()); // Important for RadioGroup
-                    final int currentSubjectId = tutorSubj.getSubjectId();
-                    radioButton.setOnClickListener(l -> selectedSubjectId.set(currentSubjectId));
-                    subjectsRadioGroup.addView(radioButton);
-
-                    if (isFirstSubject) {
-                        radioButton.setChecked(true);
-                        selectedSubjectId.set(currentSubjectId);
-                        isFirstSubject = false;
-                    }
-                    break;
-                }
+    private void fetchTutorAvailabilityAndCommonSubjects() {
+        // 1. Fetch tutor's taken time slots
+        sessionDao.getActiveTimeSlotsForUser(currentTutorPojo.getUid(), new SessionDao.TimeSlotsCallback() {
+            @Override
+            public void onTimeSlotsFetched(List<TimeSlot> timeSlots) {
+                tutorTakenSlots.clear();
+                tutorTakenSlots.addAll(timeSlots);
+                Log.d(TAG, "Fetched " + tutorTakenSlots.size() + " taken slots for tutor " + currentTutorPojo.getUid());
+                // After fetching availability, populate common subjects and then the time spinner
+                findCommonSubjectsAndPopulateRadio();
             }
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Error fetching tutor's taken time slots.", e);
+                Toast.makeText(getContext(), "Could not fetch tutor schedule.", Toast.LENGTH_SHORT).show();
+                // Still try to populate subjects, but time spinner might be inaccurate or empty
+                findCommonSubjectsAndPopulateRadio();
+            }
+        });
+    }
+
+    private void findCommonSubjectsAndPopulateRadio() {
+        commonSubjectsForRadioGroup.clear();
+        List<String> tutorSubjectIds = currentTutorPojo.getTutoredSubjectIds();
+        List<String> tuteeSubjectIds = currentTuteePojo.getTutoredSubjectIds(); // Or all subjects tutee is enrolled in
+
+        if (tutorSubjectIds == null || tutorSubjectIds.isEmpty()) {
+            displayNoCommonSubjects();
+            return;
         }
-        if (subjectsRadioGroup.getChildCount() == 0) {
-            TextView noSubjects = new TextView(getContext());
-            noSubjects.setText(R.string.no_common_subjects_tutor); // Use string resource
-            subjectsRadioGroup.addView(noSubjects);
+
+        // For simplicity, let's assume tutee can request any subject the tutor tutors.
+        // A more complex logic would find actual "common" subjects if tutees also have a list of subjects they *need* tutoring for.
+        // Here, we'll list all subjects the tutor offers.
+
+        final int[] subjectsToFetch = {tutorSubjectIds.size()};
+        final ArrayList<Subject> fetchedSubjects = new ArrayList<>();
+
+        if (subjectsToFetch[0] == 0) {
+            displayNoCommonSubjects();
+            return;
+        }
+
+        for (String subjId : tutorSubjectIds) {
+            subjectDao.getSubjectById(subjId).addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    Subject subject = documentSnapshot.toObject(Subject.class);
+                    if (subject != null) {
+                        subject.setId(documentSnapshot.getId()); // Set the Firestore ID
+                        fetchedSubjects.add(subject);
+                    }
+                }
+                subjectsToFetch[0]--;
+                if (subjectsToFetch[0] == 0) { // All fetched
+                    commonSubjectsForRadioGroup.addAll(fetchedSubjects);
+                    populateSubjectsRadioGroup();
+                    populateTimeSpinner(); // Now that subjects might be selected, and availability is known.
+                }
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "Error fetching subject details for ID: " + subjId, e);
+                subjectsToFetch[0]--;
+                if (subjectsToFetch[0] == 0) {
+                    commonSubjectsForRadioGroup.addAll(fetchedSubjects); // Add what we got
+                    populateSubjectsRadioGroup();
+                    populateTimeSpinner();
+                }
+            });
         }
     }
 
+
+    private void populateSubjectsRadioGroup() {
+        subjectsRadioGroup.removeAllViews();
+        selectedSubjectId.set(null);
+        selectedSubjectName = null;
+
+        if (commonSubjectsForRadioGroup.isEmpty()) {
+            displayNoCommonSubjects();
+            return;
+        }
+
+        boolean isFirstSubject = true;
+        for (Subject subject : commonSubjectsForRadioGroup) {
+            RadioButton radioButton = new RadioButton(getContext());
+            radioButton.setText(subject.getSubjectName());
+            radioButton.setId(View.generateViewId());
+            radioButton.setOnClickListener(l -> {
+                selectedSubjectId.set(subject.getId());
+                selectedSubjectName = subject.getSubjectName();
+                Log.d(TAG, "Subject selected: " + subject.getSubjectName() + " (ID: " + subject.getId() + ")");
+                // Optionally repopulate time spinner if subject choice affects availability (unlikely here)
+            });
+            subjectsRadioGroup.addView(radioButton);
+
+            if (isFirstSubject) {
+                radioButton.setChecked(true);
+                selectedSubjectId.set(subject.getId());
+                selectedSubjectName = subject.getSubjectName();
+                isFirstSubject = false;
+                Log.d(TAG, "Default subject selected: " + subject.getSubjectName() + " (ID: " + subject.getId() + ")");
+            }
+        }
+        // Update hint about what subjects are shown
+        if (tutorSubjectsDisplayHint != null) {
+            tutorSubjectsDisplayHint.setText("Tutor offers the following subjects:");
+        }
+    }
+
+    private void displayNoCommonSubjects() {
+        subjectsRadioGroup.removeAllViews();
+        TextView noSubjects = new TextView(getContext());
+        noSubjects.setText(R.string.no_common_subjects_tutor);
+        subjectsRadioGroup.addView(noSubjects);
+        if (tutorSubjectsDisplayHint != null) {
+            tutorSubjectsDisplayHint.setText("Tutor does not offer any subjects you can book at the moment.");
+        }
+        populateTimeSpinner(); // Populate with "select subject first" or similar
+    }
+
+
     private void populateDurationRadioGroup() {
         durationRadioGroup.removeAllViews();
-        selectedDurationMillis.set(0); // Reset
+        selectedDurationMillis = 0;
 
-        int[] minutes = {30, 60, 120}; // 30 min, 1 hr, 2 hr
+        int[] minutes = {30, 60, 120};
         String[] labels = {"30 minutes", "1 hour", "2 hours"};
         boolean isFirstDuration = true;
 
@@ -286,84 +373,81 @@ public class SessionBookingsFragment extends Fragment {
             RadioButton radioButton = new RadioButton(getContext());
             radioButton.setText(labels[i]);
             radioButton.setId(View.generateViewId());
-            final int durationValueMillis = (int) dataManager.getSessionDao().minutesToMseconds(minutes[i]);
+            final int durationValueMillis = minutes[i] * 60 * 1000;
             radioButton.setOnClickListener(l -> {
-                selectedDurationMillis.set(durationValueMillis);
+                selectedDurationMillis = durationValueMillis;
                 Log.d(TAG, "Duration selected: " + durationValueMillis + "ms");
-                populateTimeSpinner();
+                populateTimeSpinner(); // Repopulate time spinner for new duration
             });
             durationRadioGroup.addView(radioButton);
             if (isFirstDuration) {
                 radioButton.setChecked(true);
-                selectedDurationMillis.set(durationValueMillis);
+                selectedDurationMillis = durationValueMillis;
                 isFirstDuration = false;
             }
         }
     }
 
     private void populateTimeSpinner() {
-        selectedTimeOffsetMillis.set(0); // Reset when repopulating
-        availableTimeSlots.clear();
+        selectedTimeOffsetMillis = 0;
+        availableTimeSpinnerItems.clear();
 
-        if (getContext() == null || currentTutor == null) {
+        if (getContext() == null || currentTutorPojo == null) {
             Log.e(TAG, "Context or Tutor is null. Cannot populate time spinner.");
-            // Clear spinner and show a placeholder if necessary
-            ArrayAdapter<TimeSpinnerItem> emptyAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new ArrayList<>());
-            emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            timeSpinner.setAdapter(emptyAdapter);
-            timeSpinner.setEnabled(false);
+            setupEmptyTimeSpinner("Error loading tutor data");
             return;
         }
-        int currentSelectedDurationMillis = selectedDurationMillis.get();
-        if (currentSelectedDurationMillis == 0) {
-            Log.d(TAG, "No duration selected. Time spinner will be empty.");
-            availableTimeSlots.add(new TimeSpinnerItem(getString(R.string.select_duration_first_for_time), 0));
-            ArrayAdapter<TimeSpinnerItem> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, availableTimeSlots);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            timeSpinner.setAdapter(adapter);
-            timeSpinner.setEnabled(false);
+        if (selectedSubjectId.get() == null) {
+            setupEmptyTimeSpinner(getString(R.string.select_subject_first_for_time));
+            return;
+        }
+        if (selectedDurationMillis == 0) {
+            setupEmptyTimeSpinner(getString(R.string.select_duration_first_for_time));
             return;
         }
         timeSpinner.setEnabled(true);
 
-        List<TimeSlot> takenSlotsForTutor = dataManager.getSessionDao().getTakenTimeSlot(currentTutor.getStudentNum());
+        // Business hours: 8 AM to 6 PM (18:00)
+        final int OPEN_HOUR = 8;
+        final int CLOSE_HOUR = 18; // Sessions can end at 18:00, so last start time depends on duration
 
-        long slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);// currentSelectedDurationMillis;
-        if (slotCheckingIntervalMillis < dataManager.getSessionDao().minutesToMseconds(30)) {
-            slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);
-        }
+        // Slot checking interval (e.g., every 30 minutes)
+        final int SLOT_INTERVAL_MINUTES = 30;
+        final long slotIntervalMillis = SLOT_INTERVAL_MINUTES * 60 * 1000;
 
-        long serviceOpenTimeOffset = dataManager.getSessionDao().OPEN_TIME;
-        long serviceCloseTimeOffset = dataManager.getSessionDao().CLOSE_TIME;
-        Date now = new Date();
+        Calendar slotCandidate = Calendar.getInstance();
+        slotCandidate.setTime(selectedCalendarDate); // Already normalized to midnight
+        slotCandidate.set(Calendar.HOUR_OF_DAY, OPEN_HOUR);
+        slotCandidate.set(Calendar.MINUTE, 0);
 
-        Log.d(TAG, "Populating time spinner for date: " + selectedDate + ", duration: " + currentSelectedDurationMillis + "ms, interval: " + slotCheckingIntervalMillis + "ms");
-        long tempInterval = slotCheckingIntervalMillis;
-        for (long currentOffsetMillis = serviceOpenTimeOffset; currentOffsetMillis < serviceCloseTimeOffset; currentOffsetMillis += slotCheckingIntervalMillis) {
-            Calendar candidateStartCalendar = Calendar.getInstance();
-            candidateStartCalendar.setTime(selectedDate); // selectedDate is already normalized to 00:00:00
-            candidateStartCalendar.add(Calendar.MILLISECOND, (int) currentOffsetMillis);
-            Date actualCandidateStartTime = candidateStartCalendar.getTime();
-            Date actualCandidateEndTime = new Date(actualCandidateStartTime.getTime() + currentSelectedDurationMillis);
+        Calendar dayEndLimit = Calendar.getInstance();
+        dayEndLimit.setTime(selectedCalendarDate);
+        dayEndLimit.set(Calendar.HOUR_OF_DAY, CLOSE_HOUR);
+        dayEndLimit.set(Calendar.MINUTE, 0);
 
-            if (actualCandidateStartTime.before(now)) continue;
+        Date now = new Date(); // To prevent booking past slots on the current day
 
-            Calendar serviceCloseOfDayCalendar = Calendar.getInstance();
-            serviceCloseOfDayCalendar.setTime(selectedDate); // Normalized date
-            serviceCloseOfDayCalendar.add(Calendar.MILLISECOND, (int) serviceCloseTimeOffset);
-            if (actualCandidateEndTime.after(serviceCloseOfDayCalendar.getTime())) continue;
+        while (slotCandidate.getTimeInMillis() < dayEndLimit.getTimeInMillis()) {
+            Date proposedStartTime = slotCandidate.getTime();
+            Date proposedEndTime = new Date(proposedStartTime.getTime() + selectedDurationMillis);
 
-            // TimeSlot constructor takes actual UNPADDED times. Padding handled internally for 'overlaps'.
-            TimeSlot candidateSlotForCheck = new TimeSlot(actualCandidateStartTime, actualCandidateEndTime);
+            // Check if start time is in the past (for today)
+            if (selectedCalendarDate.equals(normalizeDate(now)) && proposedStartTime.before(now)) {
+                slotCandidate.add(Calendar.MILLISECOND, (int) slotIntervalMillis);
+                continue;
+            }
+
+            // Check if proposed session ends after closing time
+            if (proposedEndTime.after(dayEndLimit.getTime())) {
+                break; // No more valid slots for this duration today
+            }
+
+            TimeSlot candidateSlotForCheck = new TimeSlot(proposedStartTime, proposedEndTime);
             boolean isOverlapping = false;
-            for (TimeSlot takenSlot : takenSlotsForTutor) { // takenSlot from DAO is built from UNPADDED DB times
-                Calendar takenSlotActualStartCal = Calendar.getInstance();
-                takenSlotActualStartCal.setTime(takenSlot.getActualStartTime()); // Use actual start for day check
-
-                if (takenSlotActualStartCal.get(Calendar.YEAR) == candidateStartCalendar.get(Calendar.YEAR) &&
-                        takenSlotActualStartCal.get(Calendar.DAY_OF_YEAR) == candidateStartCalendar.get(Calendar.DAY_OF_YEAR)) {
-                    if (candidateSlotForCheck.overlaps(takenSlot)) {
-                        slotCheckingIntervalMillis = dataManager.getSessionDao().minutesToMseconds(30);
+            for (TimeSlot taken : tutorTakenSlots) {
+                // Ensure taken slot is on the same day as the proposed slot
+                if (isSameDay(taken.getActualStartTime(), proposedStartTime)) {
+                    if (candidateSlotForCheck.overlaps(taken)) {
                         isOverlapping = true;
                         break;
                     }
@@ -371,62 +455,82 @@ public class SessionBookingsFragment extends Fragment {
             }
 
             if (!isOverlapping) {
-                String displayTime = dataManager.formatDateTime(actualCandidateStartTime.toString())[1];
-                slotCheckingIntervalMillis = tempInterval;
-                availableTimeSlots.add(new TimeSpinnerItem(displayTime, (int) currentOffsetMillis));
+                String displayTime = dataManager.formatDateTime(proposedStartTime.toString())[1]; // HH:mm format
+                Calendar midnight = Calendar.getInstance();
+                midnight.setTime(selectedCalendarDate); // Normalized date
+                long offset = proposedStartTime.getTime() - midnight.getTimeInMillis();
+                availableTimeSpinnerItems.add(new TimeSpinnerItem(displayTime, (int) offset));
             }
-
+            slotCandidate.add(Calendar.MILLISECOND, (int) slotIntervalMillis);
         }
 
-        if (availableTimeSlots.isEmpty()) {
-            availableTimeSlots.add(new TimeSpinnerItem(getString(R.string.no_available_times), 0)); // Placeholder
+
+        if (availableTimeSpinnerItems.isEmpty()) {
+            availableTimeSpinnerItems.add(new TimeSpinnerItem(getString(R.string.no_available_times), 0));
         }
 
-        ArrayAdapter<TimeSpinnerItem> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, availableTimeSlots);
+        ArrayAdapter<TimeSpinnerItem> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, availableTimeSpinnerItems);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         timeSpinner.setAdapter(adapter);
 
-        // Automatically select the first valid time slot if available
-        if (availableTimeSlots.size() > 0 && availableTimeSlots.get(0).getTimeOffsetMillis() != 0) { // Check it's not a placeholder
-            timeSpinner.setSelection(0, false); // Select first item without triggering listener immediately
-            selectedTimeOffsetMillis.set(availableTimeSlots.get(0).getTimeOffsetMillis());
-        } else if (!availableTimeSlots.isEmpty() && availableTimeSlots.get(0).getTimeOffsetMillis() == 0 &&
-                availableTimeSlots.get(0).displayTime.equals(getString(R.string.no_available_times))) {
-            selectedTimeOffsetMillis.set(0); // No valid time selected
+        if (!availableTimeSpinnerItems.isEmpty() && availableTimeSpinnerItems.get(0).getTimeOffsetMillis() != 0) {
+            timeSpinner.setSelection(0, false);
+            selectedTimeOffsetMillis = availableTimeSpinnerItems.get(0).getTimeOffsetMillis();
+        } else {
+            selectedTimeOffsetMillis = 0; // Placeholder or no valid time
         }
-
-
-        Log.d(TAG, "Finished populating time spinner. Items: " + availableTimeSlots.size());
+        Log.d(TAG, "Finished populating time spinner. Items: " + availableTimeSpinnerItems.size());
     }
+
+    private void setupEmptyTimeSpinner(String message) {
+        availableTimeSpinnerItems.clear();
+        availableTimeSpinnerItems.add(new TimeSpinnerItem(message, 0));
+        ArrayAdapter<TimeSpinnerItem> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, availableTimeSpinnerItems);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        timeSpinner.setAdapter(adapter);
+        timeSpinner.setEnabled(false);
+    }
+
+
+    private boolean isSameDay(Date date1, Date date2) {
+        if (date1 == null || date2 == null) return false;
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(date1);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(date2);
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
+    }
+
+    private Date normalizeDate(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        normalizeCalendarToStartOfDay(cal);
+        return cal.getTime();
+    }
+
 
     private void setupTimeSpinnerListener() {
         timeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TimeSpinnerItem selectedItem = (TimeSpinnerItem) parent.getItemAtPosition(position);
-                // Ensure it's not a placeholder item before setting the time
                 if (!selectedItem.displayTime.equals(getString(R.string.select_duration_first_for_time)) &&
-                        !selectedItem.displayTime.equals(getString(R.string.no_available_times))) {
-                    selectedTimeOffsetMillis.set(selectedItem.getTimeOffsetMillis());
+                        !selectedItem.displayTime.equals(getString(R.string.no_available_times)) &&
+                        !selectedItem.displayTime.equals(getString(R.string.select_subject_first_for_time))) {
+                    selectedTimeOffsetMillis = selectedItem.getTimeOffsetMillis();
                     Log.d(TAG, "Time selected via spinner: offset " + selectedItem.getTimeOffsetMillis());
                 } else {
-                    selectedTimeOffsetMillis.set(0); // Reset if placeholder is selected
+                    selectedTimeOffsetMillis = 0;
                 }
             }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedTimeOffsetMillis.set(0);
-            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { selectedTimeOffsetMillis = 0; }
         });
     }
 
-
-
     private void createLocationDropDown() {
-        if (getContext() == null) return;
-        selectedLocationId = null; // Reset
-
-        ArrayAdapter<String> locationAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, locations);
+        selectedLocationId = null;
+        ArrayAdapter<String> locationAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, locations);
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         locationSpinner.setAdapter(locationAdapter);
         locationSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -434,91 +538,91 @@ public class SessionBookingsFragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedLocationId = parent.getItemAtPosition(position).toString();
             }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedLocationId = null;
-            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { selectedLocationId = null; }
         });
         if (locations.length > 0) {
-            locationSpinner.setSelection(0); // Default to first location
+            locationSpinner.setSelection(0);
             selectedLocationId = locations[0];
         }
     }
 
     private void handleSubmitBooking() {
-
-        // Ensure selectedDate is purely the date part (normalized to midnight)
-        Calendar normalizedSelectedDateCal = Calendar.getInstance();
-        normalizedSelectedDateCal.setTime(selectedDate); // selectedDate should already be normalized
-        // Double check normalization if there are doubts (though it should be by now)
-        // normalizeCalendarToStartOfDay(normalizedSelectedDateCal);
-
-        if (selectedSubjectId.get() == 0) {
+        if (selectedSubjectId.get() == null) {
             Toast.makeText(getContext(), R.string.select_subject_validation, Toast.LENGTH_LONG).show(); return;
         }
-        // This check uses startOfTodayMillis which is midnight of the app's current day.
-        // calendarView.getMinDate() should already prevent selection of past days.
-        if (normalizedSelectedDateCal.getTimeInMillis() < startOfTomorrowMillis) {
+        if (selectedCalendarDate.before(normalizeDate(new Date())) && !isSameDay(selectedCalendarDate, normalizeDate(new Date()))) { // Allow today, but not past days
             Toast.makeText(getContext(), R.string.select_valid_date_validation, Toast.LENGTH_LONG).show(); return;
         }
-        if (selectedDurationMillis.get() == 0) {
+        if (selectedDurationMillis == 0) {
             Toast.makeText(getContext(), R.string.select_duration_validation, Toast.LENGTH_LONG).show(); return;
         }
         if (selectedLocationId == null || selectedLocationId.isEmpty()) {
             Toast.makeText(getContext(), R.string.select_location_validation, Toast.LENGTH_LONG).show(); return;
         }
-        // Check if a valid time is selected from the spinner
-        if (selectedTimeOffsetMillis.get() == 0) {
-            // Check if the spinner has items and the first item isn't a placeholder that results in offset 0
-            if (timeSpinner.getSelectedItem() instanceof TimeSpinnerItem) {
-                TimeSpinnerItem currentSpinnerItem = (TimeSpinnerItem) timeSpinner.getSelectedItem();
-                if (currentSpinnerItem.getTimeOffsetMillis() == 0 &&
-                        (currentSpinnerItem.displayTime.equals(getString(R.string.select_duration_first_for_time)) ||
-                                currentSpinnerItem.displayTime.equals(getString(R.string.no_available_times)))) {
-                    Toast.makeText(getContext(), R.string.select_time_validation, Toast.LENGTH_LONG).show(); return;
-                }
-                // If offset is legitimately 0 (e.g. OPEN_TIME is midnight), this check needs refinement.
-                // For now, assuming offset 0 is only for placeholders.
-            } else { // Spinner might be empty or have non-TimeSpinnerItem if something went wrong
-                Toast.makeText(getContext(), R.string.select_time_validation, Toast.LENGTH_LONG).show(); return;
-            }
+        if (selectedTimeOffsetMillis == 0 && availableTimeSpinnerItems.size() > 0 &&
+                (availableTimeSpinnerItems.get(0).displayTime.equals(getString(R.string.no_available_times)) ||
+                        availableTimeSpinnerItems.get(0).displayTime.equals(getString(R.string.select_duration_first_for_time)) ||
+                        availableTimeSpinnerItems.get(0).displayTime.equals(getString(R.string.select_subject_first_for_time))
+                )
+        ) {
+            Toast.makeText(getContext(), R.string.select_time_validation, Toast.LENGTH_LONG).show(); return;
+        }
+        if (timeSpinner.getSelectedItemPosition() == AdapterView.INVALID_POSITION ||
+                ((TimeSpinnerItem)timeSpinner.getSelectedItem()).getTimeOffsetMillis() == 0 &&
+                        ( ((TimeSpinnerItem)timeSpinner.getSelectedItem()).displayTime.equals(getString(R.string.no_available_times)) ||
+                                ((TimeSpinnerItem)timeSpinner.getSelectedItem()).displayTime.equals(getString(R.string.select_duration_first_for_time)) ||
+                                ((TimeSpinnerItem)timeSpinner.getSelectedItem()).displayTime.equals(getString(R.string.select_subject_first_for_time))
+                        )
+        ){
+            Toast.makeText(getContext(), R.string.select_time_validation, Toast.LENGTH_LONG).show(); return;
         }
 
-        // Construct actual start and end times for the session
-        Calendar finalSessionStartCalendar = Calendar.getInstance();
-        finalSessionStartCalendar.setTime(selectedDate); // Base: selected date (already 00:00)
-        finalSessionStartCalendar.add(Calendar.MILLISECOND, selectedTimeOffsetMillis.get()); // Add chosen time-of-day offset
 
-        Date actualSessionStartTime = finalSessionStartCalendar.getTime();
-        Date actualSessionEndTime = new Date(actualSessionStartTime.getTime() + selectedDurationMillis.get());
+        Calendar finalSessionStartCalendar = Calendar.getInstance();
+        finalSessionStartCalendar.setTime(selectedCalendarDate); // Base: selected date (normalized to 00:00)
+        finalSessionStartCalendar.add(Calendar.MILLISECOND, selectedTimeOffsetMillis);
+
+        Date actualSessionStartTimeJavaUtil = finalSessionStartCalendar.getTime();
+        Date actualSessionEndTimeJavaUtil = new Date(actualSessionStartTimeJavaUtil.getTime() + selectedDurationMillis);
+
+        // Prevent booking if start time is in the past for today
+        if (isSameDay(selectedCalendarDate, normalizeDate(new Date())) && actualSessionStartTimeJavaUtil.before(new Date())) {
+            Toast.makeText(getContext(), "Cannot book a session in the past.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
 
         Log.d(TAG, "Attempting to book session: " +
-                "TuteeID: " + currentUserSession.getUser().getStudentNum() +
-                ", TutorID: " + currentTutor.getStudentNum() +
-                ", SubjectID: " + selectedSubjectId.get() +
-                ", Start: " + actualSessionStartTime +
-                ", End: " + actualSessionEndTime +
+                "TuteeUID: " + currentTuteePojo.getUid() +
+                ", TutorUID: " + currentTutorPojo.getUid() +
+                ", SubjectID: " + selectedSubjectId.get() + " (" + selectedSubjectName + ")" +
+                ", Start: " + actualSessionStartTimeJavaUtil +
+                ", End: " + actualSessionEndTimeJavaUtil +
                 ", Location: " + selectedLocationId);
 
-        // Create TimeSlot with ACTUAL (unpadded) times for the request method.
-        // SessionDao.requestSession will use these for its logic, including overlap checks.
-        TimeSlot requestedTimeSlot = new TimeSlot(new Date(actualSessionStartTime.getTime()), new Date(actualSessionEndTime.getTime()));
+        submitButton.setEnabled(false); // Prevent double clicks
 
-        boolean success = dataManager.getSessionDao().requestSession(
-                currentUserSession.getUser().getStudentNum(),
-                currentTutor.getStudentNum(),
-                requestedTimeSlot, // This is now UNPADDED
+        sessionDao.requestSession(
+                currentTuteePojo.getUid(),
+                currentTutorPojo.getUid(),
                 selectedSubjectId.get(),
+                selectedSubjectName, // Pass denormalized subject name
                 selectedLocationId,
-                actualSessionStartTime, // Actual start for DB
-                actualSessionEndTime    // Actual end for DB
+                actualSessionStartTimeJavaUtil,
+                actualSessionEndTimeJavaUtil,
+                new SessionDao.SessionRequestListener() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Toast.makeText(getContext(), R.string.session_request_success, Toast.LENGTH_LONG).show();
+                        if (getActivity() != null) getActivity().finish();
+                    }
+                    @Override
+                    public void onFailure(String errorMessage, Exception e) {
+                        Toast.makeText(getContext(), "Booking failed: " + errorMessage, Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Session request failed: " + errorMessage, e);
+                        submitButton.setEnabled(true);
+                    }
+                }
         );
-
-        if (success) {
-            Toast.makeText(getContext(), R.string.session_request_success, Toast.LENGTH_LONG).show();
-            if (getActivity() != null) getActivity().finish();
-        } else {
-            Toast.makeText(getContext(),dataManager.getSessionDao().getLastError(), Toast.LENGTH_LONG).show();
-        }
     }
 }

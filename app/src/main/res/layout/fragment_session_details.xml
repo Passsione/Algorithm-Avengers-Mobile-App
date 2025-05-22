@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light">
@@ -10,6 +11,7 @@
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:id="@+id/linearLayout3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -17,6 +19,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <!-- Toolbar -->
+
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar_session_details"
                 android:layout_width="match_parent"
@@ -28,6 +31,15 @@
                 app:title="Session Details" />
 
             <!-- Session Info Card -->
+
+            <ProgressBar
+                android:id="@+id/detailsProgressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="180dp"
+                android:layout_height="wrap_content" />
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -175,11 +187,11 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/partner_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:text="Partner"
-                        android:id="@+id/partner_title"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -233,12 +245,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        app:cardElevation="2dp"
-                        app:cardCornerRadius="8dp"
                         android:visibility="gone"
-                        app:layout_constraintTop_toBottomOf="@id/card_review_section"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="2dp"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent">
+                        app:layout_constraintTop_toBottomOf="@id/card_review_section">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -250,9 +262,9 @@
                                 android:id="@+id/textViewPartnerReviewTitle"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp"
                                 android:text="Partner's Feedback"
-                                android:textAppearance="?attr/textAppearanceSubtitle1"
-                                android:layout_marginBottom="8dp"/>
+                                android:textAppearance="?attr/textAppearanceSubtitle1" />
 
                             <RatingBar
                                 android:id="@+id/ratingBarPartnerRating"
@@ -364,8 +376,8 @@
                         android:layout_height="wrap_content"
                         android:height="80sp"
                         android:ems="10"
-                        android:hint="Write your review here..."
                         android:gravity="start|top"
+                        android:hint="Write your review here..."
                         android:inputType="textMultiLine" />
 
                     <Button
@@ -410,6 +422,14 @@
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:text="Reschedule" />
+                <Button
+                    android:id="@+id/btn_decline_session"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@color/status_confirmed"
+                    android:text="Decline"
+                    android:visibility="gone"/>
 
                 <Button
                     android:id="@+id/btn_confirm_booking"
@@ -419,6 +439,8 @@
                     android:background="@color/status_confirmed"
                     android:text="Confirm" />
             </LinearLayout>
+
         </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

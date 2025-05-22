@@ -1,452 +1,439 @@
 package com.pbdvmobile.app.data.dao;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.pbdvmobile.app.data.Schedule.TimeSlot;
-import com.pbdvmobile.app.data.SqlOpenHelper;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
+import com.pbdvmobile.app.data.Schedule.TimeSlot; // Assuming TimeSlot is updated or compatible
 import com.pbdvmobile.app.data.model.Session;
-
+import android.util.Log;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.text.SimpleDateFormat;
+
 
 public class SessionDao {
-    private final SqlOpenHelper dbHelper;
+    private static final String TAG = "SessionDaoFirebase";
+    public static final String COLLECTION_NAME = "sessions";
+    private static final long OPEN_TIME_HOUR = 8; // 8 AM
+    private static final long CLOSE_TIME_HOUR = 18; // 6 PM (exclusive for end time, so sessions can end at 18:00)
 
-    // 8:00 in Milliseconds
-    public final long OPEN_TIME = hourToMseconds(8) ;//- minutesToMseconds(DEFAULT_TIME_PADDING_MIN);
-    // 17:00 in Milliseconds
-    public final long CLOSE_TIME = hourToMseconds(18);// + minutesToMseconds(60 - DEFAULT_TIME_PADDING_MIN);
-    private String lastError = "Session request failed."; // Default error
+    private final FirebaseFirestore db;
 
-    private final int SESSION_LIMIT = 3;
-    public SessionDao(SqlOpenHelper dbHelper) {
-        this.dbHelper = dbHelper;
-    }
-    public long hourToMseconds(int hour) {return (long) hour * 60 * 60 * 1000;}
-    public int mSecondsToHour(long i) {
-        return (int) (i / (60 * 60 * 1000));
-    }
-    public long minutesToMseconds(int minutes) {return (long) minutes * 60 * 1000;}
-    public long insertSession(@NonNull Session session) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_TUTOR_ID, session.getTutorId());
-        values.put(SqlOpenHelper.KEY_SESSION_TUTEE_ID, session.getTuteeId());
-        values.put(SqlOpenHelper.KEY_SESSION_SUBJECT_ID, session.getSubjectId());
-        values.put(SqlOpenHelper.KEY_SESSION_LOCATION, session.getLocation());
-        values.put(SqlOpenHelper.KEY_SESSION_START_TIME, session.getStartTime().getTime());
-        values.put(SqlOpenHelper.KEY_SESSION_END_TIME, session.getEndTime().getTime());
-        values.put(SqlOpenHelper.KEY_SESSION_STATUS, session.getStatus().name());
-        values.put(SqlOpenHelper.KEY_SESSION_TUTOR_REVIEW, session.getTutorReview());
-        values.put(SqlOpenHelper.KEY_SESSION_TUTEE_REVIEW, session.getTuteeReview());
-
-        long id = db.insert(SqlOpenHelper.TABLE_SESSIONS, null, values);
-
-        db.close();
-        return id;
+    public SessionDao() {
+        this.db = FirebaseFirestore.getInstance();
     }
 
-    public Session getSessionById(int sessionId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    // Callback for requestSession result
+    public interface SessionRequestListener {
+        void onSuccess(DocumentReference documentReference);
+        void onFailure(String errorMessage, Exception e);
+    }
 
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
-                null,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)},
-                null, null, null);
+    // Callback for fetching ratings
+    public interface RatingsCallback {
+        void onRatingsFetched(double averageRatingAsTutee, double averageRatingAsTutor);
+        void onError(Exception e);
+    }
 
-        Session session = null;
-        if (cursor != null && cursor.moveToFirst()) {
-            session = cursorToSession(cursor);
-            cursor.close();
+    // Callback for fetching list of sessions
+    public interface SessionsCallback {
+        void onSessionsFetched(List<Session> sessions);
+        void onError(Exception e);
+    }
+
+
+    private long getMillisForHour(int hour) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, hour);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        // We only care about the time part for OPEN/CLOSE, date doesn't matter for this constant
+        return cal.get(Calendar.HOUR_OF_DAY) * 3600000L + cal.get(Calendar.MINUTE) * 60000L;
+    }
+
+
+    public void getAverageRatingByFirebaseUid(String userFirebaseUid, @NonNull RatingsCallback callback) {
+        final double[] ratings = {0.0, 0.0}; // [0] = as tutee, [1] = as tutor
+        final int[] completedTasks = {0};
+        final int TOTAL_TASKS = 2;
+
+        // Rating as Tutee (ratings given by tutors TO this user)
+        db.collection(COLLECTION_NAME)
+                .whereEqualTo("tuteeUid", userFirebaseUid)
+                .whereGreaterThan("tutorRating", 0) // Sessions where the tutor rated this tutee
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    double totalSum = 0;
+                    int count = 0;
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            Session session = doc.toObject(Session.class);
+                            if (session != null && session.getTutorRating() != null && session.getTutorRating() > 0) {
+                                totalSum += session.getTutorRating();
+                                count++;
+                            }
+                        }
+                    }
+                    ratings[0] = (count > 0) ? totalSum / count : 0.0;
+                    completedTasks[0]++;
+                    if (completedTasks[0] == TOTAL_TASKS) {
+                        callback.onRatingsFetched(ratings[0], ratings[1]);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error fetching ratings as tutee for UID: " + userFirebaseUid, e);
+                    completedTasks[0]++;
+                    if (completedTasks[0] == TOTAL_TASKS) { // If both failed or this was the second
+                        callback.onRatingsFetched(ratings[0], ratings[1]); // Report what we have
+                    } else if (completedTasks[0] == TOTAL_TASKS -1 && ratings[1] != 0.0) {
+                        // This was the first to fail, the other succeeded
+                        callback.onRatingsFetched(ratings[0], ratings[1]);
+                    } else if (completedTasks[0] == TOTAL_TASKS -1 && ratings[1] == 0.0) {
+                        // This was the first to fail, waiting for the other.
+                    } else { // This was the only task and it failed, or both failed.
+                        callback.onError(e);
+                    }
+                });
+
+        // Rating as Tutor (ratings given by tutees TO this user)
+        db.collection(COLLECTION_NAME)
+                .whereEqualTo("tutorUid", userFirebaseUid)
+                .whereGreaterThan("tuteeRating", 0) // Sessions where the tutee rated this tutor
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    double totalSum = 0;
+                    int count = 0;
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            Session session = doc.toObject(Session.class);
+                            if (session != null && session.getTuteeRating() != null && session.getTuteeRating() > 0) {
+                                totalSum += session.getTuteeRating();
+                                count++;
+                            }
+                        }
+                    }
+                    ratings[1] = (count > 0) ? totalSum / count : 0.0;
+                    completedTasks[0]++;
+                    if (completedTasks[0] == TOTAL_TASKS) {
+                        callback.onRatingsFetched(ratings[0], ratings[1]);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error fetching ratings as tutor for UID: " + userFirebaseUid, e);
+                    completedTasks[0]++;
+                    if (completedTasks[0] == TOTAL_TASKS) { // If both failed or this was the second
+                        callback.onRatingsFetched(ratings[0], ratings[1]); // Report what we have
+                    } else if (completedTasks[0] == TOTAL_TASKS -1 && ratings[0] != 0.0) {
+                        // This was the first to fail, the other succeeded
+                        callback.onRatingsFetched(ratings[0], ratings[1]);
+                    } else if (completedTasks[0] == TOTAL_TASKS -1 && ratings[0] == 0.0) {
+                        // This was the first to fail, waiting for the other.
+                    } else { // This was the only task and it failed, or both failed.
+                        callback.onError(e);
+                    }
+                });
+    }
+
+
+    public void requestSession(@NonNull String tuteeUserUid,
+                               @NonNull String tutorUserUid,
+                               @NonNull String subjectDocId, // Firestore doc ID for subject
+                               @NonNull String subjectName, // Denormalized subject name
+                               @NonNull String location,
+                               @NonNull Date proposedStartTimeJavaUtil, // java.util.Date from UI
+                               @NonNull Date proposedEndTimeJavaUtil,   // java.util.Date from UI
+                               @NonNull SessionRequestListener callback) {
+
+        Timestamp proposedStartTimeFs = new Timestamp(proposedStartTimeJavaUtil);
+        Timestamp proposedEndTimeFs = new Timestamp(proposedEndTimeJavaUtil);
+
+        // --- 1. Validate against Business Hours ---
+        Calendar reqStartCal = Calendar.getInstance();
+        reqStartCal.setTime(proposedStartTimeJavaUtil);
+        int reqStartHour = reqStartCal.get(Calendar.HOUR_OF_DAY);
+
+        Calendar reqEndCal = Calendar.getInstance();
+        reqEndCal.setTime(proposedEndTimeJavaUtil);
+        int reqEndHour = reqEndCal.get(Calendar.HOUR_OF_DAY);
+        int reqEndMinute = reqEndCal.get(Calendar.MINUTE);
+
+        // Session must start on or after OPEN_TIME_HOUR
+        // Session must end by CLOSE_TIME_HOUR:00 (e.g., if CLOSE_TIME_HOUR is 18, it can end at 18:00, not start at 18:00)
+        if (reqStartHour < OPEN_TIME_HOUR ||
+                reqEndHour > CLOSE_TIME_HOUR ||
+                (reqEndHour == CLOSE_TIME_HOUR && reqEndMinute > 0) ||
+                proposedStartTimeFs.compareTo(proposedEndTimeFs) >= 0) { // Start must be before end
+
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            String openTimeStr = String.format(Locale.getDefault(), "%02d:00", OPEN_TIME_HOUR);
+            String closeTimeStr = String.format(Locale.getDefault(), "%02d:00", CLOSE_TIME_HOUR);
+
+            String businessHoursError = "Requested time is outside service hours (" +
+                    openTimeStr + " - " + closeTimeStr + ") or duration is invalid.";
+            Log.e(TAG, businessHoursError + " Start: " + reqStartHour + ", End: " + reqEndHour + ":" + reqEndMinute);
+            callback.onFailure(businessHoursError, null);
+            return;
         }
-        db.close();
-        return session;
-    }
 
-    public List<Session> getSessionsByTutorId(int tutorId) {
-        List<Session> sessions = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        // --- 2. Check Tutor's Availability ---
+        // Query for sessions that could overlap:
+        // existing.startTime < proposed.endTime AND existing.endTime > proposed.startTime
+        Query tutorAvailabilityQuery = db.collection(COLLECTION_NAME)
+                .whereEqualTo("tutorUid", tutorUserUid)
+                .whereIn("status", Arrays.asList(Session.Status.PENDING.name(), Session.Status.CONFIRMED.name()))
+                .whereLessThan("startTime", proposedEndTimeFs); // existing.startTime < proposed.endTime
 
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
-                null,
-                SqlOpenHelper.KEY_SESSION_TUTOR_ID + "=?",
-                new String[]{String.valueOf(tutorId)},
-                null, null, SqlOpenHelper.KEY_SESSION_START_TIME);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Session session = cursorToSession(cursor);
-                sessions.add(session);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return sessions;
-    }
-    public List<TimeSlot> getTakenTimeSlot(int tutorId) {
-        List<TimeSlot> sessionTimes = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String selection = SqlOpenHelper.KEY_SESSION_TUTOR_ID + "=? AND (" +
-                SqlOpenHelper.KEY_SESSION_STATUS + " =? OR " +
-                SqlOpenHelper.KEY_SESSION_STATUS + " =?)";
-        String[] selectionArgs = new String[]{
-                String.valueOf(tutorId),
-                Session.Status.CONFIRMED.name(),
-                Session.Status.PENDING.name()
-        };
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
-                null, // columns
-                selection,
-                selectionArgs,
-                null, null, SqlOpenHelper.KEY_SESSION_START_TIME);
-        /*Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
-                null,
-                SqlOpenHelper.KEY_SESSION_TUTOR_ID + "=? AND (" + // Filter by tutorId
-                SqlOpenHelper.KEY_SESSION_STATUS+ "=Confirmed OR " +
-                SqlOpenHelper.KEY_SESSION_STATUS + "=Pending) AND",    // Filter by status (Comfirmed or Pending)
-                new String[]{String.valueOf(tutorId)},
-                null, null, SqlOpenHelper.KEY_SESSION_START_TIME);
-*/
-        if (cursor.moveToFirst()) {
-            do {
-                Session session = cursorToSession(cursor);
-                sessionTimes.add(new TimeSlot(session.getStartTime(), session.getEndTime()));
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return sessionTimes;
-    }
-
-
-    public List<Session> getSessionsByTuteeId(int tuteeId) {
-        List<Session> sessions = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
-                null,
-                SqlOpenHelper.KEY_SESSION_TUTEE_ID + "=?",
-                new String[]{String.valueOf(tuteeId)},
-                null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Session session = cursorToSession(cursor);
-                sessions.add(session);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return sessions;
-    }
-
-    public double[] getAverageRatingByStudentNum(int studentNum) {
-        double[] ratings = {0.0, 0.0};
-
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = null;
-        // and we average the KEY_TUTOR_RATING column.
-        String avgTutorRatingQuery = "SELECT AVG(" + SqlOpenHelper.KEY_SESSION_TUTOR_RATING + ") FROM " +
-                SqlOpenHelper.TABLE_SESSIONS + " WHERE " +
-                SqlOpenHelper.KEY_SESSION_TUTEE_ID + " = ?";
-        Log.d("DB_QUERY", "Query for avg rating given by tutor: " + avgTutorRatingQuery);
-
-        cursor = db.rawQuery(avgTutorRatingQuery, new String[]{String.valueOf(studentNum)});
-
-        if (cursor.moveToFirst()) {
-            // AVG() returns NULL if there are no matching rows or all values are NULL.
-            // If it's NULL, getDouble(0) will return 0.0, which is a good default.
-            ratings[0] = cursor.getDouble(0);
-        }
-
-        String avgTuteeRatingQuery = "SELECT AVG(" + SqlOpenHelper.KEY_SESSION_TUTEE_RATING + ") FROM " +
-                SqlOpenHelper.TABLE_SESSIONS + " WHERE " +
-                SqlOpenHelper.KEY_SESSION_TUTOR_ID + " = ?";
-        Log.d("DB_QUERY", "Query for avg rating given by tutee: " + avgTuteeRatingQuery);
-
-
-        cursor = db.rawQuery(avgTuteeRatingQuery, new String[]{String.valueOf(studentNum)});
-
-        if (cursor != null && cursor.moveToFirst()) {
-            // AVG() returns NULL if there are no matching rows or all values are NULL.
-            // If it's NULL, getDouble(0) will return 0.0.
-            ratings[1] = cursor.getDouble(0);
-        }
-        cursor.close();
-        db.close();
-        return ratings;
-    }
-
-    public void updatePastSessions() {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_STATUS, Session.Status.DECLINED.name());
-
-        String whereClause = SqlOpenHelper.KEY_SESSION_END_TIME + " < ? AND ( " +
-                SqlOpenHelper.KEY_SESSION_STATUS + " = ? OR "+
-                SqlOpenHelper.KEY_SESSION_STATUS + " = ? )";
-        String[] whereArgs = new String[]{String.valueOf(
-                new Date().getTime()),
-                Session.Status.PENDING.name(),
-                Session.Status.CONFIRMED.name(),
-                };
-
-        db.update(SqlOpenHelper.TABLE_SESSIONS, values, whereClause, whereArgs);
-        db.close();
-    }
-    public boolean requestSession(int tuteeStudentNum, int tutorStudentNum,
-                                  TimeSlot requestedActualSlot, // This is now UNPADDED
-                                  int subjectId, String location,
-                                  Date actualDbStartTime, Date actualDbEndTime) {
-
-    // 0. Check if requested ACTUAL slot is within OPEN_TIME and CLOSE_TIME
-    Calendar reqStartCal = Calendar.getInstance();
-    reqStartCal.setTime(requestedActualSlot.getActualStartTime()); // Use unpadded start
-    long reqStartTimeOfDayMillis = reqStartCal.get(Calendar.HOUR_OF_DAY) * 3600000L +
-            reqStartCal.get(Calendar.MINUTE) * 60000L;
-
-    Calendar reqEndCal = Calendar.getInstance();
-    reqEndCal.setTime(requestedActualSlot.getActualEndTime()); // Use unpadded end
-    long reqEndTimeOfDayMillis = reqEndCal.get(Calendar.HOUR_OF_DAY) * 3600000L +
-            reqEndCal.get(Calendar.MINUTE) * 60000L;
-
-    // Handle midnight correctly for end time (if a session ends exactly at midnight)
-    if (reqEndCal.get(Calendar.HOUR_OF_DAY) == 0 && reqEndCal.get(Calendar.MINUTE) == 0) {
-        // If selected date is same as start date, means it's end of the day.
-        if (reqEndCal.get(Calendar.DAY_OF_YEAR) == reqStartCal.get(Calendar.DAY_OF_YEAR) &&
-                reqEndCal.get(Calendar.YEAR) == reqStartCal.get(Calendar.YEAR) ){
-            reqEndTimeOfDayMillis = CLOSE_TIME; // Treat as service close time
-        }
-        // If it rolls over to next day, and it's 00:00, then reqEndTimeOfDayMillis is fine as 0.
-    }
-
-
-    if (reqStartTimeOfDayMillis < OPEN_TIME || reqEndTimeOfDayMillis > CLOSE_TIME || reqStartTimeOfDayMillis >= reqEndTimeOfDayMillis) {
-        Log.e("SessionDao", "Requested time " + actualDbStartTime + " to " + actualDbEndTime +
-                " (offsets: " + reqStartTimeOfDayMillis + "-" + reqEndTimeOfDayMillis +
-                ") is outside service hours (" + OPEN_TIME + "-" + CLOSE_TIME + ") or invalid duration.");
-        lastError = "Requested time is outside service hours or duration is invalid.";
-        return false;
-    }
-
-    // 1. Check for conflicts with tutor's schedule
-    // getTakenTimeSlot should return TimeSlots representing actual booked times (unpadded)
-    List<TimeSlot> tutorTakenSlots = getTakenTimeSlot(tutorStudentNum);
-    for (TimeSlot taken : tutorTakenSlots) {
-        if (requestedActualSlot.overlaps(taken)) {
-            Log.e("SessionDao", "Requested time overlaps with tutor's schedule: " + taken);
-            lastError = "This time slot conflicts with the tutor's schedule.";
-            return false;
-        }
-    }
-
-    // 2. Check for conflicts with tutee's schedule
-    List<TimeSlot> tuteeTakenSlotsAsTutee = getTakenTimeSlotForUser(tuteeStudentNum, true);
-    for (TimeSlot taken : tuteeTakenSlotsAsTutee) {
-        if (requestedActualSlot.overlaps(taken)) {
-            Log.e("SessionDao", "Requested time overlaps with your schedule (as tutee): " + taken);
-            lastError = "This time slot conflicts with your existing schedule.";
-            return false;
-        }
-    }
-    List<TimeSlot> tuteeTakenSlotsAsTutor = getTakenTimeSlotForUser(tuteeStudentNum, false);
-    for (TimeSlot taken : tuteeTakenSlotsAsTutor) {
-        if (requestedActualSlot.overlaps(taken)) {
-            Log.e("SessionDao", "Requested time overlaps with your schedule (as tutor): " + taken);
-            lastError = "This time slot conflicts with your existing schedule as a tutor.";
-            return false;
-        }
-    }
-
-    // 3. Check for duplicate pending/confirmed sessions
-    List<com.pbdvmobile.app.data.model.Session> existingSessions = getSessionsByUsersAndSubject(tuteeStudentNum, tutorStudentNum, subjectId);
-    Date now = new Date();
-    for (com.pbdvmobile.app.data.model.Session existing : existingSessions) {
-        if ((existing.getStatus() == com.pbdvmobile.app.data.model.Session.Status.PENDING ||
-                existing.getStatus() == com.pbdvmobile.app.data.model.Session.Status.CONFIRMED) &&
-                existing.getEndTime().after(now)) {
-            // Check if the times actually overlap for this specific check
-            TimeSlot existingSlot = new TimeSlot(existing.getStartTime(), existing.getEndTime());
-            if (requestedActualSlot.overlaps(existingSlot)) { // More precise check
-                Log.e("SessionDao", "An active or pending session for this subject with this tutor already exists at a conflicting time.");
-                lastError = "An active or pending session for this subject and tutor conflicts with this time.";
-                return false;
+        tutorAvailabilityQuery.get().addOnSuccessListener(tutorSessionsSnapshot -> {
+            for (DocumentSnapshot doc : tutorSessionsSnapshot) {
+                Session existingSession = doc.toObject(Session.class);
+                if (existingSession != null && existingSession.getEndTime() != null &&
+                        existingSession.getEndTime().compareTo(proposedStartTimeFs) > 0) { // existing.endTime > proposed.startTime
+                    Log.w(TAG, "Tutor Conflict: Proposed session overlaps with existing session ID: " + doc.getId());
+                    callback.onFailure("Tutor is unavailable at the selected time.", null);
+                    return; // Exit early on first conflict
+                }
             }
+            Log.d(TAG, "Tutor availability check passed.");
+
+            // --- 3. Check Tutee's Availability ---
+            Query tuteeAvailabilityQuery = db.collection(COLLECTION_NAME)
+                    .whereEqualTo("tuteeUid", tuteeUserUid)
+                    .whereIn("status", Arrays.asList(Session.Status.PENDING.name(), Session.Status.CONFIRMED.name()))
+                    .whereLessThan("startTime", proposedEndTimeFs);
+
+            tuteeAvailabilityQuery.get().addOnSuccessListener(tuteeSessionsSnapshot -> {
+                for (DocumentSnapshot doc : tuteeSessionsSnapshot) {
+                    Session existingSession = doc.toObject(Session.class);
+                    if (existingSession != null && existingSession.getEndTime() != null &&
+                            existingSession.getEndTime().compareTo(proposedStartTimeFs) > 0) {
+                        Log.w(TAG, "Tutee Conflict: Proposed session overlaps with tutee's existing session ID: " + doc.getId());
+                        callback.onFailure("You are unavailable at the selected time due to another session.", null);
+                        return;
+                    }
+                }
+                Log.d(TAG, "Tutee availability check passed.");
+
+                // --- 4. Check for Duplicate Pending/Confirmed Sessions for this specific pair/subject (optional, stricter rule) ---
+                // This prevents multiple PENDING requests for the exact same tutor/tutee/subject if desired.
+                // For simplicity, we might skip this if the time conflict check is sufficient.
+                // If implementing, query for sessions with same tutorUid, tuteeUid, subjectId, and PENDING/CONFIRMED status.
+
+                // --- 5. All checks passed, create the session ---
+                Session newSession = new Session();
+                newSession.setTutorUid(tutorUserUid);
+                newSession.setTuteeUid(tuteeUserUid);
+                newSession.setSubjectId(subjectDocId);
+                newSession.setSubjectName(subjectName); // Store denormalized name
+                newSession.setLocation(location);
+                newSession.setStartTime(proposedStartTimeFs);
+                newSession.setEndTime(proposedEndTimeFs);
+                newSession.setStatus(Session.Status.PENDING);
+                newSession.setCreatedAt(new Timestamp(new Date())); // Record creation time
+
+                insertSession(newSession).addOnSuccessListener(documentReference -> {
+                    Log.i(TAG, "Session request successful. New session ID: " + documentReference.getId());
+                    callback.onSuccess(documentReference);
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to insert new session into Firestore.", e);
+                    callback.onFailure("Failed to create session in database.", e);
+                });
+
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "Error checking tutee availability.", e);
+                callback.onFailure("Could not verify your availability.", e);
+            });
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error checking tutor availability.", e);
+            callback.onFailure("Could not verify tutor's availability.", e);
+        });
+    }
+
+
+    public Task<DocumentReference> insertSession(@NonNull Session session) {
+        return db.collection(COLLECTION_NAME).add(session);
+    }
+
+    public Task<DocumentSnapshot> getSessionById(String sessionId) {
+        return db.collection(COLLECTION_NAME).document(sessionId).get();
+    }
+
+    public void getSessionsByTutorUid(String tutorUid, @NonNull SessionsCallback callback) {
+        db.collection(COLLECTION_NAME)
+                .whereEqualTo("tutorUid", tutorUid)
+                .orderBy("startTime", Query.Direction.ASCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Session> sessions = new ArrayList<>();
+                    if (queryDocumentSnapshots != null) {
+                        for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            Session session = doc.toObject(Session.class);
+                            if (session != null) {
+                                session.setId(doc.getId());
+                                sessions.add(session);
+                            }
+                        }
+                    }
+                    callback.onSessionsFetched(sessions);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error fetching sessions for tutor UID: " + tutorUid, e);
+                    callback.onError(e);
+                });
+    }
+
+    public void getSessionsByTuteeUid(String tuteeUid, @NonNull SessionsCallback callback) {
+        db.collection(COLLECTION_NAME)
+                .whereEqualTo("tuteeUid", tuteeUid)
+                .orderBy("startTime", Query.Direction.ASCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Session> sessions = new ArrayList<>();
+                    if (queryDocumentSnapshots != null) {
+                        for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            Session session = doc.toObject(Session.class);
+                            if (session != null) {
+                                session.setId(doc.getId());
+                                sessions.add(session);
+                            }
+                        }
+                    }
+                    callback.onSessionsFetched(sessions);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error fetching sessions for tutee UID: " + tuteeUid, e);
+                    callback.onError(e);
+                });
+    }
+
+
+    /**
+     * Fetches sessions for a user (either as tutor or tutee) that are PENDING or CONFIRMED.
+     * This is useful for checking for conflicts or displaying active bookings.
+     * @param userUid The UID of the user.
+     * @param callback Callback to handle the list of TimeSlot objects or an error.
+     */
+    public void getActiveTimeSlotsForUser(String userUid, @NonNull final TimeSlotsCallback callback) {
+        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+
+        // Sessions where user is tutor
+        tasks.add(db.collection(COLLECTION_NAME)
+                .whereEqualTo("tutorUid", userUid)
+                .whereIn("status", Arrays.asList(Session.Status.PENDING.name(), Session.Status.CONFIRMED.name()))
+                .get());
+
+        // Sessions where user is tutee
+        tasks.add(db.collection(COLLECTION_NAME)
+                .whereEqualTo("tuteeUid", userUid)
+                .whereIn("status", Arrays.asList(Session.Status.PENDING.name(), Session.Status.CONFIRMED.name()))
+                .get());
+
+        Tasks.whenAllSuccess(tasks).addOnSuccessListener(list -> {
+            List<TimeSlot> timeSlots = new ArrayList<>();
+            for (Object snapshotObject : list) {
+                QuerySnapshot snapshot = (QuerySnapshot) snapshotObject;
+                if (snapshot != null) {
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Session session = doc.toObject(Session.class);
+                        if (session != null && session.getStartTimeAsDate() != null && session.getEndTimeAsDate() != null) {
+                            // Assuming TimeSlot constructor takes java.util.Date
+                            timeSlots.add(new TimeSlot(session.getStartTimeAsDate(), session.getEndTimeAsDate()));
+                        }
+                    }
+                }
+            }
+            callback.onTimeSlotsFetched(timeSlots);
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error fetching active time slots for user: " + userUid, e);
+            callback.onError(e);
+        });
+    }
+
+    public interface TimeSlotsCallback {
+        void onTimeSlotsFetched(List<TimeSlot> timeSlots);
+        void onError(Exception e);
+    }
+
+
+    public Task<Void> updateSessionStatus(String sessionId, Session.Status status) {
+        return db.collection(COLLECTION_NAME).document(sessionId).update("status", status.name());
+    }
+
+    public Task<Void> addTutorReview(String sessionId, String review, double rating) {
+        return db.collection(COLLECTION_NAME).document(sessionId)
+                .update("tuteeReview", review, "tuteeRating", rating); // Tutee reviews the Tutor
+    }
+
+    public Task<Void> addTuteeReview(String sessionId, String review, double rating) {
+        return db.collection(COLLECTION_NAME).document(sessionId)
+                .update("tutorReview", review, "tutorRating", rating); // Tutor reviews the Tutee
+    }
+
+    public Task<Void> deleteSession(String sessionId) {
+        return db.collection(COLLECTION_NAME).document(sessionId).delete();
+    }
+
+    /**
+     * Marks past PENDING or CONFIRMED sessions as COMPLETED or DECLINED respectively.
+     * Typically run periodically or on app start.
+     * @param userUid The UID of the user to update sessions for (can be null to update all).
+     * @param roleField "tutorUid" or "tuteeUid" if specific to a user, or null for system-wide.
+     */
+    public Task<Void> updatePastSessions(@Nullable String userUid, @Nullable String roleField) {
+        WriteBatch batch = db.batch();
+        Timestamp now = Timestamp.now();
+
+        // Query for PENDING sessions that have ended -> mark DECLINED (missed)
+        Query pendingQuery = db.collection(COLLECTION_NAME)
+                .whereEqualTo("status", Session.Status.PENDING.name())
+                .whereLessThan("endTime", now);
+        if (userUid != null && roleField != null) {
+            pendingQuery = pendingQuery.whereEqualTo(roleField, userUid);
         }
-    }
 
-    Session session = new Session(tutorStudentNum, tuteeStudentNum, subjectId);
-    session.setStartTime(actualDbStartTime);
-    session.setEndTime(actualDbEndTime);
-    session.setStatus(com.pbdvmobile.app.data.model.Session.Status.PENDING);
-    session.setLocation(location);
+        Task<QuerySnapshot> pendingTask = pendingQuery.get().addOnSuccessListener(snapshots -> {
+            if (snapshots != null) {
+                for (DocumentSnapshot doc : snapshots) {
+                    batch.update(doc.getReference(), "status", Session.Status.DECLINED.name());
+                }
+            }
+        });
 
-    if (insertSession(session) != -1) {
-        lastError = "Session request created successfully!"; // Should not be needed if success
-        return true;
-    } else {
-        lastError = "Failed to save session to database.";
-        return false;
-    }
-}
-
-    public String getLastError() {
-        return lastError;
-    }
-    // Helper method in SessionDao to get taken slots for a user (either as tutor or tutee)
-    // Or more simply, a method that returns all PENDING/CONFIRMED sessions for a user.
-    public List<TimeSlot> getTakenTimeSlotForUser(int userId, boolean asTutee) {
-        List<TimeSlot> sessionTimes = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String userColumn = asTutee ? SqlOpenHelper.KEY_SESSION_TUTEE_ID : SqlOpenHelper.KEY_SESSION_TUTOR_ID;
-
-        String selection = userColumn + " = ? AND (" +
-                SqlOpenHelper.KEY_SESSION_STATUS + " = ? OR " +
-                SqlOpenHelper.KEY_SESSION_STATUS + " = ?)";
-        String[] selectionArgs = new String[]{
-                String.valueOf(userId),
-                Session.Status.CONFIRMED.name(),
-                Session.Status.PENDING.name()
-        };
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS,
-                null, selection, selectionArgs, null, null, SqlOpenHelper.KEY_SESSION_START_TIME);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Session session = cursorToSession(cursor);
-                sessionTimes.add(new TimeSlot(session.getStartTime(), session.getEndTime()));
-            } while (cursor.moveToNext());
+        // Query for CONFIRMED sessions that have ended -> mark COMPLETED
+        Query confirmedQuery = db.collection(COLLECTION_NAME)
+                .whereEqualTo("status", Session.Status.CONFIRMED.name())
+                .whereLessThan("endTime", now);
+        if (userUid != null && roleField != null) {
+            confirmedQuery = confirmedQuery.whereEqualTo(roleField, userUid);
         }
-        cursor.close();
-        db.close();
-        return sessionTimes;
+        Task<QuerySnapshot> confirmedTask = confirmedQuery.get().addOnSuccessListener(snapshots -> {
+            if (snapshots != null) {
+                for (DocumentSnapshot doc : snapshots) {
+                    batch.update(doc.getReference(), "status", Session.Status.COMPLETED.name());
+                }
+            }
+        });
+
+        return Tasks.whenAll(pendingTask, confirmedTask).continueWithTask(task -> {
+            if (task.isSuccessful()) {
+                return batch.commit();
+            } else {
+                Log.e(TAG, "Failed to query past sessions for update.", task.getException());
+                return Tasks.forException(task.getException());
+            }
+        });
     }
-
-    // Helper method in SessionDao
-    public List<Session> getSessionsByUsersAndSubject(int tuteeId, int tutorId, int subjectId) {
-        List<Session> sessions = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String selection = SqlOpenHelper.KEY_SESSION_TUTEE_ID + " = ? AND " +
-                SqlOpenHelper.KEY_SESSION_TUTOR_ID + " = ? AND " +
-                SqlOpenHelper.KEY_SESSION_SUBJECT_ID + " = ?";
-        String[] selectionArgs = new String[]{
-                String.valueOf(tuteeId),
-                String.valueOf(tutorId),
-                String.valueOf(subjectId)
-        };
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_SESSIONS, null, selection, selectionArgs, null, null, null);
-        if (cursor.moveToFirst()) {
-            do {
-                sessions.add(cursorToSession(cursor));
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return sessions;
-    }
-    public int updateSessionStatus(int sessionId, @NonNull Session.Status status) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_STATUS, status.name());
-
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_SESSIONS, values,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)});
-        db.close();
-        return rowsAffected;
-    }
-
-    public int addTutorReview(int sessionId, String review) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_TUTOR_REVIEW, review);
-
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_SESSIONS, values,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)});
-        db.close();
-        return rowsAffected;
-    }
-    public int updateTutorRating(int sessionId, double rating) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_TUTOR_RATING, rating); // Average the rating
-
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_SESSIONS, values,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)});
-        db.close();
-        return rowsAffected;
-    }
-    public int addTuteeReview(int sessionId, String review) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_TUTEE_REVIEW, review);
-
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_SESSIONS, values,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)});
-        db.close();
-        return rowsAffected;
-    }
-    public int updateTuteeRating(int sessionId, double rating) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_SESSION_TUTEE_RATING, rating); // Average the rating
-
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_SESSIONS, values,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)});
-        db.close();
-        return rowsAffected;
-    }
-
-
-    public int deleteSession(int sessionId) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int rowsAffected = db.delete(SqlOpenHelper.TABLE_SESSIONS,
-                SqlOpenHelper.KEY_SESSION_ID + "=?",
-                new String[]{String.valueOf(sessionId)});
-        db.close();
-        return rowsAffected;
-    }
-
-    private Session cursorToSession(Cursor cursor) {
-        Session session = new Session();
-        session.setId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_ID)));
-        session.setTutorId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_TUTOR_ID)));
-        session.setTuteeId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_TUTEE_ID)));
-        session.setSubjectId(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_SUBJECT_ID)));
-        session.setLocation(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_LOCATION)));
-
-        long startTimeMillis = cursor.getLong(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_START_TIME));
-        session.setStartTime(new Date(startTimeMillis));
-
-        long endTimeMillis = cursor.getLong(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_END_TIME));
-        session.setEndTime(new Date(endTimeMillis));
-
-        String statusString = cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_STATUS));
-        session.setStatus(Session.Status.valueOf(statusString));
-
-        session.setTutorReview(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_TUTOR_REVIEW)));
-        session.setTuteeReview(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_SESSION_TUTEE_REVIEW)));
-
-        return session;
-    }
-
 }

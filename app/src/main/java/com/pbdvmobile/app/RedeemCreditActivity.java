@@ -44,7 +44,7 @@ public class RedeemCreditActivity extends AppCompatActivity implements PrizesVie
         textViewNoPrizes = findViewById(R.id.textViewNoPrizes);
 
         dataManager = DataManager.getInstance(this);
-        currentUser = LogInUser.getInstance(dataManager);
+        currentUser = LogInUser.getInstance();
 
         if (!currentUser.isLoggedIn()) {
             // Redirect to login or handle appropriately

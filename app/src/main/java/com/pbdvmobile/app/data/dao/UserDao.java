@@ -1,198 +1,147 @@
 package com.pbdvmobile.app.data.dao;
 
-
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
-
-import com.pbdvmobile.app.data.SqlOpenHelper;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions; // For merging updates
 import com.pbdvmobile.app.data.model.User;
-import com.pbdvmobile.app.data.model.UserSubject;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map; // For partial updates
 
 public class UserDao {
-    private static final String TAG = "UserDao";
-    private final SqlOpenHelper dbHelper;
+    private static final String TAG = "UserDaoFirebase";
+    public static final String COLLECTION_NAME = "users"; // Made public for easier access
+    private final FirebaseFirestore db;
 
-    public UserDao(SqlOpenHelper dbHelper) {
-        this.dbHelper = dbHelper;
+    public UserDao() {
+        this.db = FirebaseFirestore.getInstance();
     }
 
-    public long insertUser(@NonNull User user) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_USER_STUDENT_NUM, user.getStudentNum());
-        values.put(SqlOpenHelper.KEY_USER_FIRST_NAME, user.getFirstName());
-        values.put(SqlOpenHelper.KEY_USER_LAST_NAME, user.getLastName());
-        values.put(SqlOpenHelper.KEY_USER_EMAIL, user.getEmail());
-        values.put(SqlOpenHelper.KEY_USER_PASSWORD, user.getPassword());
-        values.put(SqlOpenHelper.KEY_USER_BIO, user.getBio());
-        values.put(SqlOpenHelper.KEY_USER_EDUCATION_LEVEL, user.getEducationLevel().name());
-        values.put(SqlOpenHelper.KEY_USER_IS_TUTOR, user.isTutor() ? 1 : 0);
-        values.put(SqlOpenHelper.KEY_USER_TIER_LEVEL, user.getTierLevel().name());
-//        values.put(SqlOpenHelper.KEY_USER_AVERAGE_RATING, user.getAverageRating());
-        values.put(SqlOpenHelper.KEY_USER_PROFILE_IMAGE_URL, user.getProfileImageUrl());
-        values.put(SqlOpenHelper.KEY_USER_CREDITS, user.getCredits());
-        values.put(SqlOpenHelper.KEY_USER_SUBJECTS, user.getSubjects());
-        values.put(SqlOpenHelper.KEY_USER_BANK_DETAILS, user.getBankDetails());
-
-        long id = db.insert(SqlOpenHelper.TABLE_USERS, null, values);
-        db.close();
-        return id;
-    }
-
-    public User getUserByStudentNum(int studentNum) {
-
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USERS,
-                null,
-                SqlOpenHelper.KEY_USER_STUDENT_NUM + "=?",
-                new String[]{String.valueOf(studentNum)},
-                null, null, null);
-
-        User user = null;
-        if (cursor.moveToFirst()) {
-            user = cursorToUser(cursor);
-            cursor.close();
+    /**
+     * Creates or updates a user's profile in Firestore.
+     * The document ID will be the user's Firebase Auth UID.
+     * @param user The User object to save.
+     * @return A Task that completes when the operation is finished.
+     */
+    public Task<Void> createUserProfile(@NonNull User user) {
+        if (user.getUid() == null || user.getUid().isEmpty()) {
+            Log.e(TAG, "User UID cannot be null or empty for creating/updating profile.");
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("User UID required."));
         }
-        db.close();
-        return user;
+        // Use set without merge to ensure the document is created or fully overwritten.
+        // If you want to merge (update existing fields and add new ones without deleting others),
+        // use SetOptions.merge(). For creating a new profile, a full set is often desired.
+        return db.collection(COLLECTION_NAME).document(user.getUid()).set(user);
     }
 
-    public User getUserByEmail(String email) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USERS,
-                null,
-                SqlOpenHelper.KEY_USER_EMAIL + "=?",
-                new String[]{email},
-                null, null, null);
-
-        User user = null;
-        if (cursor.moveToFirst()) {
-            user = cursorToUser(cursor);
-            cursor.close();
+    /**
+     * Fetches a user document by their Firebase Auth UID.
+     * @param uid The Firebase Auth UID of the user.
+     * @return A Task containing the DocumentSnapshot.
+     */
+    public Task<DocumentSnapshot> getUserByUid(String uid) {
+        if (uid == null || uid.isEmpty()) {
+            Log.e(TAG, "User UID cannot be null or empty for fetching.");
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("User UID cannot be null or empty."));
         }
-        db.close();
-        return user;
+        return db.collection(COLLECTION_NAME).document(uid).get();
     }
 
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    /**
+     * Fetches users by their student number.
+     * Note: Ensure 'studentNum' field is indexed in Firestore for efficient querying if used frequently.
+     * @param studentNum The student number to search for.
+     * @return A Task containing the QuerySnapshot. Expect 0 or 1 result if studentNum is unique.
+     */
+    public Task<QuerySnapshot> getUserByStudentNum(int studentNum) {
+        return db.collection(COLLECTION_NAME)
+                .whereEqualTo("studentNum", studentNum)
+                .limit(1) // Assuming studentNum should be unique or you only want the first match
+                .get();
+    }
 
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USERS,
-                null,null, null,
-                null, null, null);
+    /**
+     * Fetches users by their email address.
+     * Note: Ensure 'email' field is indexed in Firestore for efficient querying.
+     * @param email The email address to search for.
+     * @return A Task containing the QuerySnapshot. Expect 0 or 1 result if email is unique.
+     */
+    public Task<QuerySnapshot> getUserByEmail(String email) {
+        return db.collection(COLLECTION_NAME)
+                .whereEqualTo("email", email)
+                .limit(1) // Assuming email should be unique
+                .get();
+    }
 
-        if (cursor.moveToFirst()) {
-            do {
-                User user = cursorToUser(cursor);
-                users.add(user);
-            } while (cursor.moveToNext());
+    /**
+     * Fetches all user documents from the 'users' collection.
+     * Use with caution for very large user bases. Consider pagination or more specific queries.
+     * @return A Task containing the QuerySnapshot with all users.
+     */
+    public Task<QuerySnapshot> getAllUsers() {
+        return db.collection(COLLECTION_NAME).get();
+    }
+
+    /**
+     * Fetches all users who are marked as tutors.
+     * Note: Ensure 'tutor' field (boolean isTutor) is indexed in Firestore.
+     * @return A Task containing the QuerySnapshot with all tutors.
+     */
+    public Task<QuerySnapshot> getAllTutors() {
+        return db.collection(COLLECTION_NAME)
+                .whereEqualTo("tutor", true) // Field in Firestore is 'tutor' due to isTutor() getter
+                .get();
+    }
+
+    /**
+     * Updates an existing user document. This performs a merge, so only fields present in the
+     * User object will be updated. Fields not in the object will remain untouched in Firestore.
+     * @param user The User object with updated information. UID must be set.
+     * @return A Task that completes when the update is finished.
+     */
+    public Task<Void> updateUser(@NonNull User user) {
+        if (user.getUid() == null || user.getUid().isEmpty()) {
+            Log.e(TAG, "User UID required for update.");
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("User UID required for update."));
         }
-        cursor.close();
-        db.close();
-        return users;
+        return db.collection(COLLECTION_NAME).document(user.getUid()).set(user, SetOptions.merge());
     }
-    public List<User> getAllTutors() {
-        List<User> tutors = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_USERS,
-                null,
-                SqlOpenHelper.KEY_USER_IS_TUTOR + "=?",
-                new String[]{"1"},
-                null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                User user = cursorToUser(cursor);
-                tutors.add(user);
-            } while (cursor.moveToNext());
+    /**
+     * Updates specific fields of a user document using a Map.
+     * @param uid The UID of the user to update.
+     * @param updates A Map where keys are field names and values are the new field values.
+     * @return A Task that completes when the update is finished.
+     */
+    public Task<Void> updateUserSpecificFields(String uid, Map<String, Object> updates) {
+        if (uid == null || uid.isEmpty()) {
+            Log.e(TAG, "User UID required for specific field update.");
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("User UID required for specific field update."));
         }
-        cursor.close();
-        db.close();
-        return tutors;
-    }
-
-    public int updateUser(@NonNull User user) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(SqlOpenHelper.KEY_USER_FIRST_NAME, user.getFirstName());
-        values.put(SqlOpenHelper.KEY_USER_LAST_NAME, user.getLastName());
-        values.put(SqlOpenHelper.KEY_USER_EMAIL, user.getEmail());
-        values.put(SqlOpenHelper.KEY_USER_PASSWORD, user.getPassword());
-        values.put(SqlOpenHelper.KEY_USER_BIO, user.getBio());
-        values.put(SqlOpenHelper.KEY_USER_EDUCATION_LEVEL, user.getEducationLevel().name());
-        values.put(SqlOpenHelper.KEY_USER_IS_TUTOR, user.isTutor() ? 1 : 0);
-        values.put(SqlOpenHelper.KEY_USER_TIER_LEVEL, user.getTierLevel().name());
-//        values.put(SqlOpenHelper.KEY_USER_AVERAGE_RATING, user.getAverageRating());
-        values.put(SqlOpenHelper.KEY_USER_PROFILE_IMAGE_URL, user.getProfileImageUrl());
-        values.put(SqlOpenHelper.KEY_USER_CREDITS, user.getCredits());
-        values.put(SqlOpenHelper.KEY_USER_SUBJECTS, user.getSubjects());
-        values.put(SqlOpenHelper.KEY_USER_BANK_DETAILS, user.getBankDetails());
-
-        int rowsAffected = db.update(SqlOpenHelper.TABLE_USERS, values,
-                SqlOpenHelper.KEY_USER_STUDENT_NUM + "=?",
-                new String[]{String.valueOf(user.getStudentNum())});
-        db.close();
-        return rowsAffected;
-    }
-
-    public int deleteUser(int studentNum) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int rowsAffected = db.delete(SqlOpenHelper.TABLE_USERS,
-                SqlOpenHelper.KEY_USER_STUDENT_NUM + "=?",
-                new String[]{String.valueOf(studentNum)});
-        db.close();
-        return rowsAffected;
-    }
-
-
-    @NonNull
-    private User cursorToUser(@NonNull Cursor cursor) {
-        User user = new User();
-        user.setStudentNum(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_STUDENT_NUM)));
-        user.setFirstName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_FIRST_NAME)));
-        user.setLastName(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_LAST_NAME)));
-        user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_EMAIL)));
-        user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_PASSWORD)));
-        user.setBio(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_BIO)));
-
-        String eduLevelString = cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_EDUCATION_LEVEL));
-        try {
-            user.setEducationLevel(User.EduLevel.valueOf(eduLevelString));
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "Invalid education level: " + eduLevelString);
-            user.setEducationLevel(User.EduLevel.BACHELOR); // Default value
+        if (updates == null || updates.isEmpty()) {
+            Log.w(TAG, "Update map is null or empty. No update will be performed.");
+            return com.google.android.gms.tasks.Tasks.forResult(null); // Or throw an error
         }
+        if(updates.containsKey("tutor") && !(boolean)updates.get("tutor")){
 
-        user.setTutor(cursor.getInt(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_IS_TUTOR)) == 1);
-
-        String tierLevelString = cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_TIER_LEVEL));
-        try {
-            user.setTierLevel(User.TierLevel.valueOf(tierLevelString));
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "Invalid tier level: " + tierLevelString);
-            user.setTierLevel(User.TierLevel.BASIC); // Default value
         }
-
-//        user.setAverageRating(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_AVERAGE_RATING)));
-        user.setProfileImageUrl(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_PROFILE_IMAGE_URL)));
-        user.setCredits(cursor.getDouble(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_CREDITS)));
-        user.setSubjects(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_SUBJECTS)));
-        user.setBankDetails(cursor.getString(cursor.getColumnIndexOrThrow(SqlOpenHelper.KEY_USER_BANK_DETAILS)));
-
-        return user;
+        return db.collection(COLLECTION_NAME).document(uid).update(updates);
     }
 
+    /**
+     * Deletes a user document from Firestore.
+     * IMPORTANT: This does NOT delete the Firebase Auth user. Auth deletion must be handled separately.
+     * @param uid The UID of the user to delete.
+     * @return A Task that completes when the deletion is finished.
+     */
+    public Task<Void> deleteUser(String uid) {
+        if (uid == null || uid.isEmpty()) {
+            Log.e(TAG, "User UID required for delete.");
+            return com.google.android.gms.tasks.Tasks.forException(new IllegalArgumentException("User UID required for delete."));
+        }
+        return db.collection(COLLECTION_NAME).document(uid).delete();
+    }
 }

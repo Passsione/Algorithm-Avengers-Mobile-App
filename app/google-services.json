@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "496138814140",
+    "project_id": "algorithm-avengers-mobile-app",
+    "storage_bucket": "algorithm-avengers-mobile-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:496138814140:android:ee173420b147cb3c48c6b9",
+        "android_client_info": {
+          "package_name": "com.pbdvmobile.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZQllfxqY_s4fjx9rVwnZtx69RNkJH11Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

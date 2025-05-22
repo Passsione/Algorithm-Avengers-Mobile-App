@@ -175,7 +175,7 @@ public class AIQuizActivity extends AppCompatActivity {
         progressBarQuiz.setVisibility(View.VISIBLE);
         btnSubmitQuiz.setEnabled(false);
 
-        // --- AI QUIZ PROCESSING SIMULATION ---
+        // --- AI QUIZ PROCESSING  ---
         new android.os.Handler().postDelayed(() -> {
             progressBarQuiz.setVisibility(View.GONE);
             btnSubmitQuiz.setEnabled(true);

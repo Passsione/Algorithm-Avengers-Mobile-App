@@ -6,9 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".ResourceUploadActivity">
 
-  <LinearLayout
+  <ProgressBar
+      android:id="@+id/uploadProgressBar"
+      style="?android:attr/progressBarStyle"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
+      android:visibility="gone"
+      android:layout_below="@+id/linearLayout4"
+      android:layout_marginTop="19dp" />
+
+  <LinearLayout
+      android:id="@+id/linearLayout4"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_alignParentStart="true"
+      android:layout_alignParentTop="true"
+      android:layout_marginStart="0dp"
       android:layout_marginTop="60dp"
       android:orientation="vertical"
       android:padding="24dp">
@@ -27,6 +40,7 @@
           android:text="Upload Resource"
           android:textSize="24sp"
           android:textStyle="bold" />
+
     </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -42,6 +56,22 @@
           android:id="@+id/resourceNameEditText"
           android:layout_width="match_parent"
           android:layout_height="wrap_content" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginBottom="16dp"
+        android:hint="Description"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary">
+
+      <com.google.android.material.textfield.TextInputEditText
+          android:id="@+id/resourceDescriptionEditText"
+          android:layout_width="match_parent"
+          android:layout_height="100dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Spinner
@@ -106,8 +136,8 @@
           android:layout_marginStart="8dp"
           android:layout_weight="1"
           android:elevation="1dp"
-          android:visibility="gone"
           android:text="Upload Resource"
+          android:visibility="gone"
           app:backgroundTint="@color/primary"
           app:cornerRadius="8dp" />
     </LinearLayout>
@@ -120,156 +150,4 @@
       android:layout_height="wrap_content" />
 
 </RelativeLayout>
-<!--
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ResourceUploadActivity">
 
-
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="vertical"
-      android:layout_marginTop="60dp"
-      android:padding="24dp">
-
-    &lt;!&ndash; Header Section &ndash;&gt;
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:orientation="vertical">
-
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:gravity="start"
-          android:text="Upload resource"
-          android:textSize="24sp"
-          android:textStyle="bold" />
-
-    </LinearLayout>
-
-    &lt;!&ndash; Resource Title &ndash;&gt;
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Resource display name"
-        app:boxStrokeColor="@color/primary"
-        app:hintTextColor="@color/primary">
-
-      <com.google.android.material.textfield.TextInputEditText
-          android:id="@+id/resourceTitle"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-
-    &lt;!&ndash; Subject Dropdown &ndash;&gt;
-
-
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Select a subject"
-        app:boxStrokeColor="@color/primary"
-        app:hintTextColor="@color/primary">
-
-      <Spinner
-          android:id="@+id/subjectDropdown"
-          android:layout_width="match_parent"
-          android:layout_height="50dp"
-
-          android:layout_marginBottom="20dp"
-          android:importantForAccessibility="yes" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-
-    &lt;!&ndash; File Upload Card &ndash;&gt;
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/uploadCard"
-        android:layout_width="match_parent"
-        android:layout_height="110dp"
-        android:layout_marginBottom="24dp"
-
-        app:cardElevation="2dp"
-        app:strokeColor="@color/primary"
-        app:strokeWidth="1dp">
-
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:gravity="center"
-          android:orientation="vertical"
-          android:padding="16dp">
-
-        <Button
-            android:id="@+id/selectPdfButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Tap to upload"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/upload_doc_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="PDF's only"
-            android:textSize="12sp" />
-      </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    &lt;!&ndash; Upload Button &ndash;&gt;
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-      <com.google.android.material.button.MaterialButton
-          android:id="@+id/uploadPdfButton"
-          android:layout_width="match_parent"
-          android:layout_height="48dp"
-          android:elevation="1dp"
-          android:text="upload resource"
-          app:backgroundTint="@color/primary"
-          app:cornerRadius="8dp"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
-
-      <com.google.android.material.button.MaterialButton
-          android:id="@+id/upload_cancel_button"
-          android:layout_width="wrap_content"
-          android:layout_height="48dp"
-          android:layout_marginStart="132dp"
-          android:layout_marginTop="8dp"
-          android:elevation="1dp"
-          android:text="Cancel"
-          app:backgroundTint="@color/primary"
-          app:cornerRadius="8dp"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/uploadPdfButton" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-  </LinearLayout>
-
-  <androidx.fragment.app.FragmentContainerView
-      android:id="@+id/fragmentContainerView"
-      android:name="com.pbdvmobile.app.fragments.NavigationFragment"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content" />
-
-</RelativeLayout>
-
--->

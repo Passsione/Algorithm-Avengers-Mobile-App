@@ -55,7 +55,7 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
         });
 
         dataManager = DataManager.getInstance(this.getApplicationContext()); // Use application context for DataManager if it's a singleton
-        current_user = LogInUser.getInstance(dataManager);
+        current_user = LogInUser.getInstance();
 
         recyclerViewNotifications = findViewById(R.id.recyclerViewNotifications);
         textViewNoNotifications = findViewById(R.id.textViewNoNotifications);

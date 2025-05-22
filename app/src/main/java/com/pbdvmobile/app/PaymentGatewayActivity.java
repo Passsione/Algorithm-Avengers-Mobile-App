@@ -67,7 +67,7 @@ public class PaymentGatewayActivity extends AppCompatActivity {
         });
 
         DataManager dataManager = DataManager.getInstance(this);
-        LogInUser currentUser = LogInUser.getInstance(dataManager);
+        LogInUser currentUser = LogInUser.getInstance();
 
         initializeViews();
         setupFormValidation();

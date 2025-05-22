@@ -1,19 +1,23 @@
 package com.pbdvmobile.app;
 
+import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils; // Import for TextUtils
+import android.provider.OpenableColumns;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,434 +26,510 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.pbdvmobile.app.data.DataManager;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.pbdvmobile.app.data.LogInUser;
 import com.pbdvmobile.app.data.dao.ResourceDao;
+import com.pbdvmobile.app.data.dao.SubjectDao;
 import com.pbdvmobile.app.data.model.Resource;
 import com.pbdvmobile.app.data.model.Subject;
-import com.pbdvmobile.app.data.model.UserSubject;
+import com.pbdvmobile.app.data.model.User;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResourceUploadActivity extends AppCompatActivity {
 
     public static final String EXTRA_MODE = "com.pbdvmobile.app.EXTRA_MODE";
-    public static final String MODE_CREATE = "MODE_CREATE";
+    public static final String MODE_UPLOAD = "MODE_UPLOAD";
     public static final String MODE_EDIT = "MODE_EDIT";
     public static final String EXTRA_RESOURCE_ID = "com.pbdvmobile.app.EXTRA_RESOURCE_ID";
-    private static final String TAG = "Resource Upload";
+    private static final String TAG = "ResourceUploadActivity";
 
-    private Button selectPdfButton, uploadPdfButton, cancelButton;
-    private Uri selectedPdfUri;
-    TextInputEditText txtResourceName; // Changed from txtFileName for clarity
-    TextView docNameLabel, jobTitle; // Renamed from docName
-    Spinner subjectSpinner; // Renamed from subjects
-    private DataManager db;
-    private LogInUser current_user;
-    ResourceDao resourceDao; // Renamed from pdfDao
-    AtomicInteger selectedSubjectId = new AtomicInteger(0); // Renamed
+    private Button selectFileButton, uploadOrUpdateButton, cancelButton;
+    private Uri selectedFileUri;
+    private TextInputEditText txtResourceName, txtResourceDescription;
+    private TextView tvSelectedFileNameLabel, tvActivityTitle;
+    private Spinner subjectSpinner;
+    private ProgressBar uploadProgressBar;
 
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
-    // private String savedFilePath; // URI string is better for content URIs
+    private LogInUser loggedInUser;
+    private User currentUserPojo;
+    private ResourceDao resourceDao;
+    private SubjectDao subjectDao;
+    private FirebaseStorage firebaseStorage;
 
-    private String currentMode = MODE_CREATE;
-    private Resource resourceToEdit;
-    private int resourceToEditId = -1;
+    private String currentMode = MODE_UPLOAD;
+    private String resourceToEditId;
+    private Resource existingResourceToEdit;
 
-    private final ActivityResultLauncher<Intent> pdfSelectionLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                            selectedPdfUri = result.getData().getData();
-                            if (selectedPdfUri != null) {
-                                String fileName = getFileNameFromUri(selectedPdfUri);
-                                Toast.makeText(this, "File Selected: " + fileName, Toast.LENGTH_SHORT).show();
-                                uploadPdfButton.setVisibility(View.VISIBLE);
-                                docNameLabel.setText(fileName);
-                                if (TextUtils.isEmpty(txtResourceName.getText())) {
-                                    txtResourceName.setText(fileName.replaceFirst("[.][^.]+$", "")); // Remove extension for title
-                                }
-                            } else {
-                                Toast.makeText(this, "Error selecting file", Toast.LENGTH_SHORT).show();
-                                uploadPdfButton.setVisibility(View.GONE);
-                            }
-                        } else {
-                            Toast.makeText(this, "File selection cancelled", Toast.LENGTH_SHORT).show();                        uploadPdfButton.setEnabled(selectedPdfUri != null || currentMode.equals(MODE_EDIT));
-                        }
-                    });
-    private List<Integer> subjectIdListForSpinner = new ArrayList<>(); // To map spinner position to subject ID
+    private List<Subject> availableSubjectsForSpinner = new ArrayList<>();
+    private String selectedSubjectId;
+    private String selectedSubjectName;
 
+    private ActivityResultLauncher<Intent> fileSelectionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_resource_upload);
 
-        selectPdfButton = findViewById(R.id.selectPdfButton);
-        uploadPdfButton = findViewById(R.id.uploadPdfButton);
-        jobTitle = findViewById(R.id.textViewUploadTitle);
-        txtResourceName = findViewById(R.id.resourceNameEditText); // Changed ID
-        docNameLabel = findViewById(R.id.upload_doc_name_label);     // Changed ID
+        initializeViews(); // Make sure these IDs match your XML
+        setupInsets();
+
+        loggedInUser = LogInUser.getInstance();
+        // Corrected to use the method from the LogInUser class you provided
+        currentUserPojo = loggedInUser.getUser();
+        resourceDao = new ResourceDao();
+        subjectDao = new SubjectDao();
+        firebaseStorage = FirebaseStorage.getInstance();
+
+        if (currentUserPojo == null || !currentUserPojo.isTutor()) {
+            Toast.makeText(this, "You must be logged in as a tutor to upload resources.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        Intent intent = getIntent();
+        currentMode = intent.getStringExtra(EXTRA_MODE) != null ? intent.getStringExtra(EXTRA_MODE) : MODE_UPLOAD;
+        resourceToEditId = intent.getStringExtra(EXTRA_RESOURCE_ID);
+
+        setupActivityLaunchers();
+        loadSubjectsForSpinner();
+
+        selectFileButton.setOnClickListener(v -> selectFile());
+        uploadOrUpdateButton.setOnClickListener(v -> handleUploadOrUpdate());
+        cancelButton.setOnClickListener(v -> {
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+        });
+    }
+
+    private void initializeViews() {
+        // Using IDs from the Java file you provided in THIS turn
+        selectFileButton = findViewById(R.id.selectPdfButton);
+        uploadOrUpdateButton = findViewById(R.id.uploadPdfButton);
+        tvActivityTitle = findViewById(R.id.textViewUploadTitle);
+        txtResourceName = findViewById(R.id.resourceNameEditText);
+        txtResourceDescription = findViewById(R.id.resourceDescriptionEditText);
+        tvSelectedFileNameLabel = findViewById(R.id.upload_doc_name_label);
         subjectSpinner = findViewById(R.id.subjectDropdown);
         cancelButton = findViewById(R.id.upload_cancel_button);
+        uploadProgressBar = findViewById(R.id.uploadProgressBar);
+    }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.mainResourceUploadLayout), (v, insets) -> { // Changed ID
+    private void setupInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.mainResourceUploadLayout), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        db = DataManager.getInstance(getApplicationContext()); // Use application context
-        current_user = LogInUser.getInstance(db);
-        resourceDao = db.getResourceDao();
-
-        Intent intent = getIntent();
-        currentMode = intent.getStringExtra(EXTRA_MODE) != null ? intent.getStringExtra(EXTRA_MODE) : MODE_CREATE;
-        resourceToEditId = intent.getIntExtra(EXTRA_RESOURCE_ID, -1);
-
-        createSubjectDropDown(); // Call before potentially pre-filling for edit mode
-
-        if (currentMode.equals(MODE_EDIT) && resourceToEditId != -1) {
-            setTitle("Edit Resource");
-            uploadPdfButton.setText("Update Resource");
-            loadResourceForEditing();
-        } else {
-            setTitle("Upload Resource");
-            uploadPdfButton.setText("Upload Resource");
-//            uploadPdfButton.setEnabled(false); // Enabled only after file selection in create mode
-        }
-
-
-        selectPdfButton.setOnClickListener(v -> selectPdfFile());
-        uploadPdfButton.setOnClickListener(v -> handleUploadOrUpdate());
-        cancelButton.setOnClickListener(v -> {
-            finish();
-            Toast.makeText(this, "Operation cancelled", Toast.LENGTH_SHORT).show();
-        });
     }
 
-    private void loadResourceForEditing() {
-        executorService.execute(() -> {
-            resourceToEdit = resourceDao.getResourceById(resourceToEditId);
-            runOnUiThread(() -> {
-                if (resourceToEdit != null) {
-                    txtResourceName.setText(resourceToEdit.getName());
-                    jobTitle.setText("Edit Resource");
-                    docNameLabel.setText(getFileNameFromUriString(resourceToEdit.getResource())); // Display existing file name or URI
-                    // Pre-select subject in spinner
-                    if (subjectSpinner.getAdapter() != null) {
-                        for (int i = 0; i < subjectSpinner.getAdapter().getCount(); i++) {
-                            // This assumes subjectSpinner items are Subject objects or that you can map ID
-                            // For now, let's assume IDs are stored and matched.
-                            // This part needs careful implementation based on how subjects are populated in spinner.
-                            // We'll use the 'addedSubjectIds' list from createSubjectDropDown.
-                            if (subjectIdListForSpinner.get(i) == resourceToEdit.getSubjectId()){
-                                subjectSpinner.setSelection(i);
-                                selectedSubjectId.set(resourceToEdit.getSubjectId());
-                                break;
+    private void setupActivityLaunchers() {
+        fileSelectionLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        selectedFileUri = result.getData().getData();
+                        if (selectedFileUri != null) {
+                            String fileName = getFileNameFromUri(selectedFileUri);
+                            tvSelectedFileNameLabel.setText("Selected: " + fileName);
+                            tvSelectedFileNameLabel.setVisibility(View.VISIBLE);
+                            if (TextUtils.isEmpty(txtResourceName.getText()) && MODE_UPLOAD.equals(currentMode)) {
+                                txtResourceName.setText(fileName.replaceFirst("[.][^.]+$", ""));
                             }
+                            uploadOrUpdateButton.setEnabled(true); // Enable button on successful selection
+                            uploadOrUpdateButton.setVisibility(View.VISIBLE); // Ensure it's visible
+                        } else {
+                            Toast.makeText(this, "Error selecting file.", Toast.LENGTH_SHORT).show();
+                            uploadOrUpdateButton.setEnabled(false); // Disable if selection failed
+                            uploadOrUpdateButton.setVisibility(View.GONE);
                         }
+                    } else {
+                        // File selection cancelled or failed, ensure button is appropriately set
+                        if(selectedFileUri == null && MODE_UPLOAD.equals(currentMode)) { // Only disable if no file was previously selected in UPLOAD mode
+                            uploadOrUpdateButton.setEnabled(false);
+                            uploadOrUpdateButton.setVisibility(View.GONE);
+                        }
+                        // In EDIT mode, button might remain enabled if user just wants to update metadata
                     }
-                    uploadPdfButton.setEnabled(true); // Can update details even without changing file
-                } else {
-                    Toast.makeText(this, "Error loading resource for editing.", Toast.LENGTH_LONG).show();
-                    finish();
+                });
+    }
+
+    private void loadSubjectsForSpinner() {
+        showLoading(true);
+        List<String> tutoredIds = currentUserPojo.getTutoredSubjectIds();
+        if (tutoredIds == null || tutoredIds.isEmpty()) {
+            Toast.makeText(this, "You are not set to tutor any subjects. Please update your profile.", Toast.LENGTH_LONG).show();
+            showLoading(false);
+            finish();
+            return;
+        }
+
+        List<com.google.android.gms.tasks.Task<com.google.firebase.firestore.DocumentSnapshot>> subjectTasks = new ArrayList<>();
+        for (String id : tutoredIds) {
+            subjectTasks.add(subjectDao.getSubjectById(id));
+        }
+
+        com.google.android.gms.tasks.Tasks.whenAllSuccess(subjectTasks).addOnSuccessListener(results -> {
+            availableSubjectsForSpinner.clear();
+            for (Object snapshot : results) {
+                com.google.firebase.firestore.DocumentSnapshot doc = (com.google.firebase.firestore.DocumentSnapshot) snapshot;
+                if (doc.exists()) {
+                    Subject subject = doc.toObject(Subject.class);
+                    if (subject != null) {
+                        subject.setId(doc.getId());
+                        availableSubjectsForSpinner.add(subject);
+                    }
                 }
-            });
+            }
+            if (availableSubjectsForSpinner.isEmpty()) {
+                Toast.makeText(this, "No tutored subjects found. Please update your profile.", Toast.LENGTH_LONG).show();
+                showLoading(false);
+                finish();
+                return;
+            }
+            populateSubjectSpinner();
+            if (MODE_EDIT.equals(currentMode) && resourceToEditId != null) {
+                loadResourceForEditing();
+            } else {
+                tvActivityTitle.setText("Upload New Resource");
+                uploadOrUpdateButton.setText("Upload Resource");
+                // Button is disabled initially in UPLOAD mode until a file is selected
+                uploadOrUpdateButton.setEnabled(false);
+                uploadOrUpdateButton.setVisibility(View.GONE);
+                showLoading(false);
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error fetching tutored subjects", e);
+            Toast.makeText(this, "Could not load subjects for selection.", Toast.LENGTH_LONG).show();
+            showLoading(false);
+            finish();
         });
     }
 
-    private void createSubjectDropDown() {
-        List<UserSubject> userSubjects = db.getSubjectDao().getTutoredUserSubjects(current_user.getUser().getStudentNum()); // Get only subjects user tutors
-        subjectIdListForSpinner.clear();
-        List<String> subjectsName = new ArrayList<>();
-
-        if (userSubjects.isEmpty() && currentMode.equals(MODE_CREATE)) {
-            Toast.makeText(this, "You are not registered to tutor any subjects. Cannot upload resources.", Toast.LENGTH_LONG).show();
-            finish();
-            return;
+    private void populateSubjectSpinner() {
+        List<String> subjectNames = new ArrayList<>();
+        for (Subject subject : availableSubjectsForSpinner) {
+            subjectNames.add(subject.getSubjectName());
         }
 
-        for (UserSubject userSubject : userSubjects) {
-            if(!userSubject.getTutoring())continue;
-            Subject sub = db.getSubjectDao().getSubjectById(userSubject.getSubjectId());
-            if (sub != null) {
-                subjectsName.add(sub.getSubjectName());
-                subjectIdListForSpinner.add(sub.getSubjectId()); // Store ID in parallel
-            }
-        }
-
-        if (subjectsName.isEmpty() && currentMode.equals(MODE_CREATE)) {
-            Toast.makeText(this, "No subjects available for you to upload resources to.", Toast.LENGTH_LONG).show();
-            finish();
-            return;
-        }
-
-
-        ArrayAdapter<String> subjectsAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                subjectsName
-        );
-        subjectsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        subjectSpinner.setAdapter(subjectsAdapter);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subjectNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        subjectSpinner.setAdapter(adapter);
 
         subjectSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position >= 0 && position < subjectIdListForSpinner.size()) {
-                    selectedSubjectId.set(subjectIdListForSpinner.get(position));
+                if (position >= 0 && position < availableSubjectsForSpinner.size()) {
+                    selectedSubjectId = availableSubjectsForSpinner.get(position).getId();
+                    selectedSubjectName = availableSubjectsForSpinner.get(position).getSubjectName();
                 } else {
-                    selectedSubjectId.set(0); // Reset or handle error
+                    selectedSubjectId = null;
+                    selectedSubjectName = null;
                 }
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                selectedSubjectId.set(0);
+                selectedSubjectId = null;
+                selectedSubjectName = null;
             }
         });
-
-        // If creating, select first by default if list is not empty
-        if (currentMode.equals(MODE_CREATE) && !subjectIdListForSpinner.isEmpty()) {
+        if (!availableSubjectsForSpinner.isEmpty()) {
             subjectSpinner.setSelection(0);
-            selectedSubjectId.set(subjectIdListForSpinner.get(0));
+            selectedSubjectId = availableSubjectsForSpinner.get(0).getId();
+            selectedSubjectName = availableSubjectsForSpinner.get(0).getSubjectName();
         }
     }
 
+    private void loadResourceForEditing() {
+        tvActivityTitle.setText("Edit Resource");
+        uploadOrUpdateButton.setText("Update Resource");
+        showLoading(true);
 
-    private void selectPdfFile() {
+        resourceDao.getResourceById(resourceToEditId).addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                existingResourceToEdit = documentSnapshot.toObject(Resource.class);
+                if (existingResourceToEdit != null) {
+                    existingResourceToEdit.setId(documentSnapshot.getId());
+                    txtResourceName.setText(existingResourceToEdit.getName());
+                    txtResourceDescription.setText(existingResourceToEdit.getDescription());
+                    tvSelectedFileNameLabel.setText("Current file: " + getFileNameFromUrl(existingResourceToEdit.getFileUrl()));
+                    tvSelectedFileNameLabel.setVisibility(View.VISIBLE);
+
+                    if (subjectSpinner.getAdapter() != null && existingResourceToEdit.getSubjectId() != null) {
+                        for (int i = 0; i < availableSubjectsForSpinner.size(); i++) {
+                            if (availableSubjectsForSpinner.get(i).getId().equals(existingResourceToEdit.getSubjectId())) {
+                                subjectSpinner.setSelection(i);
+                                selectedSubjectId = existingResourceToEdit.getSubjectId();
+                                selectedSubjectName = availableSubjectsForSpinner.get(i).getSubjectName();
+                                break;
+                            }
+                        }
+                    }
+                    uploadOrUpdateButton.setEnabled(true); // Enable for metadata update
+                    uploadOrUpdateButton.setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(this, "Error parsing resource data for editing.", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            } else {
+                Toast.makeText(this, "Resource to edit not found.", Toast.LENGTH_LONG).show();
+                finish();
+            }
+            showLoading(false);
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error loading resource for editing", e);
+            Toast.makeText(this, "Error loading resource: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            showLoading(false);
+            finish();
+        });
+    }
+
+
+    private void selectFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*"); // Allow any file type, can be restricted e.g. "application/pdf"
-        String[] mimeTypes = {"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"};
+        intent.setType("*/*");
+        String[] mimeTypes = {"application/pdf", "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "text/plain", "image/jpeg", "image/png"};
         intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-        pdfSelectionLauncher.launch(intent);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        fileSelectionLauncher.launch(intent);
     }
 
     private void handleUploadOrUpdate() {
         String resourceName = txtResourceName.getText().toString().trim();
+        String resourceDescription = txtResourceDescription.getText().toString().trim();
+
         if (TextUtils.isEmpty(resourceName)) {
             txtResourceName.setError("Resource name cannot be empty");
             txtResourceName.requestFocus();
             return;
         }
-        if (selectedSubjectId.get() == 0) {
+        if (selectedSubjectId == null || selectedSubjectId.isEmpty()) {
             Toast.makeText(this, "Please select a subject.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (currentMode.equals(MODE_CREATE)) {
-            if (selectedPdfUri == null) {
-                Toast.makeText(this, "No file selected for upload", Toast.LENGTH_SHORT).show();
+        uploadOrUpdateButton.setEnabled(false);
+        showLoading(true);
+
+        if (MODE_UPLOAD.equals(currentMode)) {
+            if (selectedFileUri == null) {
+                Toast.makeText(this, "No file selected for upload.", Toast.LENGTH_SHORT).show();
+                uploadOrUpdateButton.setEnabled(true); // Re-enable
+                showLoading(false);
                 return;
             }
-            // Call to copy the selected file to internal storage and then save its metadata
-            copyFileToInternalStorageAndSave(selectedPdfUri, resourceName, true); // isCreateMode = true
-        } else if (currentMode.equals(MODE_EDIT) && resourceToEdit != null) {
-            if (selectedPdfUri != null) {
-                // User selected a new file to replace the old one during edit
-                // Call to copy the NEW selected file to internal storage and then update metadata
-                copyFileToInternalStorageAndSave(selectedPdfUri, resourceName, false); // isCreateMode = false
-
+            uploadFileToStorageAndSaveMetadata(resourceName, resourceDescription, selectedFileUri);
+        } else if (MODE_EDIT.equals(currentMode) && existingResourceToEdit != null) {
+            if (selectedFileUri != null) {
+                String oldStoragePath = existingResourceToEdit.getStoragePath();
+                deleteOldFileFromStorage(oldStoragePath, () -> {
+                    uploadFileToStorageAndSaveMetadata(resourceName, resourceDescription, selectedFileUri);
+                }, e -> {
+                    Toast.makeText(this, "Failed to delete old file. Update aborted. " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    uploadOrUpdateButton.setEnabled(true); // Re-enable
+                    showLoading(false);
+                });
             } else {
-                // User is editing details but NOT changing the file itself
-                updateExistingResource(resourceName);
+                updateResourceMetadataOnly(resourceName, resourceDescription);
             }
         }
     }
 
-    private void uploadNewResource(Uri fileUri, String displayName) {
-        String fileUriString = fileUri.toString(); // Store the URI as a string
+    private void uploadFileToStorageAndSaveMetadata(String name, String description, Uri fileUri) {
+        String originalFileName = getFileNameFromUri(fileUri);
+        String fileExtension = getFileExtension(fileUri);
+        String mimeType = getMimeType(fileUri);
 
-        Resource newResource = new Resource(current_user.getUser().getStudentNum(), selectedSubjectId.get(), fileUriString, displayName);
-        executorService.execute(() -> {
-            long newId = resourceDao.insertResource(newResource);
-            runOnUiThread(() -> {
-                if (newId != -1) {
-                    Toast.makeText(ResourceUploadActivity.this, "Resource uploaded successfully.", Toast.LENGTH_LONG).show();
-                    setResult(RESULT_OK); // Indicate success to calling fragment/activity
-                    finish();
+        final StorageReference fileRef = firebaseStorage.getReference()
+                .child(ResourceDao.STORAGE_RESOURCES_PATH)
+                .child(currentUserPojo.getUid())
+                .child(UUID.randomUUID().toString() + (fileExtension != null ? "." + fileExtension : "")); // Ensure extension is added
+
+        UploadTask uploadTask = fileRef.putFile(fileUri);
+        uploadTask.addOnProgressListener(snapshot -> {
+            double progress = (100.0 * snapshot.getBytesTransferred()) / snapshot.getTotalByteCount();
+            Log.d(TAG, "Upload is " + progress + "% done");
+        }).continueWithTask(task -> {
+            if (!task.isSuccessful()) {
+                throw task.getException();
+            }
+            return fileRef.getDownloadUrl();
+        }).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Uri downloadUri = task.getResult();
+                long fileSize = 0;
+                try (Cursor cursor = getContentResolver().query(fileUri, null, null, null, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                        if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) fileSize = cursor.getLong(sizeIndex);
+                    }
+                } catch (Exception e) { Log.e(TAG, "Error getting file size", e); }
+
+
+                Resource resource = new Resource(
+                        name, description, currentUserPojo.getUid(),
+                        selectedSubjectId, selectedSubjectName,
+                        downloadUri.toString(), fileRef.getPath(),
+                        mimeType, fileSize
+                );
+
+                if (MODE_EDIT.equals(currentMode) && existingResourceToEdit != null) {
+                    resource.setId(existingResourceToEdit.getId());
+                    resource.setUploadedAt(existingResourceToEdit.getUploadedAt()); // Preserve original upload date unless new file
+                    if(selectedFileUri != null) resource.setUploadedAt(com.google.firebase.Timestamp.now()); // Update if new file
+
+                    resourceDao.updateResourceMetadata(existingResourceToEdit.getId(), resource)
+                            .addOnSuccessListener(aVoid -> handleSaveSuccess("Resource updated successfully."))
+                            .addOnFailureListener(e -> handleSaveFailure("Failed to update resource metadata.", e));
                 } else {
-                    Toast.makeText(ResourceUploadActivity.this, "Failed to upload resource to database.", Toast.LENGTH_LONG).show();
+                    resourceDao.saveResourceMetadata(resource)
+                            .addOnSuccessListener(docRef -> handleSaveSuccess("Resource uploaded successfully."))
+                            .addOnFailureListener(e -> handleSaveFailure("Failed to save resource metadata.", e));
                 }
-                selectedPdfUri = null;
-            });
+            } else {
+                handleSaveFailure("File upload failed.", task.getException());
+            }
         });
     }
 
-    private void updateExistingResource(String newDisplayName) {
-        resourceToEdit.setName(newDisplayName);
-        resourceToEdit.setSubjectId(selectedSubjectId.get()); // Update subject if changed
+    private void updateResourceMetadataOnly(String name, String description) {
+        existingResourceToEdit.setName(name);
+        existingResourceToEdit.setDescription(description);
+        existingResourceToEdit.setSubjectId(selectedSubjectId);
+        existingResourceToEdit.setSubjectName(selectedSubjectName);
+        // existingResourceToEdit.setUploadedAt(com.google.firebase.Timestamp.now()); // Optionally update modified time
 
-        // If a new file was selected, update the resource URI
-        if (selectedPdfUri != null) {
-            resourceToEdit.setResource(selectedPdfUri.toString());
+        resourceDao.updateResourceMetadata(existingResourceToEdit.getId(), existingResourceToEdit)
+                .addOnSuccessListener(aVoid -> handleSaveSuccess("Resource details updated successfully."))
+                .addOnFailureListener(e -> handleSaveFailure("Failed to update resource details.", e));
+    }
+
+    private void deleteOldFileFromStorage(String storagePath, Runnable onSuccess, com.google.android.gms.tasks.OnFailureListener onFailure) {
+        if (storagePath == null || storagePath.isEmpty()) {
+            Log.d(TAG, "No old file storage path to delete.");
+            onSuccess.run();
+            return;
         }
-        // Note: TutorId should not change during an edit by the same tutor.
+        StorageReference oldFileRef = firebaseStorage.getReference().child(storagePath);
+        oldFileRef.delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Old file deleted from storage: " + storagePath);
+                    onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Failed to delete old file from storage: " + storagePath + ". This might be okay if the path was invalid or file already deleted.", e);
+                    onSuccess.run(); // Proceed even if old file deletion fails, to not block user.
+                    // Consider if this should call onFailure(e) instead for stricter error handling.
+                });
+    }
 
-        executorService.execute(() -> {
-            int rowsAffected = resourceDao.updateResource(resourceToEdit);
-            runOnUiThread(() -> {
-                if (rowsAffected > 0) {
-                    Toast.makeText(ResourceUploadActivity.this, "Resource updated successfully.", Toast.LENGTH_LONG).show();
-                    setResult(RESULT_OK); // Indicate success
-                    finish();
-                } else {
-                    Toast.makeText(ResourceUploadActivity.this, "Failed to update resource.", Toast.LENGTH_LONG).show();
-                }
-                selectedPdfUri = null; // Reset after attempt
-                uploadPdfButton.setEnabled(true); // Keep enabled as it's edit mode
-            });
-        });
+
+    private void handleSaveSuccess(String message) {
+        Toast.makeText(ResourceUploadActivity.this, message, Toast.LENGTH_LONG).show();
+        setResult(Activity.RESULT_OK);
+        finish();
+    }
+
+    private void handleSaveFailure(String message, Exception e) {
+        Toast.makeText(ResourceUploadActivity.this, message + (e != null ? ": " + e.getMessage() : ""), Toast.LENGTH_LONG).show();
+        Log.e(TAG, message, e);
+        uploadOrUpdateButton.setEnabled(true); // Re-enable button on failure
+        showLoading(false);
+    }
+
+    private void showLoading(boolean show) {
+        if (uploadProgressBar != null) {
+            uploadProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+        if (uploadOrUpdateButton != null) uploadOrUpdateButton.setEnabled(!show);
+        if (selectFileButton != null) selectFileButton.setEnabled(!show);
+        if (cancelButton != null) cancelButton.setEnabled(!show);
     }
 
     private String getFileNameFromUri(Uri uri) {
         String fileName = null;
-        if (uri.getScheme().equals("content")) {
+        if (uri == null) return "unknown_file";
+        if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
             try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
-                    int nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
-                    if (nameIndex != -1) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex != -1 && !cursor.isNull(nameIndex)) { // Check for -1 and null
                         fileName = cursor.getString(nameIndex);
                     }
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting file name from content URI", e);
             }
         }
         if (fileName == null) {
             fileName = uri.getLastPathSegment();
-            if (fileName == null || fileName.isEmpty()) {
-                fileName = "selected_file"; // Fallback
-            }
         }
-        return fileName;
+        return fileName != null ? fileName : "unknown_file";
     }
 
-    private String getFileNameFromUriString(String uriString) {
-        if (uriString == null) return "Unknown File";
+    private String getFileNameFromUrl(String url) {
+        if (url == null || url.isEmpty()) return "unknown_file";
         try {
-            Uri uri = Uri.parse(uriString);
+            String decodedUrl = Uri.decode(url);
+            int lastSlash = decodedUrl.lastIndexOf('/');
+            String segmentWithParams = (lastSlash != -1 && lastSlash < decodedUrl.length() - 1) ? decodedUrl.substring(lastSlash + 1) : decodedUrl;
+            int queryParamStart = segmentWithParams.indexOf('?');
+            String fileName = (queryParamStart != -1) ? segmentWithParams.substring(0, queryParamStart) : segmentWithParams;
+            int firstUnderscore = fileName.indexOf('_');
+            // Heuristic for UUID_filename.ext, try to extract filename.ext
+            if (fileName.length() > 37 && firstUnderscore == 36) {
+                return fileName.substring(firstUnderscore + 1);
+            }
+            return fileName;
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing file name from URL: " + url, e);
+        }
+        return "linked_resource";
+    }
+
+
+    private String getFileExtension(Uri uri) {
+        String extension = null;
+        if (uri == null) return "bin";
+        if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
+            final MimeTypeMap mime = MimeTypeMap.getSingleton();
+            extension = mime.getExtensionFromMimeType(getContentResolver().getType(uri));
+        } else {
             String path = uri.getPath();
             if (path != null) {
-                return new File(path).getName();
-            }
-        } catch (Exception e) {
-            // Fallback for non-standard URIs or if path parsing fails
-            int lastSlash = uriString.lastIndexOf('/');
-            if (lastSlash != -1 && lastSlash < uriString.length() -1) {
-                return uriString.substring(lastSlash + 1);
+                extension = MimeTypeMap.getFileExtensionFromUrl(path);
             }
         }
-        return uriString; // Return the URI string itself as a last resort
-    }
-
-    private void copyFileToInternalStorageAndSave(Uri sourceContentUri, String displayName, boolean isCreateMode) {
-        executorService.execute(() -> {
-            String originalFileName = getFileNameFromUri(sourceContentUri); // Make sure this method is robust
-            String uniqueInternalFileName = UUID.randomUUID().toString() + "_" + sanitizeFileName(originalFileName);
-            File internalDir = getFilesDir();
-            File internalFile = new File(internalDir, uniqueInternalFileName);
-            Uri internalFileUri = null;
-
-            Log.d(TAG, "Attempting to copy to internal storage: " + internalFile.getAbsolutePath());
-
-            try (InputStream inputStream = getContentResolver().openInputStream(sourceContentUri);
-                 OutputStream outputStream = new FileOutputStream(internalFile)) {
-
-                if (inputStream == null) {
-                    throw new IOException("Could not open input stream from source URI: " + sourceContentUri);
-                }
-
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-                internalFileUri = Uri.fromFile(internalFile); // URI of the internal copy
-                Log.d(TAG, "File copied to internal storage: " + internalFileUri.toString());
-
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to copy file to internal storage from URI: " + sourceContentUri, e);
-                runOnUiThread(() -> Toast.makeText(ResourceUploadActivity.this, "Error saving file internally. " + e.getMessage(), Toast.LENGTH_LONG).show());
-                return;
+        // Fallback if extension is still null, try to get from filename itself
+        if (extension == null) {
+            String name = getFileNameFromUri(uri);
+            int lastDot = name.lastIndexOf('.');
+            if (lastDot > 0 && lastDot < name.length() - 1) {
+                extension = name.substring(lastDot + 1).toLowerCase(Locale.US);
             }
-
-            // Now proceed with DB operation using internalFileUri
-            if (internalFileUri != null) {
-                String internalUriStringToStore = internalFileUri.toString(); // THIS IS WHAT GETS STORED
-
-                if (isCreateMode) {
-                    Resource newResource = new Resource(
-                            current_user.getUser().getStudentNum(),
-                            selectedSubjectId.get(),
-                            internalUriStringToStore,
-                            displayName
-                    );
-                    // --- Start: Rest of insert logic ---
-                    long newId = resourceDao.insertResource(newResource);
-                    runOnUiThread(() -> {
-                        if (newId != -1) {
-                            Toast.makeText(ResourceUploadActivity.this, "Resource uploaded successfully.", Toast.LENGTH_LONG).show();
-                            setResult(RESULT_OK); // Indicate success to calling fragment/activity
-                            finish();
-                        } else {
-                            Toast.makeText(ResourceUploadActivity.this, "Failed to save resource to database.", Toast.LENGTH_LONG).show();
-                        }
-                        // Reset UI elements specific to file selection in create mode if not finishing
-                        // selectedFileSourceUri = null; // Already doing this based on your flow
-                        // uploadPdfButton.setEnabled(false);
-                    });
-                    // --- End: Rest of insert logic ---
-                } else { // Edit mode, and a new file was selected and copied
-                    // Optional: Delete old internal file if replacing - This logic is already present above this block
-                    // (Keep the old file deletion logic as it was, it's fine there if internalFileUri for new file is successfully created)
-
-                    resourceToEdit.setResource(internalUriStringToStore); // Update with new internal file URI
-                    resourceToEdit.setName(displayName);                  // Update display name
-                    resourceToEdit.setSubjectId(selectedSubjectId.get()); // Update subject
-                    // Note: resourceToEdit.setTutorId() should not change here as it's an edit by the same tutor.
-
-                    // --- Start: Rest of update logic ---
-                    int rowsAffected = resourceDao.updateResource(resourceToEdit);
-                    runOnUiThread(() -> {
-                        if (rowsAffected > 0) {
-                            Toast.makeText(ResourceUploadActivity.this, "Resource (including file) updated successfully.", Toast.LENGTH_LONG).show();
-                            setResult(RESULT_OK); // Indicate success
-                            finish();
-                        } else {
-                            Toast.makeText(ResourceUploadActivity.this, "Failed to update resource in database.", Toast.LENGTH_LONG).show();
-                        }
-                        // Reset UI for next potential selection if not finishing
-                        // selectedFileSourceUri = null;
-                        // uploadPdfButton.setEnabled(true); // Still in edit mode, button stays active for detail changes
-                    });
-                    // --- End: Rest of update logic ---
-                }
-            } else {
-                runOnUiThread(() -> Toast.makeText(ResourceUploadActivity.this, "Failed to get internal file URI after copy.", Toast.LENGTH_LONG).show());
-            }
-        });
-    }
-
-    private String sanitizeFileName(String originalFileName) {
-        if (originalFileName == null) return "unknown_file";
-        // Replace characters that might be problematic in file names on some systems
-        return originalFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
-    }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown();
         }
+        return extension != null ? extension : "bin";
+    }
+
+    private String getMimeType(Uri uri) {
+        String mimeType = null;
+        if (uri == null) return "application/octet-stream";
+        if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
+            mimeType = getContentResolver().getType(uri);
+        } else {
+            String fileExtension = getFileExtension(uri); // Use our improved getFileExtension
+            if (fileExtension != null && !fileExtension.equals("bin")) {
+                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.US));
+            }
+        }
+        return mimeType != null ? mimeType : "application/octet-stream";
     }
 }
