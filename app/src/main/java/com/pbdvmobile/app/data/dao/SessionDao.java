@@ -374,12 +374,14 @@ public class SessionDao {
 
     public Task<Void> addTutorReview(String sessionId, String review, double rating) {
         return db.collection(COLLECTION_NAME).document(sessionId)
-                .update("tuteeReview", review, "tuteeRating", rating); // Tutee reviews the Tutor
+                .update("tutorReview", review, "tutorRating", rating); // Tutor owns the reviews
+
     }
 
     public Task<Void> addTuteeReview(String sessionId, String review, double rating) {
         return db.collection(COLLECTION_NAME).document(sessionId)
-                .update("tutorReview", review, "tutorRating", rating); // Tutor reviews the Tutee
+                .update("tuteeReview", review, "tuteeRating", rating); // Tutee owns the reviews
+
     }
 
     public Task<Void> deleteSession(String sessionId) {

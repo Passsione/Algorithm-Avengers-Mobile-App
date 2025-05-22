@@ -21,7 +21,6 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.pbdvmobile.app.PartnerProfileActivity;
 import com.pbdvmobile.app.R;
@@ -51,7 +50,7 @@ public class SessionDetailsFragment extends Fragment {
     private EditText editTextMyReviewInput;
     private Button buttonSubmitMyReview;
     private TextView textViewNoPartnerReviewYet, textViewPartnerReviewTitleDisplay, textViewPartnerSubmittedReviewText;
-    private RatingBar  ratingBarPartnerSubmittedRatingDisplay;
+    private RatingBar ratingBarPartnerSubmittedRatingDisplay;
     private Button buttonTogglePartnerReview;
 
 
@@ -65,7 +64,7 @@ public class SessionDetailsFragment extends Fragment {
     private UserDao userDao;
 
     private boolean isCurrentUserTutee;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yy", Locale.getDefault());
     private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
 
@@ -77,19 +76,36 @@ public class SessionDetailsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (getContext() == null) return;
+        if (getContext() == null) {
+            Log.e(TAG, "Context is null in onViewCreated, cannot proceed.");
+            return;
+        }
 
         loggedInUser = LogInUser.getInstance();
-        currentUserPojo = loggedInUser.getUser();
+        currentUserPojo = loggedInUser.getUser(); // Using the method from your provided LogInUser
         sessionDao = new SessionDao();
         userDao = new UserDao();
 
-        assert getArguments() != null;
-        currentSessionId = getArguments().getString("session_id");
+        if (getArguments() != null) {
+            currentSessionId = getArguments().getString("session_id");
+        } else {
+            Toast.makeText(getContext(), "Error: Session ID missing.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "getArguments() is null or session_id is missing.");
+            if (getParentFragmentManager() != null) getParentFragmentManager().popBackStack();
+            return;
+        }
 
-        if (currentUserPojo == null || currentSessionId == null || currentSessionId.isEmpty()) {
-            Toast.makeText(getContext(), "Error: User or Session data missing.", Toast.LENGTH_LONG).show();
-            getParentFragmentManager().popBackStack();
+
+        if (currentUserPojo == null || currentUserPojo.getUid() == null ) {
+            Toast.makeText(getContext(), "Error: Current user data missing or invalid. Please re-login.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "currentUserPojo or its UID is null. currentUserPojo: " + currentUserPojo);
+            if (getParentFragmentManager() != null) getParentFragmentManager().popBackStack();
+            return;
+        }
+        if (currentSessionId == null || currentSessionId.isEmpty()){
+            Toast.makeText(getContext(), "Error: Session ID is invalid.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "currentSessionId is null or empty.");
+            if (getParentFragmentManager() != null) getParentFragmentManager().popBackStack();
             return;
         }
 
@@ -98,104 +114,162 @@ public class SessionDetailsFragment extends Fragment {
     }
 
     private void initializeViews(View view) {
-        detailsProgressBar = view.findViewById(R.id.detailsProgressBar); // Add to XML
+        detailsProgressBar = view.findViewById(R.id.detailsProgressBar);
         subjectTitle = view.findViewById(R.id.session_detail_subject);
         txtStatus = view.findViewById(R.id.session_detail_status);
         dateView = view.findViewById(R.id.session_detail_date);
         timeView = view.findViewById(R.id.session_detail_time);
         locationView = view.findViewById(R.id.session_detail_location);
 
-        detailsProgressBar = view.findViewById(R.id.detailsProgressBar);
-        subjectTitle = view.findViewById(R.id.session_detail_subject);
-        txtStatus = view.findViewById(R.id.session_detail_status);
-        dateView = view.findViewById(R.id.session_detail_date);
-        timeView = view.findViewById(R.id.session_detail_time);     // Reverted (was session_detail_time)
-        locationView = view.findViewById(R.id.session_detail_location); // Reverted (was session_detail_location)
+        partnerNameLabel = view.findViewById(R.id.session_detail_tutor_name);
+        partnerRoleLabel = view.findViewById(R.id.partner_title);
+        partnerInfoLabel = view.findViewById(R.id.session_detail_tutor_subjects);
+        imageViewPartnerProfile = view.findViewById(R.id.session_detail_tutor_image);
+        ratingBarPartnerOverall = view.findViewById(R.id.session_detail_tutor_rating);
 
-        // Partner Details
-        partnerNameLabel = view.findViewById(R.id.session_detail_tutor_name); // Reverted
-        partnerRoleLabel = view.findViewById(R.id.partner_title); // Kept new distinct ID
-        partnerInfoLabel = view.findViewById(R.id.session_detail_tutor_subjects); // Reverted
-        imageViewPartnerProfile = view.findViewById(R.id.session_detail_tutor_image); // Reverted
-        ratingBarPartnerOverall = view.findViewById(R.id.session_detail_tutor_rating); // Reverted
-
-        // My Review Section
         cardMyReviewSection = view.findViewById(R.id.card_review_section);
         layoutMyReviewInputArea = view.findViewById(R.id.layout_review_input_area);
-        ratingBarMyReviewInput = view.findViewById(R.id.rabDetails);          // Reverted
-        editTextMyReviewInput = view.findViewById(R.id.redDetailsReview);      // Reverted
-        buttonSubmitMyReview = view.findViewById(R.id.btn_submit_review);     // Reverted
+        ratingBarMyReviewInput = view.findViewById(R.id.rabDetails);
+        editTextMyReviewInput = view.findViewById(R.id.redDetailsReview);
+        buttonSubmitMyReview = view.findViewById(R.id.btn_submit_review);
 
-        // Partner's Review Display Section
-        cardPartnerReviewSectionDisplay = view.findViewById(R.id.cardPartnerReviewSection); // Reverted
-        textViewPartnerReviewTitleDisplay = view.findViewById(R.id.textViewPartnerReviewTitle); // Reverted
-        ratingBarPartnerSubmittedRatingDisplay = view.findViewById(R.id.ratingBarPartnerRating); // Reverted
-        textViewPartnerSubmittedReviewText = view.findViewById(R.id.textViewPartnerReviewText); // Reverted
-        textViewNoPartnerReviewYet = view.findViewById(R.id.textViewNoPartnerReview); // Reverted
-        buttonTogglePartnerReview = view.findViewById(R.id.buttonTogglePartnerReview); // Reverted
+        cardPartnerReviewSectionDisplay = view.findViewById(R.id.cardPartnerReviewSection);
+        textViewPartnerReviewTitleDisplay = view.findViewById(R.id.textViewPartnerReviewTitle);
+        ratingBarPartnerSubmittedRatingDisplay = view.findViewById(R.id.ratingBarPartnerRating);
+        textViewPartnerSubmittedReviewText = view.findViewById(R.id.textViewPartnerReviewText);
+        textViewNoPartnerReviewYet = view.findViewById(R.id.textViewNoPartnerReview);
+        buttonTogglePartnerReview = view.findViewById(R.id.buttonTogglePartnerReview);
 
-        // Action Buttons
-        buttonViewPartnerProfile = view.findViewById(R.id.btn_view_tutor_profile); // Reverted
-        buttonCancelSession = view.findViewById(R.id.btn_cancel_booking);    // Reverted
-        buttonStartSession = view.findViewById(R.id.btn_reschedule_session); // Reverted (Functionality changed, but ID reverted to original for "reschedule" concept)
-        buttonConfirmSession = view.findViewById(R.id.btn_confirm_booking);   // Reverted
-        buttonDeclineSession = view.findViewById(R.id.btn_decline_session); // Kept new distinct ID
+        buttonViewPartnerProfile = view.findViewById(R.id.btn_view_tutor_profile);
+        buttonCancelSession = view.findViewById(R.id.btn_cancel_booking);
+        buttonStartSession = view.findViewById(R.id.btn_reschedule_session);
+        buttonConfirmSession = view.findViewById(R.id.btn_confirm_booking);
+        buttonDeclineSession = view.findViewById(R.id.btn_decline_session);
     }
 
     private void showLoading(boolean isLoading) {
         if (detailsProgressBar != null) detailsProgressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        // Hide/show main content view group if you have one
+        View mainContent = getView() != null ? getView().findViewById(R.id.session_details_content) : null;
+        if (mainContent != null) {
+            mainContent.setVisibility(isLoading ? View.INVISIBLE : View.VISIBLE);
+        }
     }
 
     private void loadSessionDetails() {
         showLoading(true);
+        Log.d(TAG, "Loading session details for ID: " + currentSessionId);
         sessionDao.getSessionById(currentSessionId).addOnSuccessListener(documentSnapshot -> {
+            if (!isAdded() || getContext() == null) {
+                Log.w(TAG, "Fragment not attached or context null during session load success.");
+                return;
+            }
             if (documentSnapshot.exists()) {
                 currentSessionPojo = documentSnapshot.toObject(Session.class);
                 if (currentSessionPojo != null) {
-                    currentSessionPojo.setId(documentSnapshot.getId()); // Set Firestore ID
-                    isCurrentUserTutee = currentUserPojo.getUid().equals(currentSessionPojo.getTuteeUid());
-                    String partnerUid = isCurrentUserTutee ? currentSessionPojo.getTutorUid() : currentSessionPojo.getTuteeUid();
-                    loadPartnerDetails(partnerUid); // This will then call populateAllUIData
+                    currentSessionPojo.setId(documentSnapshot.getId());
+                    Log.d(TAG, "Session data fetched: " + currentSessionPojo.getSubjectName());
+
+                    String myUid = currentUserPojo.getUid();
+                    String tutorUid = currentSessionPojo.getTutorUid();
+                    String tuteeUid = currentSessionPojo.getTuteeUid();
+                    String partnerUid = null;
+
+                    if (myUid == null) {
+                        handleLoadError("Current user UID is null. Cannot determine role.");
+                        return;
+                    }
+                    if (tutorUid == null || tuteeUid == null) {
+                        handleLoadError("Session data is incomplete (missing tutor/tutee UID).");
+                        return;
+                    }
+
+                    if (myUid.equals(tuteeUid)) {
+                        isCurrentUserTutee = true;
+                        partnerUid = tutorUid;
+                    } else if (myUid.equals(tutorUid)) {
+                        isCurrentUserTutee = false;
+                        partnerUid = tuteeUid;
+                    } else {
+                        Log.e(TAG, "Critical: Current user (" + myUid + ") is neither tutor (" + tutorUid + ") nor tutee (" + tuteeUid + ") for session " + currentSessionId);
+                        handleLoadError("You are not authorized to view this session's details.");
+                        return;
+                    }
+
+                    Log.d(TAG, "Current user isTutee: " + isCurrentUserTutee + ", Partner UID: " + partnerUid);
+
+                    if (partnerUid == null || partnerUid.isEmpty()) {
+                        Log.e(TAG, "Partner UID is missing or empty for session: " + currentSessionId);
+                        sessionPartnerPojo = null;
+                        populateAllUIData();
+                        showLoading(false);
+                    } else {
+                        loadPartnerDetails(partnerUid);
+                    }
                 } else {
                     handleLoadError("Failed to parse session data.");
                 }
             } else {
-                handleLoadError("Session not found.");
+                handleLoadError("Session with ID '" + currentSessionId + "' not found.");
             }
-        }).addOnFailureListener(e -> handleLoadError("Error loading session: " + e.getMessage()));
+        }).addOnFailureListener(e -> {
+            if (!isAdded() || getContext() == null) return;
+            Log.e(TAG, "Error loading session " + currentSessionId, e);
+            handleLoadError("Error loading session: " + e.getMessage());
+        });
     }
 
     private void loadPartnerDetails(String partnerUid) {
+        Log.d(TAG, "Loading partner details for UID: " + partnerUid);
         userDao.getUserByUid(partnerUid).addOnSuccessListener(doc -> {
+            if (!isAdded() || getContext() == null) return;
             if (doc.exists()) {
                 sessionPartnerPojo = doc.toObject(User.class);
-                if (sessionPartnerPojo != null) sessionPartnerPojo.setUid(doc.getId());
+                if (sessionPartnerPojo != null) {
+                    sessionPartnerPojo.setUid(doc.getId());
+                    Log.d(TAG, "Partner details loaded: " + sessionPartnerPojo.getFirstName());
+                } else {
+                    Log.w(TAG, "Partner document exists but failed to parse for UID: " + partnerUid);
+                }
             } else {
-                Log.w(TAG, "Partner (UID: " + partnerUid + ") not found.");
+                Log.w(TAG, "Partner document (UID: " + partnerUid + ") not found.");
+                sessionPartnerPojo = null;
             }
-            populateAllUIData(); // Populate UI now that partner (or lack thereof) is known
+            populateAllUIData();
             showLoading(false);
         }).addOnFailureListener(e -> {
-            Log.e(TAG, "Error loading partner details", e);
-            populateAllUIData(); // Still populate session details even if partner fails
+            if (!isAdded() || getContext() == null) return;
+            Log.e(TAG, "Error loading partner details for UID: " + partnerUid, e);
+            sessionPartnerPojo = null;
+            populateAllUIData();
             showLoading(false);
         });
     }
 
     private void handleLoadError(String message) {
-        Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+        if (getContext() != null && isAdded()) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+            Log.e(TAG, "handleLoadError: " + message);
+        }
         showLoading(false);
-        if (getParentFragmentManager() != null) getParentFragmentManager().popBackStack();
+        if (getParentFragmentManager() != null && isAdded()) {
+            try {
+                getParentFragmentManager().popBackStack();
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "Error popping backstack: " + e.getMessage());
+            }
+        }
     }
 
-
+    @SuppressLint("SetTextI18n")
     private void populateAllUIData() {
-        if (currentSessionPojo == null) return; // Should not happen if loadSessionDetails succeeded
-
+        if (currentSessionPojo == null || !isAdded() || getContext() == null) {
+            Log.e(TAG, "Cannot populate UI: session or context is null or fragment not added.");
+            return;
+        }
+        Log.d(TAG, "Populating all UI data for session: " + currentSessionPojo.getId());
         populateSessionInfo();
         populatePartnerInfo();
-        configureReviewSectionVisibility(); // Initial visibility based on status
+        configureReviewSectionVisibility();
         loadAndDisplayMyReview();
         loadAndDisplayPartnerReview();
         configureActionButtons();
@@ -208,7 +282,7 @@ public class SessionDetailsFragment extends Fragment {
         if (currentSessionPojo.getStartTime() != null) {
             dateView.setText(dateFormat.format(currentSessionPojo.getStartTime().toDate()));
             if (currentSessionPojo.getEndTime() != null) {
-                timeView.setText(String.format("%s - %s",
+                timeView.setText(String.format(Locale.getDefault(),"%s - %s",
                         timeFormat.format(currentSessionPojo.getStartTime().toDate()),
                         timeFormat.format(currentSessionPojo.getEndTime().toDate())));
             } else {
@@ -222,17 +296,18 @@ public class SessionDetailsFragment extends Fragment {
     }
 
     private void populatePartnerInfo() {
-        partnerRoleLabel.setText(isCurrentUserTutee ? "Tutor Details" : "Tutee Details");
+        partnerRoleLabel.setText(!isCurrentUserTutee ? "Tutor Details" : "Tutee Details");
         if (sessionPartnerPojo != null) {
-            partnerNameLabel.setText(String.format("%s %s", sessionPartnerPojo.getFirstName(), sessionPartnerPojo.getLastName()));
+            partnerNameLabel.setText(String.format(Locale.getDefault(),"%s %s", sessionPartnerPojo.getFirstName(), sessionPartnerPojo.getLastName()));
             partnerInfoLabel.setText("Education: " + (sessionPartnerPojo.getEducationLevel() != null ? sessionPartnerPojo.getEducationLevel().name().replace("_", " ") : "N/A"));
 
-            Glide.with(this)
-                    .load(sessionPartnerPojo.getProfileImageUrl())
-                    .placeholder(R.drawable.avatar_1).error(R.drawable.avatar_1).circleCrop()
-                    .into(imageViewPartnerProfile);
+            if (getContext() != null && isAdded()) {
+                Glide.with(this)
+                        .load(sessionPartnerPojo.getProfileImageUrl())
+                        .placeholder(R.drawable.avatar_1).error(R.drawable.avatar_1).circleCrop()
+                        .into(imageViewPartnerProfile);
+            }
 
-            // Display partner's overall rating (as tutor if partner is tutor, as tutee if partner is tutee)
             double partnerOverallRating = isCurrentUserTutee ? sessionPartnerPojo.getAverageRatingAsTutor() : sessionPartnerPojo.getAverageRatingAsTutee();
             if (partnerOverallRating > 0) {
                 ratingBarPartnerOverall.setRating((float) partnerOverallRating);
@@ -242,20 +317,31 @@ public class SessionDetailsFragment extends Fragment {
             }
             buttonViewPartnerProfile.setVisibility(View.VISIBLE);
             buttonViewPartnerProfile.setOnClickListener(v -> {
-                Intent toProfile = new Intent(getContext(), PartnerProfileActivity.class);
-                toProfile.putExtra("tutor", sessionPartnerPojo); // PartnerProfileActivity needs to handle generic "partner"
-                startActivity(toProfile);
+                if (getContext() != null && isAdded()) {
+                    Intent toProfile = new Intent(getContext(), PartnerProfileActivity.class);
+                    toProfile.putExtra("tutor", sessionPartnerPojo);
+                    startActivity(toProfile);
+                }
             });
         } else {
             partnerNameLabel.setText("Partner details unavailable");
             partnerInfoLabel.setText("");
             ratingBarPartnerOverall.setVisibility(View.GONE);
-            imageViewPartnerProfile.setImageResource(R.drawable.avatar_1);
+            if (getContext() != null && isAdded()) {
+                imageViewPartnerProfile.setImageResource(R.drawable.avatar_1);
+            }
             buttonViewPartnerProfile.setVisibility(View.GONE);
         }
     }
 
     private void updateStatusUI(Session.Status status) {
+        if (status == null || !isAdded() || getContext() == null) {
+            if (txtStatus != null) {
+                txtStatus.setText("UNKNOWN");
+                if(getContext() != null) txtStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.status_generic_gray));
+            }
+            return;
+        }
         txtStatus.setText(status.name());
         int colorRes;
         switch (status) {
@@ -266,46 +352,47 @@ public class SessionDetailsFragment extends Fragment {
             case DECLINED:  colorRes = R.color.status_declined;  break;
             default:        colorRes = R.color.status_generic_gray; break;
         }
-        if(getContext() != null) txtStatus.setTextColor(ContextCompat.getColor(getContext(), colorRes));
+        txtStatus.setTextColor(ContextCompat.getColor(getContext(), colorRes));
     }
 
     private void configureReviewSectionVisibility() {
+        if (currentSessionPojo == null || currentSessionPojo.getStatus() == null || !isAdded()) return;
         boolean canLeaveReview = currentSessionPojo.getStatus() == Session.Status.COMPLETED;
         cardMyReviewSection.setVisibility(canLeaveReview ? View.VISIBLE : View.GONE);
         cardPartnerReviewSectionDisplay.setVisibility(canLeaveReview ? View.VISIBLE : View.GONE);
         buttonTogglePartnerReview.setVisibility(canLeaveReview ? View.VISIBLE : View.GONE);
 
         if (canLeaveReview) {
-            // Default state for partner review display (e.g., initially hidden)
             textViewPartnerSubmittedReviewText.setVisibility(View.GONE);
             ratingBarPartnerSubmittedRatingDisplay.setVisibility(View.GONE);
-            textViewNoPartnerReviewYet.setVisibility(View.VISIBLE); // Show this first
+            textViewNoPartnerReviewYet.setVisibility(View.VISIBLE);
             buttonTogglePartnerReview.setText("Show Partner's Review");
         }
     }
 
     private void loadAndDisplayMyReview() {
-        if (currentSessionPojo.getStatus() != Session.Status.COMPLETED) {
+        if (currentSessionPojo == null || currentSessionPojo.getStatus() == null ||
+                currentSessionPojo.getStatus() != Session.Status.COMPLETED || !isAdded()) {
             layoutMyReviewInputArea.setVisibility(View.GONE);
+
             buttonSubmitMyReview.setVisibility(View.GONE);
             return;
         }
 
-        String myExistingReview = isCurrentUserTutee ? currentSessionPojo.getTuteeReview() : currentSessionPojo.getTutorReview();
-        Double myExistingRating = isCurrentUserTutee ? currentSessionPojo.getTuteeRating() : currentSessionPojo.getTutorRating();
+        String myExistingReview = isCurrentUserTutee ? currentSessionPojo.getTutorReview() : currentSessionPojo.getTuteeReview();
+        Double myExistingRating = isCurrentUserTutee ? currentSessionPojo.getTutorRating() : currentSessionPojo.getTuteeRating();
 
         if (myExistingReview != null || (myExistingRating != null && myExistingRating > 0)) {
-            // Already reviewed: Show submitted review, hide input
             layoutMyReviewInputArea.setVisibility(View.GONE);
             buttonSubmitMyReview.setVisibility(View.GONE);
-
             editTextMyReviewInput.setText(myExistingReview != null ? myExistingReview : "No written feedback provided.");
 
             if (myExistingRating != null && myExistingRating > 0) {
                 ratingBarMyReviewInput.setRating(myExistingRating.floatValue());
+            } else {
+
             }
         } else {
-            // Not reviewed yet: Show input fields
             layoutMyReviewInputArea.setVisibility(View.VISIBLE);
             editTextMyReviewInput.setText("");
             ratingBarMyReviewInput.setRating(0f);
@@ -317,19 +404,19 @@ public class SessionDetailsFragment extends Fragment {
     }
 
     private void loadAndDisplayPartnerReview() {
-        if (currentSessionPojo.getStatus() != Session.Status.COMPLETED) {
+        if (currentSessionPojo == null || currentSessionPojo.getStatus() == null ||
+                currentSessionPojo.getStatus() != Session.Status.COMPLETED || !isAdded()) {
             cardPartnerReviewSectionDisplay.setVisibility(View.GONE);
             buttonTogglePartnerReview.setVisibility(View.GONE);
             return;
         }
-        cardPartnerReviewSectionDisplay.setVisibility(View.VISIBLE); // Card itself is visible
+        cardPartnerReviewSectionDisplay.setVisibility(View.VISIBLE);
         buttonTogglePartnerReview.setVisibility(View.VISIBLE);
 
-
-        String partnerReviewText = !isCurrentUserTutee ? currentSessionPojo.getTuteeReview() : currentSessionPojo.getTutorReview();
-        Double partnerRatingValue = !isCurrentUserTutee ? currentSessionPojo.getTuteeRating() : currentSessionPojo.getTutorRating();
-        String partnerRole = !isCurrentUserTutee ? "Tutee's" : "Tutor's";
-        textViewPartnerReviewTitleDisplay.setText(String.format("%s Feedback", partnerRole));
+        String partnerReviewText = isCurrentUserTutee ? currentSessionPojo.getTuteeReview() : currentSessionPojo.getTutorReview();
+        Double partnerRatingValue = isCurrentUserTutee ? currentSessionPojo.getTuteeRating() : currentSessionPojo.getTutorRating();
+        String partnerRole = isCurrentUserTutee ? "Tutee's" : "Tutor's";
+        textViewPartnerReviewTitleDisplay.setText(String.format(Locale.getDefault(),"%s Feedback", partnerRole));
 
         final boolean hasPartnerReview = (partnerReviewText != null && !partnerReviewText.isEmpty()) || (partnerRatingValue != null && partnerRatingValue > 0);
 
@@ -338,37 +425,34 @@ public class SessionDetailsFragment extends Fragment {
             if (partnerRatingValue != null && partnerRatingValue > 0) {
                 ratingBarPartnerSubmittedRatingDisplay.setRating(partnerRatingValue.floatValue());
             }
-            // Initially hide the content, user clicks button to show
             textViewPartnerSubmittedReviewText.setVisibility(View.GONE);
             ratingBarPartnerSubmittedRatingDisplay.setVisibility(View.GONE);
             textViewNoPartnerReviewYet.setVisibility(View.VISIBLE);
-            textViewNoPartnerReviewYet.setText(String.format("%s has submitted feedback.", partnerRole));
-            buttonTogglePartnerReview.setText(String.format("Show %s Review", partnerRole));
+            textViewNoPartnerReviewYet.setText(String.format(Locale.getDefault(),"%s has submitted feedback.", partnerRole));
+            buttonTogglePartnerReview.setText(String.format(Locale.getDefault(),"Show %s Review", partnerRole));
             buttonTogglePartnerReview.setEnabled(true);
-
         } else {
-            textViewNoPartnerReviewYet.setText(String.format("%s has not submitted feedback yet.", partnerRole));
+            textViewNoPartnerReviewYet.setText(String.format(Locale.getDefault(),"%s has not submitted feedback yet.", partnerRole));
             textViewNoPartnerReviewYet.setVisibility(View.VISIBLE);
             textViewPartnerSubmittedReviewText.setVisibility(View.GONE);
             ratingBarPartnerSubmittedRatingDisplay.setVisibility(View.GONE);
-            buttonTogglePartnerReview.setText(String.format("%s Review (Not Submitted)", partnerRole));
+            buttonTogglePartnerReview.setText(String.format(Locale.getDefault(),"%s Review (Not Submitted)", partnerRole));
             buttonTogglePartnerReview.setEnabled(false);
         }
 
         buttonTogglePartnerReview.setOnClickListener(v -> {
-            if (textViewPartnerSubmittedReviewText.getVisibility() == View.VISIBLE) { // If showing, hide it
+            if (textViewPartnerSubmittedReviewText.getVisibility() == View.VISIBLE) {
                 textViewPartnerSubmittedReviewText.setVisibility(View.GONE);
                 ratingBarPartnerSubmittedRatingDisplay.setVisibility(View.GONE);
-                textViewNoPartnerReviewYet.setVisibility(View.VISIBLE); // Show placeholder again
-                if(hasPartnerReview) textViewNoPartnerReviewYet.setText(String.format("%s has submitted feedback.", partnerRole));
-
-                buttonTogglePartnerReview.setText(String.format("Show %s Review", partnerRole));
-            } else { // If hidden, show it (only if review exists)
+                textViewNoPartnerReviewYet.setVisibility(View.VISIBLE);
+                if(hasPartnerReview) textViewNoPartnerReviewYet.setText(String.format(Locale.getDefault(),"%s has submitted feedback.", partnerRole));
+                buttonTogglePartnerReview.setText(String.format(Locale.getDefault(),"Show %s Review", partnerRole));
+            } else {
                 if (hasPartnerReview) {
                     textViewPartnerSubmittedReviewText.setVisibility(View.VISIBLE);
                     if (partnerRatingValue != null && partnerRatingValue > 0) ratingBarPartnerSubmittedRatingDisplay.setVisibility(View.VISIBLE);
                     textViewNoPartnerReviewYet.setVisibility(View.GONE);
-                    buttonTogglePartnerReview.setText(String.format("Hide %s Review", partnerRole));
+                    buttonTogglePartnerReview.setText(String.format(Locale.getDefault(),"Hide %s Review", partnerRole));
                 }
             }
         });
@@ -376,6 +460,7 @@ public class SessionDetailsFragment extends Fragment {
 
 
     private void submitMyReview() {
+        if (getContext() == null || !isAdded()) return;
         float rating = ratingBarMyReviewInput.getRating();
         String reviewText = editTextMyReviewInput.getText().toString().trim();
 
@@ -383,27 +468,31 @@ public class SessionDetailsFragment extends Fragment {
             Toast.makeText(getContext(), "Please provide a rating (1-5 stars).", Toast.LENGTH_SHORT).show();
             return;
         }
-        buttonSubmitMyReview.setEnabled(false); // Prevent double submission
+        buttonSubmitMyReview.setEnabled(false);
+        showLoading(true);
 
-        Task<Void> updateTask;
-        if (isCurrentUserTutee) { // Current user is Tutee, reviewing Tutor
-            updateTask = sessionDao.addTuteeReview(currentSessionId, reviewText, rating);
-        } else { // Current user is Tutor, reviewing Tutee
+        com.google.android.gms.tasks.Task<Void> updateTask;
+        if (isCurrentUserTutee) {
             updateTask = sessionDao.addTutorReview(currentSessionId, reviewText, rating);
+        } else {
+            updateTask = sessionDao.addTuteeReview(currentSessionId, reviewText, rating);
         }
 
         updateTask.addOnSuccessListener(aVoid -> {
-            Toast.makeText(getContext(), "Review submitted successfully!", Toast.LENGTH_LONG).show();
-            // Refresh the session data to get the latest review status
-            loadSessionDetails(); // This will re-fetch and re-populate everything
+            if (getContext() != null && isAdded()) Toast.makeText(getContext(), "Review submitted successfully!", Toast.LENGTH_LONG).show();
+            loadSessionDetails();
         }).addOnFailureListener(e -> {
-            Toast.makeText(getContext(), "Failed to submit review: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            if (getContext() != null && isAdded()) Toast.makeText(getContext(), "Failed to submit review: " + e.getMessage(), Toast.LENGTH_LONG).show();
             Log.e(TAG, "Failed to submit review", e);
-            buttonSubmitMyReview.setEnabled(true);
+            if(isAdded()) {
+                buttonSubmitMyReview.setEnabled(true);
+                showLoading(false);
+            }
         });
     }
 
     private void configureActionButtons() {
+        if (currentSessionPojo == null || currentSessionPojo.getStatus() == null || !isAdded()) return;
         buttonCancelSession.setVisibility(View.GONE);
         buttonStartSession.setVisibility(View.GONE);
         buttonConfirmSession.setVisibility(View.GONE);
@@ -411,53 +500,58 @@ public class SessionDetailsFragment extends Fragment {
 
         switch (currentSessionPojo.getStatus()) {
             case PENDING:
-                if (!isCurrentUserTutee) { // Tutor's action for PENDING
+                if (!isCurrentUserTutee) {
                     buttonConfirmSession.setVisibility(View.VISIBLE);
                     buttonConfirmSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.CONFIRMED, "Session Confirmed!"));
                     buttonDeclineSession.setVisibility(View.VISIBLE);
                     buttonDeclineSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.DECLINED, "Session Declined."));
-                } else { // Tutee can cancel their PENDING request
+                } else {
                     buttonCancelSession.setVisibility(View.VISIBLE);
                     buttonCancelSession.setText("Cancel Request");
                     buttonCancelSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.CANCELLED, "Request Cancelled."));
                 }
                 break;
             case CONFIRMED:
-                // Allow starting session if it's near start time or ongoing
                 Date now = new Date();
                 long fiveMinutesInMillis = 5 * 60 * 1000;
-                boolean canStart = currentSessionPojo.getStartTime() != null &&
-                        (now.getTime() >= (currentSessionPojo.getStartTime().toDate().getTime() - fiveMinutesInMillis)) &&
-                        now.before(currentSessionPojo.getEndTime().toDate());
+                Timestamp startTimeTs = currentSessionPojo.getStartTime();
+                Timestamp endTimeTs = currentSessionPojo.getEndTime();
 
-                if (canStart) {
-                    buttonStartSession.setVisibility(View.VISIBLE);
-                    buttonStartSession.setText("Begin Session");
-                    buttonStartSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.COMPLETED, "Session Started (Marked as Completed)!"));
-                } else if (currentSessionPojo.getStartTime() != null && now.before(currentSessionPojo.getStartTime().toDate())) {
-                    // If not yet time to start, allow cancellation
-                    buttonCancelSession.setVisibility(View.VISIBLE);
-                    buttonCancelSession.setText("Cancel Session");
-                    buttonCancelSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.CANCELLED, "Session Cancelled."));
+                if (startTimeTs != null && endTimeTs != null) {
+                    Date startTime = startTimeTs.toDate();
+                    Date endTime = endTimeTs.toDate();
+                    boolean canStart = (now.getTime() >= (startTime.getTime() - fiveMinutesInMillis)) && now.before(endTime) && !isCurrentUserTutee;
+
+                    if (canStart) {
+                        buttonStartSession.setVisibility(View.VISIBLE);
+                        buttonStartSession.setText("Begin Session");
+                        buttonStartSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.COMPLETED, "Session Started (Marked as Completed)!"));
+                    } else if (now.before(startTime)) {
+                        buttonCancelSession.setVisibility(View.VISIBLE);
+                        buttonCancelSession.setText("Cancel Session");
+                        buttonCancelSession.setOnClickListener(v -> updateSessionStatusWithAction(Session.Status.CANCELLED, "Session Cancelled."));
+                    }
                 }
-                // If it's past endTime but still CONFIRMED, it should be updated by a cleanup job.
-                // For UI, might show "Session Overdue" or similar.
                 break;
-            // For COMPLETED, CANCELLED, DECLINED - usually no direct actions from details screen.
         }
     }
 
     private void updateSessionStatusWithAction(Session.Status newStatus, String toastMessage) {
+        if (getContext() == null || !isAdded()) return;
         showLoading(true);
         sessionDao.updateSessionStatus(currentSessionId, newStatus)
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getContext(), toastMessage, Toast.LENGTH_LONG).show();
-                    loadSessionDetails(); // Reload to reflect changes and update buttons/reviews
+                    if (getContext() != null && isAdded()) Toast.makeText(getContext(), toastMessage, Toast.LENGTH_LONG).show();
+                    if(newStatus == Session.Status.COMPLETED){
+                        sessionPartnerPojo.setCredits(sessionPartnerPojo.getCredits() + 6);
+                        userDao.updateUser(sessionPartnerPojo);
+                    }
+                    loadSessionDetails();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Failed to update session: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    if (getContext() != null && isAdded()) Toast.makeText(getContext(), "Failed to update session: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     Log.e(TAG, "Failed to update session status", e);
-                    showLoading(false); // Hide loading on failure too
+                    if(isAdded()) showLoading(false);
                 });
     }
 }

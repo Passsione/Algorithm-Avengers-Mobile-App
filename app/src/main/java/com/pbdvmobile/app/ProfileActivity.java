@@ -5,15 +5,12 @@ import static android.view.View.VISIBLE;
 
 import android.Manifest;
 import android.app.Activity;
-// Removed ContentResolver import as it's not directly used after getFileNameFromUri was removed from here
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,7 +20,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
-import android.widget.Switch; // android.widget.Switch
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,7 +33,10 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth; // Import FirebaseAuth
+import com.google.firebase.auth.FirebaseUser; // Import FirebaseUser
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.pbdvmobile.app.data.LogInUser;
@@ -60,13 +60,14 @@ public class ProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "ProfileActivity";
     private static final int REQUEST_CAMERA_PERMISSION = 100;
-    private static final String PROFILE_IMAGES_PATH = "profile_images/";
+    private static final String PROFILE_IMAGES_PATH = "profile_images";
 
     private LogInUser loggedInUser;
     private UserDao userDao;
     private SubjectDao subjectDao;
     private SessionDao sessionDao;
     private FirebaseStorage firebaseStorage;
+    private FirebaseAuth firebaseAuth; // Added FirebaseAuth
 
     private ImageView imgProfileImage;
     private FloatingActionButton fabUpdateProfileImage;
@@ -82,10 +83,10 @@ public class ProfileActivity extends AppCompatActivity {
     private List<Subject> allSubjectsList = new ArrayList<>();
     private List<String> selectedTutoredSubjectIds = new ArrayList<>();
 
-    private Uri cameraImageUri; // To store URI from camera after FileProvider creates it
+    private Uri cameraImageUri;
 
     private ActivityResultLauncher<Intent> pickImageLauncher;
-    private ActivityResultLauncher<Uri> takePictureLauncher; // For new contract
+    private ActivityResultLauncher<Uri> takePictureLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,15 +98,26 @@ public class ProfileActivity extends AppCompatActivity {
         subjectDao = new SubjectDao();
         sessionDao = new SessionDao();
         firebaseStorage = FirebaseStorage.getInstance();
+        firebaseAuth = FirebaseAuth.getInstance(); // Initialize FirebaseAuth
 
-        // Use the method from your LogInUser.java
         currentUserPojo = loggedInUser.getUser();
-        if (currentUserPojo == null || currentUserPojo.getUid() == null) { // Also check if UID is present
+
+        FirebaseUser fbAuthUser = firebaseAuth.getCurrentUser();
+        if (fbAuthUser == null) {
+            Log.e(TAG, "Firebase Auth user is NULL. User is not authenticated for Storage operations.");
+        } else {
+            Log.d(TAG, "Firebase Auth User UID for Storage check: " + fbAuthUser.getUid());
+        }
+
+
+        if (currentUserPojo == null || currentUserPojo.getUid() == null || currentUserPojo.getUid().isEmpty()) {
             Toast.makeText(this, "User data not found or invalid. Please log in again.", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "currentUserPojo or its UID is null in onCreate.");
-            logoutUser(); // Defined method for logout
+            Log.e(TAG, "currentUserPojo or its UID is null/empty in onCreate. UID: " + (currentUserPojo != null ? currentUserPojo.getUid() : "null user or UID"));
+            logoutUser();
             return;
         }
+        Log.d(TAG, "ProfileActivity onCreate - Current User POJO UID: " + currentUserPojo.getUid());
+
 
         initializeActivityLaunchers();
         initializeViews();
@@ -131,40 +143,6 @@ public class ProfileActivity extends AppCompatActivity {
         txtCreditsDisplay = findViewById(R.id.txtProfileCredits);
     }
 
-    private void initializeActivityLaunchers() {
-        pickImageLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        Uri imageUri = result.getData().getData();
-                        if (imageUri != null) {
-                            Log.d(TAG, "Image picked from gallery: " + imageUri.toString());
-                            uploadProfileImageToStorage(imageUri);
-                        } else {
-                            Log.w(TAG, "pickImageLauncher: imageUri is null from gallery data.");
-                            Toast.makeText(this, "Failed to get image from gallery.", Toast.LENGTH_SHORT).show();
-                        }
-                    }  else {
-                        Log.d(TAG, "pickImageLauncher: Gallery selection cancelled or failed. Result code: " + result.getResultCode());
-                    }
-                });
-
-        takePictureLauncher = registerForActivityResult(new ActivityResultContracts.TakePicture(),
-                success -> {
-                    if (success) {
-                        if (cameraImageUri != null) {
-                            Log.d(TAG, "Image captured with camera: " + cameraImageUri.toString());
-                            uploadProfileImageToStorage(cameraImageUri);
-                        } else {
-                            // This case should ideally not happen if createImageFileForCamera and FileProvider are correct.
-                            Log.e(TAG, "takePictureLauncher: Camera success but cameraImageUri is null! This indicates an issue with file creation or URI passing.");
-                            Toast.makeText(this, "Error: Could not retrieve image from camera.", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Log.d(TAG, "takePictureLauncher: Camera capture failed or was cancelled by user.");
-                        // No need for a toast if user cancels.
-                    }
-                });
-    }
 
     private void loadAllSubjectsAndThenUserData() {
         subjectDao.getAllSubjects().addOnSuccessListener(queryDocumentSnapshots -> {
@@ -188,7 +166,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void loadUserData() {
-        if (currentUserPojo == null) { // Double check after async subject load
+        if (currentUserPojo == null) {
             Toast.makeText(this, "User data became unavailable. Please try again.", Toast.LENGTH_LONG).show();
             Log.e(TAG, "currentUserPojo is null in loadUserData.");
             logoutUser();
@@ -196,12 +174,15 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
-        Glide.with(this)
-                .load(currentUserPojo.getProfileImageUrl())
-                .placeholder(R.drawable.avatar_1)
-                .error(R.drawable.avatar_1)
-                .circleCrop()
-                .into(imgProfileImage);
+        if (!isFinishing() && !isDestroyed()) {
+            Glide.with(this)
+                    .load(currentUserPojo.getProfileImageUrl())
+                    .placeholder(R.drawable.avatar_1)
+                    .error(R.drawable.avatar_1)
+                    .circleCrop()
+                    .into(imgProfileImage);
+        }
+
 
         edtFirstName.setText(currentUserPojo.getFirstName());
         edtLastName.setText(currentUserPojo.getLastName());
@@ -249,7 +230,6 @@ public class ProfileActivity extends AppCompatActivity {
                 tutorRatingLayout.setVisibility(VISIBLE);
                 ratingBarTutorOverall.setRating((float) currentUserPojo.getAverageRatingAsTutor());
             } else {
-                // Show "Not rated" or hide if 0, only if they are a tutor
                 tutorRatingLayout.setVisibility(GONE);
             }
             subjectSelectionLayout.setVisibility(VISIBLE);
@@ -264,7 +244,7 @@ public class ProfileActivity extends AppCompatActivity {
         if (isFinishing()) return;
         subjectSelectionLayout.removeAllViews();
         selectedTutoredSubjectIds.clear();
-        if (currentUserPojo.getTutoredSubjectIds() != null) {
+        if (currentUserPojo != null && currentUserPojo.getTutoredSubjectIds() != null) {
             selectedTutoredSubjectIds.addAll(currentUserPojo.getTutoredSubjectIds());
         }
 
@@ -316,6 +296,11 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void saveProfileChanges() {
+        if (currentUserPojo == null || currentUserPojo.getUid() == null || currentUserPojo.getUid().isEmpty()) {
+            Toast.makeText(this, "Cannot save profile: User data invalid.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "saveProfileChanges: currentUserPojo or UID is null/empty.");
+            return;
+        }
         showLoading(true);
         String firstName = edtFirstName.getText().toString().trim();
         String lastName = edtLastName.getText().toString().trim();
@@ -402,107 +387,13 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void launchCamera() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        File photoFile = null;
-        try {
-            photoFile = createImageFileForCamera();
-        } catch (IOException ex) {
-            Log.e(TAG, "Error creating image file for camera", ex);
-            Toast.makeText(this, "Could not prepare camera.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (photoFile != null) {
-            // Store the path for later use if needed, but FileProvider URI is primary
-            // mCurrentPhotoPath = photoFile.getAbsolutePath();
-            cameraImageUri = FileProvider.getUriForFile(this,
-                    // Ensure this matches your AndroidManifest provider authority
-                    getApplicationContext().getPackageName() + ".provider",
-                    photoFile);
-            Log.d(TAG, "Launching camera, image URI: " + cameraImageUri);
-            takePictureLauncher.launch(cameraImageUri);
-        } else {
-            Log.e(TAG, "photoFile is null after createImageFileForCamera");
-        }
-    }
-
-    private File createImageFileForCamera() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
-        if (storageDir == null) { // Fallback if getExternalFilesDir returns null
-            Log.w(TAG, "ExternalFilesDir is null, attempting to use cache directory.");
-            storageDir = getCacheDir();
-            if (storageDir == null) { // If cache dir is also null, this is a bigger problem
-                throw new IOException("Cannot get external or cache directory for images.");
-            }
-        }
-
-        if (!storageDir.exists()) {
-            if (!storageDir.mkdirs()) {
-                Log.e(TAG, "Failed to create directory: " + storageDir.getAbsolutePath());
-                // If mkdirs fails even on cache dir, throw error
-                if (storageDir.equals(getCacheDir())) {
-                    throw new IOException("Failed to create cache directory: " + storageDir.getAbsolutePath());
-                }
-                // Try cache dir as a last resort if external-files failed
-                storageDir = getCacheDir();
-                if (!storageDir.exists() && !storageDir.mkdirs()){
-                    throw new IOException("Failed to create any directory for images.");
-                }
-            }
-        }
-        File image = File.createTempFile(imageFileName, ".jpg", storageDir);
-        Log.d(TAG, "Camera image file created at: " + image.getAbsolutePath());
-        return image;
-    }
-
-
-    private void uploadProfileImageToStorage(Uri imageUri) {
-        if (imageUri == null || currentUserPojo == null || currentUserPojo.getUid() == null) {
-            Toast.makeText(this, "Error: Cannot upload image. User data or image URI is missing.", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "uploadProfileImageToStorage: imageUri=" + imageUri + ", currentUserPojo=" + currentUserPojo + (currentUserPojo != null ? ", UID=" + currentUserPojo.getUid() : ""));
-            showLoading(false); // Ensure loading is hidden
-            return;
-        }
-        showLoading(true);
-
-        // Use a more consistent naming for profile images, e.g., just the UID or a fixed name like "profile.jpg"
-        // Using System.currentTimeMillis() creates many files if user changes pic often.
-        // For simplicity, let's stick to your current naming for now.
-        final StorageReference profileImageRef = firebaseStorage.getReference()
-                .child(PROFILE_IMAGES_PATH + currentUserPojo.getUid() + "/" + "profile_image.jpg"); // Consistent name
-
-        Log.d(TAG, "Uploading to Storage path: " + profileImageRef.getPath() + " from URI: " + imageUri.toString());
-
-        UploadTask uploadTask = profileImageRef.putFile(imageUri);
-        uploadTask.addOnSuccessListener(taskSnapshot -> profileImageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-            String downloadUrl = uri.toString();
-            Log.d(TAG, "Image uploaded successfully. Download URL: " + downloadUrl);
-            updateUserProfileImageUrlInFirestore(downloadUrl);
-        }).addOnFailureListener(e -> {
-            Toast.makeText(ProfileActivity.this, "Failed to get image URL: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Failed to get download URL for " + profileImageRef.getPath(), e);
-            showLoading(false);
-        })).addOnFailureListener(e -> {
-            Toast.makeText(ProfileActivity.this, "Image upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Image upload failed for " + profileImageRef.getPath(), e);
-            // Check StorageException details
-            if (e instanceof com.google.firebase.storage.StorageException) {
-                com.google.firebase.storage.StorageException se = (com.google.firebase.storage.StorageException) e;
-                Log.e(TAG, "StorageException Code: " + se.getErrorCode());
-                Log.e(TAG, "StorageException HttpResult: " + se.getHttpResultCode());
-            }
-            showLoading(false);
-        }).addOnProgressListener(snapshot -> {
-            double progress = (100.0 * snapshot.getBytesTransferred()) / snapshot.getTotalByteCount();
-            Log.d(TAG, "Upload is " + progress + "% done");
-        });
-    }
 
     private void updateUserProfileImageUrlInFirestore(String imageUrl) {
+        if (currentUserPojo == null || currentUserPojo.getUid() == null || currentUserPojo.getUid().isEmpty()) {
+            Log.e(TAG, "Cannot update Firestore, currentUserPojo or UID is null/empty.");
+            showLoading(false);
+            return;
+        }
         Map<String, Object> update = new HashMap<>();
         update.put("profileImageUrl", imageUrl);
 
@@ -511,7 +402,7 @@ public class ProfileActivity extends AppCompatActivity {
                     Toast.makeText(ProfileActivity.this, "Profile image updated!", Toast.LENGTH_SHORT).show();
                     currentUserPojo.setProfileImageUrl(imageUrl);
                     loggedInUser.setUser(currentUserPojo);
-                    if (!isDestroyed() && !isFinishing()) {
+                    if (!isFinishing() && !isDestroyed()) {
                         Glide.with(ProfileActivity.this).load(imageUrl).circleCrop().placeholder(R.drawable.avatar_1).error(R.drawable.avatar_1).into(imgProfileImage);
                     }
                     showLoading(false);
@@ -530,9 +421,211 @@ public class ProfileActivity extends AppCompatActivity {
         if (btnSaveProfile != null) btnSaveProfile.setEnabled(!isLoading);
         if (fabUpdateProfileImage != null) fabUpdateProfileImage.setEnabled(!isLoading);
     }
+// Replace these methods in your ProfileActivity.java
+
+    private void initializeActivityLaunchers() {
+        pickImageLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri imageUri = result.getData().getData();
+                        if (imageUri != null) {
+                            Log.d(TAG, "Gallery image selected: " + imageUri);
+                            uploadProfileImageToStorage(imageUri);
+                        }
+                    }
+                });
+
+        takePictureLauncher = registerForActivityResult(new ActivityResultContracts.TakePicture(),
+                success -> {
+                    if (success && cameraImageUri != null) {
+                        Log.d(TAG, "Camera image captured: " + cameraImageUri);
+                        uploadProfileImageToStorage(cameraImageUri);
+                    } else {
+                        Log.d(TAG, "Camera capture failed or cancelled");
+                        Toast.makeText(this, "Camera capture failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void launchCamera() {
+        try {
+            // Create image file
+            File photoFile = createImageFile();
+            if (photoFile != null) {
+                String authority = getPackageName() + ".provider";
+                cameraImageUri = FileProvider.getUriForFile(this, authority, photoFile);
+
+                Log.d(TAG, "Camera file created: " + photoFile.getAbsolutePath());
+                Log.d(TAG, "Camera URI: " + cameraImageUri);
+
+                takePictureLauncher.launch(cameraImageUri);
+            }
+        } catch (IOException ex) {
+            Log.e(TAG, "Error creating camera file", ex);
+            Toast.makeText(this, "Error preparing camera", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String imageFileName = "IMG_" + timeStamp + "_";
+
+        // Use app's private external files directory
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        // Fallback to cache if external not available
+        if (storageDir == null) {
+            storageDir = new File(getCacheDir(), "images");
+        }
+
+        // Create directory if it doesn't exist
+        if (!storageDir.exists()) {
+            storageDir.mkdirs();
+        }
+
+        // Create the file
+        File image = File.createTempFile(imageFileName, ".jpg", storageDir);
+
+        Log.d(TAG, "Created image file: " + image.getAbsolutePath());
+        return image;
+    }
+
+    private void uploadProfileImageToStorage(Uri imageUri) {
+        if (imageUri == null || currentUserPojo == null) {
+            Toast.makeText(this, "Cannot upload: missing data", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        showLoading(true);
+
+        // Create storage reference
+        String fileName = "profile_image_" + System.currentTimeMillis() + ".jpg";
+        StorageReference storageRef = firebaseStorage.getReference()
+                .child("profile_images")
+                .child(currentUserPojo.getUid())
+                .child(fileName);
+
+        Log.d(TAG, "Starting upload to: " + storageRef.getPath());
+        Log.d(TAG, "From URI: " + imageUri);
+
+        // Upload file
+        storageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    Log.d(TAG, "Upload successful!");
+                    // Get download URL
+                    storageRef.getDownloadUrl()
+                            .addOnSuccessListener(downloadUri -> {
+                                Log.d(TAG, "Got download URL: " + downloadUri);
+                                updateProfileImageInDatabase(downloadUri.toString());
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Failed to get download URL", e);
+                                Toast.makeText(this, "Failed to get image URL", Toast.LENGTH_SHORT).show();
+                                showLoading(false);
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Upload failed", e);
+                    Toast.makeText(this, "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    showLoading(false);
+                })
+                .addOnProgressListener(taskSnapshot -> {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    Log.d(TAG, "Upload progress: " + (int) progress + "%");
+                });
+    }
+
+    private void updateProfileImageInDatabase(String imageUrl) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("profileImageUrl", imageUrl);
+
+        userDao.updateUserSpecificFields(currentUserPojo.getUid(), updates)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Profile image updated!", Toast.LENGTH_SHORT).show();
+
+                    // Update local user object
+                    currentUserPojo.setProfileImageUrl(imageUrl);
+                    loggedInUser.setUser(currentUserPojo);
+
+                    // Update UI
+                    if (!isFinishing() && !isDestroyed()) {
+                        Glide.with(this)
+                                .load(imageUrl)
+                                .circleCrop()
+                                .placeholder(R.drawable.avatar_1)
+                                .error(R.drawable.avatar_1)
+                                .into(imgProfileImage);
+                    }
+                    showLoading(false);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to update database", e);
+                    Toast.makeText(this, "Failed to update database", Toast.LENGTH_SHORT).show();
+                    showLoading(false);
+                });
+    }
+
+    // Add this method to verify file existence
+    private boolean verifyFileExists(Uri uri) {
+        if (uri == null) return false;
+
+        try {
+            if ("file".equals(uri.getScheme())) {
+                File file = new File(uri.getPath());
+                boolean exists = file.exists();
+                Log.d(TAG, "File exists check for " + uri.getPath() + ": " + exists +
+                        " (Size: " + (exists ? file.length() : "N/A") + " bytes)");
+                return exists;
+            } else if ("content".equals(uri.getScheme())) {
+                // For content URIs, try to open input stream
+                try (java.io.InputStream inputStream = getContentResolver().openInputStream(uri)) {
+                    boolean exists = inputStream != null;
+                    Log.d(TAG, "Content URI exists check: " + exists);
+                    return exists;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error verifying file existence for URI: " + uri, e);
+        }
+        return false;
+    }
+
+
+    private File createImageFileForCamera() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String imageFileName = "CAMERA_" + timeStamp + "_";
+
+        // Try external files directory first
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        if (storageDir == null) {
+            Log.w(TAG, "ExternalFilesDir is null, using cache directory.");
+            storageDir = getCacheDir();
+        }
+
+        if (storageDir == null) {
+            throw new IOException("Cannot get any directory for images.");
+        }
+
+        // Ensure directory exists
+        if (!storageDir.exists()) {
+            boolean dirCreated = storageDir.mkdirs();
+            Log.d(TAG, "Directory creation result for " + storageDir.getAbsolutePath() + ": " + dirCreated);
+            if (!dirCreated) {
+                throw new IOException("Failed to create directory: " + storageDir.getAbsolutePath());
+            }
+        }
+
+        File imageFile = File.createTempFile(imageFileName, ".jpg", storageDir);
+        Log.d(TAG, "Camera image file created: " + imageFile.getAbsolutePath());
+        Log.d(TAG, "File exists after creation: " + imageFile.exists());
+
+        return imageFile;
+    }
 
     private int dpToPx(int dp) {
-        if (isFinishing()) return dp; // Avoid getResources if activity is finishing
+        if (isFinishing() || isDestroyed()) return dp;
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 }

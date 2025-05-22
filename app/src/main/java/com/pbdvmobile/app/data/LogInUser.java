@@ -42,8 +42,11 @@ public class LogInUser implements Serializable {
 */
 package com.pbdvmobile.app.data;
 
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.pbdvmobile.app.data.dao.SessionDao;
+import com.pbdvmobile.app.data.model.Session;
 import com.pbdvmobile.app.data.model.User; // Your User POJO
 
 import java.io.Serializable;
@@ -63,6 +66,8 @@ public class LogInUser implements Serializable {
     public static synchronized LogInUser getInstance() {
         if (instance == null) {
             instance = new LogInUser();
+            SessionDao sDao = new SessionDao();
+            sDao.updateSessionStatus("OJoHInlR6ZabvulKghHw", Session.Status.COMPLETED);
         }
         return instance;
     }

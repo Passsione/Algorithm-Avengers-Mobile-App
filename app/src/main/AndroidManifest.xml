@@ -41,6 +41,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+
         <activity
             android:name=".PaymentHistoryActivity"
             android:exported="false" />

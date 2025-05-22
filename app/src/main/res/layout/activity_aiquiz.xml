@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:gravity="center"
-                android:text="Upload Document for AI Quiz Generation"
+                android:text="Upload Document for AI Quiz Generation (8 Credits)"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -202,11 +202,18 @@
                         android:text="10" />
 
                     <RadioButton
-                        android:id="@+id/radio15Questions"
+                        android:id="@+id/radio20Questions"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="15" />
+                        android:text="20" />
+
+                    <RadioButton
+                        android:id="@+id/radio35Questions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="35" />
                 </RadioGroup>
             </LinearLayout>
 
@@ -242,6 +249,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Short Answer (Fill in the blanks)" />
+
+                <CheckBox
+                    android:id="@+id/checkLongAnswer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Long Answer (Paragraphs)" />
             </LinearLayout>
 
             <LinearLayout

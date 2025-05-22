@@ -36,8 +36,10 @@ import java.util.Random;
 import java.util.regex.Pattern;
 
 public class DataManager implements Serializable {
-    public static final double CREDIT_AI_QUIZ = 5;
-    public static final double CREDIT_AI_SUMMARIZER = 3;
+    public static final double CREDIT_AI_QUIZ = 8;
+    public static final double CREDIT_AI_SUMMARIZER = 5;
+    public static final double CREDIT_AI_REVIEW_SUMMARY = 2;
+
 
     // 5 minutes before the start of the session
     public static final long START_SESSION_PADDING = 5 * 60 * 1000;
