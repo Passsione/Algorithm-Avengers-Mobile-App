@@ -413,9 +413,9 @@ public class SessionDetailsFragment extends Fragment {
         cardPartnerReviewSectionDisplay.setVisibility(View.VISIBLE);
         buttonTogglePartnerReview.setVisibility(View.VISIBLE);
 
-        String partnerReviewText = isCurrentUserTutee ? currentSessionPojo.getTuteeReview() : currentSessionPojo.getTutorReview();
-        Double partnerRatingValue = isCurrentUserTutee ? currentSessionPojo.getTuteeRating() : currentSessionPojo.getTutorRating();
-        String partnerRole = isCurrentUserTutee ? "Tutee's" : "Tutor's";
+        String partnerReviewText = !isCurrentUserTutee ? currentSessionPojo.getTuteeReview() : currentSessionPojo.getTutorReview();
+        Double partnerRatingValue = !isCurrentUserTutee ? currentSessionPojo.getTuteeRating() : currentSessionPojo.getTutorRating();
+        String partnerRole = !isCurrentUserTutee ? "Tutee's" : "Tutor's";
         textViewPartnerReviewTitleDisplay.setText(String.format(Locale.getDefault(),"%s Feedback", partnerRole));
 
         final boolean hasPartnerReview = (partnerReviewText != null && !partnerReviewText.isEmpty()) || (partnerRatingValue != null && partnerRatingValue > 0);

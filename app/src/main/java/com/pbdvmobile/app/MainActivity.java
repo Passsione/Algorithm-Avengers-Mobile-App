@@ -161,6 +161,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 // DataManager is no longer the primary source for current user data directly
 // import com.pbdvmobile.app.data.DataManager;
+import com.pbdvmobile.app.data.DataManager;
 import com.pbdvmobile.app.data.LogInUser; // Your updated LogInUser
 import com.pbdvmobile.app.data.dao.SessionDao;
 import com.pbdvmobile.app.data.dao.SubjectDao;
@@ -194,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
 
         mAuth = FirebaseAuth.getInstance();
         dbFirestore = FirebaseFirestore.getInstance();

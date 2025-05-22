@@ -107,12 +107,11 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0") // Optional, for logging requests
 
 // FireBase
-
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-storage") // For file uploads later
+    implementation("com.google.firebase:firebase-storage")
 
     implementation(libs.appcompat)
     implementation(libs.glide)

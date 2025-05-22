@@ -449,7 +449,7 @@ public class ResourceUploadActivity extends AppCompatActivity {
             mimeType = getContentResolver().getType(uri);
         } else {
             String fileExtension = getFileExtension(uri);
-            if (fileExtension != null && !fileExtension.equals("bin")) {
+            if (!fileExtension.equals("bin")) {
                 mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.US));
             }
         }
